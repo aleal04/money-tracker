@@ -16,6 +16,10 @@ USE money_tracker;
  * (SET @/PREPARE/EXECUTE), para que el archivo corra igual en la terminal y en clientes
  * graficos (extensiones de VS Code, DBeaver, Workbench).
  *
+ * Si ya se ejecutaron los scripts anteriores a espacios, primero DROP DATABASE money_tracker;
+ * y volver a correr todos los scripts: CREATE TABLE IF NOT EXISTS no modifica tablas viejas
+ * (no agrega las columnas nuevas). Esto borra todos los datos.
+ *
  * Convenciones (las del proyecto ssi): tablas y columnas en PascalCase, llave primaria
  * Id<Tabla>, llaves foraneas Fk<Referencia>, restricciones PK_/FK_/UQ_/IX_. Use siempre el
  * nombre exacto de la tabla: en Linux MySQL distingue mayusculas (lower_case_table_names=0)

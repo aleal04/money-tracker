@@ -14,6 +14,8 @@ App personal de finanzas (Laravel 12 + Inertia + Vue). Registra ingresos, gastos
 
 El esquema vive en scripts idempotentes MySQL en `database/scripts` (no hay migraciones). Antes de ejecutarlos, edita `database/scripts/logins/1. Application - Login.sql` y cambia `<CAMBIAR_PASSWORD_ALFANUMERICA>` por una contraseña con solo letras y números (los especiales dan problemas en URLs y `.env`). No guardes la real en git.
 
+Si ya habías ejecutado los scripts anteriores a espacios, borra la base primero (`docker exec -i mysql mysql -uroot -p -e "DROP DATABASE money_tracker;"`): `CREATE TABLE IF NOT EXISTS` no modifica tablas viejas, así que no agregaría las columnas nuevas. Esto borra todos los datos.
+
 Ejecútalos en este orden contra el contenedor:
 
 ```bash
@@ -29,7 +31,7 @@ docker exec -i mysql mysql -uroot -p < "logins/1. Application - Login.sql"
 
 Un espacio es una "bolsa" de dinero (Salario, Ahorro, Servicios digitales...) con sus propios periodos. Hay uno principal ("Salario", quincenal) y se administran en el menú Espacios.
 
-- **Frecuencia**: semanal, quincenal, mensual o personalizada (N días). Propone las fechas del siguiente periodo; se pueden ajustar sin traslapes.
+- **Frecuencia**: semanal, quincenal, mensual o personalizada (N días). Propone las fechas del siguiente periodo; se pueden ajustar sin traslapes. No se puede cambiar cuando el espacio ya tiene periodos.
 - **Saldo**: Saldo anterior + Entró − Gastado = Restante. El restante (positivo o negativo) pasa como saldo anterior al siguiente periodo; el primero parte del saldo inicial del espacio.
 - **Transferencias**: en una línea de gasto, "Enviar a espacio" crea, al pagarla, un ingreso "Desde <espacio>" en el destino, en el periodo que contiene la fecha de inicio del periodo de origen (se crea si falta). Despagar, cambiar el monto o borrar la línea origen se propaga; la línea destino no se edita.
 - **Cerrar periodo**: una transferencia sin pagar no entra al arrastre general; pasa al siguiente periodo como su propia línea "↩ nombre". Reabrir la deshace mientras no esté pagada.
