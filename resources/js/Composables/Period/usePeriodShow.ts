@@ -77,6 +77,7 @@ export function usePeriodShow(periodId: Ref<number>) {
 	const go = (id: number | null) =>
 		id !== null && router.visit(`/periods/${id}`);
 	async function createNext() {
+		error.value = "";
 		busy.value = true;
 		try {
 			const res = await axios.post<{ period: { id: number } }>("/periods/next");

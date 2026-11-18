@@ -1,5 +1,6 @@
 {
 	"name": "Money Tracker",
+	"lang": "es",
 	"short_name": "Finanzas",
 	"start_url": "/",
 	"display": "standalone",

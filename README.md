@@ -16,10 +16,8 @@ Dentro del contenedor (`docker exec -it mysql mysql -uroot -p`). Usa una contras
 
 ```sql
 CREATE DATABASE money_tracker CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE money_tracker_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'money'@'%' IDENTIFIED BY '<TU_PASSWORD_ALFANUMERICA>';
 GRANT ALL PRIVILEGES ON money_tracker.* TO 'money'@'%';
-GRANT ALL PRIVILEGES ON money_tracker_test.* TO 'money'@'%';
 FLUSH PRIVILEGES;
 ```
 
@@ -27,7 +25,7 @@ FLUSH PRIVILEGES;
 
 ```bash
 composer install && pnpm install
-cp .env.example .env   # completa DB_PASSWORD; APP_TIMEZONE=America/Costa_Rica
+cp .env.example .env   # SESSION_DRIVER=file (no hay migración de sessions); completa DB_PASSWORD; APP_TIMEZONE=America/Costa_Rica
 php artisan key:generate
 php artisan migrate
 git config core.hooksPath .githooks   # activa los hooks

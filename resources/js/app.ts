@@ -2,7 +2,10 @@ import { createApp, type DefineComponent, h } from "vue";
 
 import { createInertiaApp } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
+import { reloadOnSessionExpiry } from "@/Support/sessionExpiry";
 import AppLayout from "@/Layouts/AppLayout.vue";
+
+reloadOnSessionExpiry();
 
 createInertiaApp({
 	resolve: async (name) => {
