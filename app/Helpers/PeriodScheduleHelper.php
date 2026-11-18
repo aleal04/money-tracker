@@ -41,6 +41,29 @@ final class PeriodScheduleHelper
     }
 
     /**
+     * Propose the period that ends the day before $firstStartDate, stepping back by the frequency (biweekly/monthly
+     * keep the calendar halves/months when the next period is aligned).
+     *
+     * @return array{start:string,end:string}
+     */
+    public static function proposePrevious(string $frequency, ?int $customDays, string $firstStartDate): array
+    {
+        $end = CarbonImmutable::parse($firstStartDate)->subDay();
+        $start = match ($frequency) {
+            SpaceFrequencyConstant::BIWEEKLY => match (true) {
+                $end->day === 15 => $end->startOfMonth(),
+                $end->isLastOfMonth() => $end->day(16),
+                default => $end->subDays(14),
+            },
+            SpaceFrequencyConstant::MONTHLY => $end->isLastOfMonth() ? $end->startOfMonth() : $end->subMonthNoOverflow()->addDay(),
+            SpaceFrequencyConstant::WEEKLY => $end->subDays(6),
+            default => $end->subDays(max(1, (int) $customDays) - 1),
+        };
+
+        return ['start' => $start->toDateString(), 'end' => $end->toDateString()];
+    }
+
+    /**
      * Start of the first period: calendar-aligned for biweekly/monthly, today for weekly/custom.
      */
     private static function firstStart(string $frequency, CarbonImmutable $today): CarbonImmutable

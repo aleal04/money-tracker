@@ -42,6 +42,17 @@ class PeriodQueryRepository extends BaseQueryRepository
     }
 
     /**
+     * The first period of a space (by start date).
+     *
+     * @param  int  $spaceId  The space identifier.
+     * @return PeriodModel|null The earliest period, or null when the space has none.
+     */
+    public function earliest(int $spaceId): ?PeriodModel
+    {
+        return PeriodModel::query()->where('FkSpace', $spaceId)->orderBy('StartDate')->first();
+    }
+
+    /**
      * Periods in chronological order (by space, then start date), of one space or of every space.
      *
      * @param  int|null  $spaceId  The space identifier, or null for every space.

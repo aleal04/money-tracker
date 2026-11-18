@@ -99,8 +99,8 @@ class TransferService implements TransferServiceContract
 
         $target = $this->spaceQueryRepository->findSpace($targetSpaceId);
         $destinationPeriod = $this->periodContaining($target, $period->StartDate);
-        if ($destinationPeriod === null) {
-            return createValidationErrorResponse('Creá primero el periodo en '.$target->Name, ['statusCode' => 409]);
+        if (is_string($destinationPeriod)) {
+            return createValidationErrorResponse($destinationPeriod, ['statusCode' => 409]);
         }
         $this->lineRepository->insert($columns + [
             'FkPeriod' => $destinationPeriod->IdPeriod,
@@ -116,14 +116,14 @@ class TransferService implements TransferServiceContract
 
     /**
      * The period of the space that contains the date, creating it when needed: the first period aligned to the
-     * frequency when the space has none, else the missing periods after its latest one (at most 12). A date before
-     * the latest period's end that no period contains (before the first one or in a gap) is not created.
+     * frequency when the space has none, the missing periods after its latest one, or the periods stepped back from
+     * its first one (at most 12 either way). A date in a gap between periods is not created.
      *
      * @param  SpaceModel  $space  The destination space.
      * @param  string  $date  The date 'Y-m-d'.
-     * @return PeriodModel|null The period, or null when it must be created by hand.
+     * @return PeriodModel|string The period, or the 409 message when it must be created by hand.
      */
-    private function periodContaining(SpaceModel $space, string $date): ?PeriodModel
+    private function periodContaining(SpaceModel $space, string $date): PeriodModel|string
     {
         $existing = $this->periodQueryRepository->findOverlapping($space->IdSpace, $date, $date);
         if ($existing !== null) {
@@ -131,8 +131,12 @@ class TransferService implements TransferServiceContract
         }
 
         $latest = $this->periodQueryRepository->latest($space->IdSpace, true);
+        $first = $latest === null ? null : $this->periodQueryRepository->earliest($space->IdSpace);
+        if ($first !== null && $date < $first->StartDate) {
+            return $this->createBackward($space, $first->StartDate, $date);
+        }
         if ($latest !== null && $date <= $latest->EndDate) {
-            return null;
+            return 'Creá primero el periodo en '.$space->Name;
         }
 
         $chain = [];
@@ -142,9 +146,45 @@ class TransferService implements TransferServiceContract
             $lastEnd = $next['end'];
         } while ($next['end'] < $date && count($chain) < self::MAX_CREATED_PERIODS);
         if ($next['end'] < $date || $next['start'] > $date) {
-            return null;
+            return 'Creá primero el periodo en '.$space->Name;
         }
 
+        return $this->createChain($space, $chain);
+    }
+
+    /**
+     * Create the periods that step back from the first period of the space until one contains the date (at most 12).
+     *
+     * @param  SpaceModel  $space  The destination space.
+     * @param  string  $firstStart  The start date of the space's first period.
+     * @param  string  $date  The date 'Y-m-d', before $firstStart.
+     * @return PeriodModel|string The period that contains the date, or the 409 message when 12 are not enough.
+     */
+    private function createBackward(SpaceModel $space, string $firstStart, string $date): PeriodModel|string
+    {
+        $chain = [];
+        do {
+            array_unshift($chain, $previous = PeriodScheduleHelper::proposePrevious($space->Frequency, $space->CustomDays, $firstStart));
+            $firstStart = $previous['start'];
+        } while ($previous['start'] > $date && count($chain) < self::MAX_CREATED_PERIODS);
+        if ($previous['start'] > $date) {
+            return 'La fecha '.date('d/m/Y', strtotime($date)).' es anterior al primer periodo de '.$space->Name.'; creá o adelantá su periodo';
+        }
+
+        $this->createChain($space, $chain);
+
+        return $this->periodQueryRepository->findOverlapping($space->IdSpace, $date, $date);
+    }
+
+    /**
+     * Create the given periods in order and return the last one.
+     *
+     * @param  SpaceModel  $space  The space.
+     * @param  list<array{start:string,end:string}>  $chain  The period dates.
+     * @return PeriodModel The last created period.
+     */
+    private function createChain(SpaceModel $space, array $chain): PeriodModel
+    {
         foreach ($chain as $dates) {
             $created = $this->periodService->createWithinTransaction($space, $dates['start'], $dates['end']);
         }

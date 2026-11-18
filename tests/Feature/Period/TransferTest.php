@@ -230,13 +230,36 @@ class TransferTest extends PeriodTestCase
         $this->assertCount(13, $this->starts($ahorro));
     }
 
-    public function test_date_before_the_first_destination_period_is_409(): void
+    public function test_date_before_the_first_destination_period_creates_the_aligned_periods_backward(): void
+    {
+        $quincenas = $this->space('Quincenas', 'biweekly');
+        $this->spacePeriod($quincenas, '2026-12-01', '2026-12-15');
+        $line = $this->transfer($this->makePeriod()['id'], $quincenas, ['paid' => true]);
+
+        $this->assertSame(['2026-11-01', '2026-11-16', '2026-12-01'], $this->starts($quincenas));
+        $this->assertSame('2026-11-01', PeriodModel::find($this->destination($line['id'])->FkPeriod)->StartDate);
+    }
+
+    public function test_weekly_destination_created_after_the_origin_start_gets_periods_backward(): void
+    {
+        $semanas = $this->space('Semanas', 'weekly');
+        $this->spacePeriod($semanas, '2026-11-18', '2026-11-24');
+        $line = $this->transfer($this->makePeriod()['id'], $semanas, ['paid' => true]);
+
+        $this->assertSame(['2026-10-28', '2026-11-04', '2026-11-11', '2026-11-18'], $this->starts($semanas));
+        $period = PeriodModel::find($this->destination($line['id'])->FkPeriod);
+        $this->assertSame(['2026-10-28', '2026-11-03'], [$period->StartDate, $period->EndDate]);
+    }
+
+    public function test_more_than_twelve_periods_before_the_first_is_409_with_the_date(): void
     {
         $ahorro = $this->space();
-        $this->spacePeriod($ahorro, '2026-12-01', '2026-12-31');
+        $this->spacePeriod($ahorro, '2027-12-01', '2027-12-31'); // Nov 2026 .. Nov 2027 would be 13 periods
         $line = $this->transfer($this->makePeriod()['id'], $ahorro);
 
-        $this->postJson("/lines/{$line['id']}/toggle-paid")->assertStatus(409)->assertJsonPath('message', 'Creá primero el periodo en Ahorro');
+        $this->postJson("/lines/{$line['id']}/toggle-paid")->assertStatus(409)
+            ->assertJsonPath('message', 'La fecha 01/11/2026 es anterior al primer periodo de Ahorro; creá o adelantá su periodo');
+        $this->assertSame(['2027-12-01'], $this->starts($ahorro));
     }
 
     public function test_only_manual_or_template_lines_can_get_a_target(): void
