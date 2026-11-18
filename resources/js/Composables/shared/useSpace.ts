@@ -51,6 +51,13 @@ async function loadSpaces(): Promise<void> {
 	}
 }
 
+let loaded: Promise<void> | null = null;
+/** Loads the spaces once so the first data request never sends a stale stored id (404). */
+function ensureSpaces(): Promise<void> {
+	loaded ??= loadSpaces().catch(() => undefined);
+	return loaded;
+}
+
 /** Follow the space of the period on screen without reloading anything. */
 function adoptSpace(id: number): void {
 	if (selectedId.value !== id) persist(id);
@@ -71,6 +78,7 @@ export function useSpace() {
 		current,
 		spaceParams,
 		loadSpaces,
+		ensureSpaces,
 		setSpace,
 		adoptSpace,
 	};

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import Icon from "@/Components/UI/Icon.vue";
+import { lineKind, transferBadge } from "@/Composables/Period/lineKind";
+import { useSpace } from "@/Composables/shared/useSpace";
 import { canToggle } from "@/Composables/Period/usePeriodShow";
 import { diffLabel, formatCRC } from "@/Composables/shared/format";
 import type { Category, CategoryTotals, Line } from "@/Types/Pages/Period/Period";
@@ -17,6 +19,8 @@ defineProps<{
 	busy: boolean;
 }>();
 const emit = defineEmits<{ toggle: [Line]; changed: [] }>();
+const { spaces } = useSpace();
+const readOnlyHint = "Se edita desde el espacio de origen";
 const adding = ref(false);
 const editingId = ref<number | null>(null);
 const expanded = ref<Record<number, boolean>>({});
@@ -38,7 +42,8 @@ const expanded = ref<Record<number, boolean>>({});
 							class="category-block__check"
 							:disabled="!canToggle(l, closed, busy)"
 							:aria-pressed="l.paid"
-							:aria-label="`Marcar como pagado: ${l.name}`"
+							:aria-label="lineKind(l) === 'destination' ? readOnlyHint : `Marcar como pagado: ${l.name}`"
+							:title="lineKind(l) === 'destination' ? readOnlyHint : undefined"
 							@click="emit('toggle', l)"
 						>
 							<span class="category-block__box" :class="{ 'category-block__box--on': l.paid }"><Icon v-if="l.paid" name="check" /></span>
@@ -47,6 +52,7 @@ const expanded = ref<Record<number, boolean>>({});
 							<div class="category-block__name">
 								<span class="category-block__label">{{ l.name }}</span>
 								<span v-if="l.carried" class="category-block__note">↪ arrastrado</span>
+								<span v-if="transferBadge(l, spaces)" class="pill category-block__transfer" :title="lineKind(l) === 'destination' ? readOnlyHint : undefined">{{ transferBadge(l, spaces) }}</span>
 								<span v-if="l.source === 'installments'" class="pill category-block__auto">auto</span>
 							</div>
 							<div class="category-block__amount-narrow">
@@ -58,10 +64,10 @@ const expanded = ref<Record<number, boolean>>({});
 						<span class="num category-block__col category-block__amount">{{ l.actual === null ? "—" : formatCRC(l.actual) }}</span>
 						<span class="num category-block__col category-block__note">{{ diffLabel(l.estimated, l.actual) ?? "" }}</span>
 						<div class="category-block__actions">
-							<button v-if="!l.carried" type="button" class="icon-btn" :aria-label="'Editar ' + l.name" @click="editingId = l.id"><Icon name="edit" /></button>
+							<button v-if="!l.carried && lineKind(l) !== 'destination'" type="button" class="icon-btn" :aria-label="'Editar ' + l.name" @click="editingId = l.id"><Icon name="edit" /></button>
 						</div>
 					</div>
-					<details v-if="l.source === 'carried'" class="category-block__detail" @toggle="expanded[l.id] = ($event.target as HTMLDetailsElement).open">
+					<details v-if="lineKind(l) === 'arrastre'" class="category-block__detail" @toggle="expanded[l.id] = ($event.target as HTMLDetailsElement).open">
 						<summary>Ver detalle</summary>
 						<ArrastreDetail v-if="expanded[l.id]" :line-id="l.id" />
 					</details>

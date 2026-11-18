@@ -5,7 +5,7 @@ import type { Template } from "@/Types/Pages/Template/Template";
 
 const props = defineProps<{ template?: Template }>();
 const emit = defineEmits<{ saved: []; cancel: [] }>();
-const { name, category, estimated, freq, day, confirmingDelete, errors, busy, submit, remove } = useTemplateForm(props, () => emit("saved"));
+const { spaces, current, target, name, category, estimated, freq, day, confirmingDelete, errors, busy, submit, remove } = useTemplateForm(props, () => emit("saved"));
 </script>
 
 <template>
@@ -35,6 +35,13 @@ const { name, category, estimated, freq, day, confirmingDelete, errors, busy, su
 		<label v-if="freq === 'mensual_dia'" class="field">Día del mes
 			<input v-model="day" type="number" min="1" max="31" inputmode="numeric" class="input" />
 			<span v-if="errors.dayOfMonth" role="alert" class="err">{{ errors.dayOfMonth }}</span>
+		</label>
+		<label v-if="category !== 'ingreso' && spaces.length > 1" class="field">Enviar a espacio
+			<select v-model="target" class="input">
+				<option value="">Ninguno</option>
+				<option v-for="s in spaces.filter((x) => x.id !== (template?.spaceId ?? current?.id))" :key="s.id" :value="s.id">{{ s.name }}</option>
+			</select>
+			<span v-if="errors.targetSpaceId" role="alert" class="err">{{ errors.targetSpaceId }}</span>
 		</label>
 		<p v-if="errors.form" role="alert" class="err form-wide">{{ errors.form }}</p>
 		<div class="form-actions form-wide">

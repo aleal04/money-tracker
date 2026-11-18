@@ -4,11 +4,12 @@ import CardsPanel from "@/Components/Pages/Dashboard/CardsPanel.vue";
 import PendingPanel from "@/Components/Pages/Dashboard/PendingPanel.vue";
 import WelcomeSteps from "@/Components/Pages/Dashboard/WelcomeSteps.vue";
 import CreatePeriodForm from "@/Components/Pages/Period/CreatePeriodForm.vue";
+import SpacesPanel from "@/Components/Pages/Dashboard/SpacesPanel.vue";
 import SummaryCards from "@/Components/Pages/Period/SummaryCards.vue";
 import Icon from "@/Components/UI/Icon.vue";
 import { greeting, useDashboard } from "@/Composables/Dashboard/useDashboard";
 
-const { data, error, busy, creating, pending, installmentCount, pay, createNext } = useDashboard();
+const { data, error, busy, creating, pending, rows, current, setSpace, installmentCount, pay, createNext } = useDashboard();
 </script>
 
 <template>
@@ -20,7 +21,7 @@ const { data, error, busy, creating, pending, installmentCount, pay, createNext 
 				<div class="dashboard-index__heading">
 					<h1 class="dashboard-index__title">Inicio</h1>
 					<p class="dashboard-index__sub">
-						{{ greeting(new Date().getHours()) }}<template v-if="data.current"> · {{ data.current.period.label }} ({{ data.current.period.closed ? "cerrada" : "abierta" }})</template>
+						{{ greeting(new Date().getHours()) }}<template v-if="data.current"> · {{ data.current.period.label }} ({{ data.current.period.closed ? "Cerrado" : "Abierto" }})</template>
 					</p>
 				</div>
 				<button type="button" :disabled="busy" class="btn btn-accent" @click="createNext"><Icon name="plus" />Nuevo periodo</button>
@@ -29,6 +30,7 @@ const { data, error, busy, creating, pending, installmentCount, pay, createNext 
 				<h2 class="dashboard-index__create-title">Nuevo periodo</h2>
 				<CreatePeriodForm cancellable @cancel="creating = false" />
 			</section>
+			<SpacesPanel v-if="rows.length" :rows="rows" :selected-id="current?.id ?? null" @select="setSpace" />
 			<WelcomeSteps v-if="!data.current && !creating" :template-count="data.templateCount" :installment-count="installmentCount" @create="creating = true" />
 			<template v-if="data.current">
 				<SummaryCards :summary="data.current.summary" />

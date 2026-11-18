@@ -1,16 +1,19 @@
 <script setup lang="ts">
+import { onMounted, useTemplateRef } from "vue";
 import { useSpaceForm } from "@/Composables/Space/useSpaceIndex";
 import type { Space } from "@/Types/Pages/Space/Space";
 
 const props = defineProps<{ space?: Space }>();
 const emit = defineEmits<{ saved: []; cancel: [] }>();
+const first = useTemplateRef<HTMLInputElement>("first");
+onMounted(() => first.value?.focus());
 const { name, frequency, customDays, initialBalance, confirmingDelete, errors, busy, submit, remove } = useSpaceForm(props, () => emit("saved"));
 </script>
 
 <template>
 	<form class="form-panel" @submit.prevent="submit">
 		<label class="field">Nombre
-			<input v-model="name" class="input" />
+			<input ref="first" v-model="name" class="input" />
 			<span v-if="errors.name" role="alert" class="err">{{ errors.name }}</span>
 		</label>
 		<label class="field">Frecuencia

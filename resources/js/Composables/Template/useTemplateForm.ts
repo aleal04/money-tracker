@@ -22,13 +22,14 @@ export function useTemplateForm(
 	props: { template?: Template },
 	onSaved: () => void,
 ) {
-	const { current } = useSpace();
+	const { current, spaces } = useSpace();
 	const t = props.template;
 	const name = ref(t?.name ?? "");
 	const category = ref<Category>(t?.category ?? "servicio");
 	const estimated = ref(t ? plainAmount(t.estimated) : "");
 	const freq = ref<Frequency>(t?.frequency ?? "cada_periodo");
 	const day = ref(t?.dayOfMonth ? String(t.dayOfMonth) : "1");
+	const target = ref<number | "">(t?.targetSpaceId ?? "");
 	const confirmingDelete = ref(false);
 	const errors = ref<Record<string, string>>({});
 	const busy = ref(false);
@@ -55,6 +56,10 @@ export function useTemplateForm(
 				estimated: estimated.value,
 				frequency: freq.value,
 				dayOfMonth: dayFor(freq.value, day.value),
+				targetSpaceId:
+					category.value === "ingreso" || target.value === ""
+						? null
+						: Number(target.value),
 			};
 			return t
 				? axios.put(`/templates/${t.id}/update`, body)
@@ -67,6 +72,9 @@ export function useTemplateForm(
 	const remove = () => call(() => axios.delete(`/templates/${t?.id}/delete`));
 
 	return {
+		spaces,
+		current,
+		target,
 		name,
 		category,
 		estimated,

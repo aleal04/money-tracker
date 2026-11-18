@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { useLineForm } from "@/Composables/Period/useLineForm";
+import { canSendToSpace, targetOptions } from "@/Composables/Period/lineKind";
+import { useSpace } from "@/Composables/shared/useSpace";
 import type { Category, Line } from "@/Types/Pages/Period/Period";
 
 const props = defineProps<{ periodId: number; category: Category; line?: Line }>();
 const emit = defineEmits<{ saved: []; cancel: [] }>();
-const { name, estimated, actual, paid, confirmingDelete, errors, busy, submit, remove } = useLineForm(props, () => emit("saved"));
+const { spaces } = useSpace();
+const { current, target, name, estimated, actual, paid, confirmingDelete, errors, busy, submit, remove } = useLineForm(props, () => emit("saved"));
 </script>
 
 <template>
@@ -20,6 +23,13 @@ const { name, estimated, actual, paid, confirmingDelete, errors, busy, submit, r
 		<label class="field">Real (opcional)
 			<input v-model="actual" inputmode="decimal" class="input" />
 			<span v-if="errors.actual" role="alert" class="err">{{ errors.actual }}</span>
+		</label>
+		<label v-if="canSendToSpace(category, line) && targetOptions(spaces, current?.id).length" class="field">Enviar a espacio
+			<select v-model="target" class="input">
+				<option value="">Ninguno</option>
+				<option v-for="s in targetOptions(spaces, current?.id)" :key="s.id" :value="s.id">{{ s.name }}</option>
+			</select>
+			<span v-if="errors.targetSpaceId" role="alert" class="err">{{ errors.targetSpaceId }}</span>
 		</label>
 		<label v-if="!line" class="line-form__paid">
 			<input v-model="paid" type="checkbox" /> Pagado

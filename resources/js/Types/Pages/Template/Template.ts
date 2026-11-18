@@ -11,6 +11,7 @@ export interface Template {
 	estimated: number;
 	frequency: Frequency;
 	dayOfMonth: number | null;
+	targetSpaceId: number | null;
 	active: boolean;
 }
 
@@ -21,4 +22,5 @@ export interface TemplateBody {
 	estimated: string;
 	frequency: Frequency;
 	dayOfMonth: number | null;
+	targetSpaceId: number | null;
 }

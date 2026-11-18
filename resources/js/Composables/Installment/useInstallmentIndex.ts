@@ -24,7 +24,7 @@ export const porPeriodoLabel = (
 ): string => (t.porPeriodo ?? t.porQuincena).map(fmt).join(" / ");
 
 export function useInstallmentIndex() {
-	const { selectedId, current, spaceParams } = useSpace();
+	const { selectedId, current, spaceParams, ensureSpaces } = useSpace();
 	const cards = ref<CardView[]>([]);
 	const error = ref("");
 	/** "new-<cardId>" while adding an installment, "<installmentId>" while editing one. */
@@ -45,8 +45,11 @@ export function useInstallmentIndex() {
 			error.value = errorMessage(e);
 		}
 	}
-	load();
-	watch(selectedId, load);
+	// Wait for the space list so a stale stored id never reaches the API.
+	ensureSpaces().then(() => {
+		load();
+		watch(selectedId, load);
+	});
 
 	/** After a save or delete: close the form and reload. */
 	async function saved() {

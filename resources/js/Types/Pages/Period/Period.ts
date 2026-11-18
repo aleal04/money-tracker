@@ -4,7 +4,12 @@ export type Category =
 	| "gasto"
 	| "ahorro"
 	| "deuda_fija";
-export type LineSource = "manual" | "template" | "installments" | "carried";
+export type LineSource =
+	| "manual"
+	| "template"
+	| "installments"
+	| "carried"
+	| "transfer";
 
 /** Money is integer cents. */
 export interface Line {
@@ -77,4 +82,5 @@ export interface LineBody {
 	estimated: string;
 	actual: string | null;
 	paid?: boolean;
+	targetSpaceId?: number | null;
 }

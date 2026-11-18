@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import axios from "axios";
 import { onMounted, ref } from "vue";
+import { lineKind } from "@/Composables/Period/lineKind";
 import { formatCRC } from "@/Composables/shared/format";
 import { errorMessage } from "@/Composables/shared/http";
 import type { Line } from "@/Types/Pages/Period/Period";
@@ -23,7 +24,7 @@ onMounted(async () => {
 	<ul class="arrastre-detail">
 		<li v-if="error" class="err">{{ error }}</li>
 		<li v-for="l in lines" :key="l.id">
-			<details v-if="l.source === 'carried'" @toggle="opened[l.id] = ($event.target as HTMLDetailsElement).open">
+			<details v-if="lineKind(l) === 'arrastre'" @toggle="opened[l.id] = ($event.target as HTMLDetailsElement).open">
 				<summary class="arrastre-detail__summary">{{ l.name }} · <span class="num">{{ formatCRC(l.actual ?? l.estimated) }}</span></summary>
 				<ArrastreDetail v-if="opened[l.id]" :line-id="l.id" />
 			</details>

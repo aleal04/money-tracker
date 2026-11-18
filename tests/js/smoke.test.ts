@@ -15,9 +15,11 @@ vi.mock("@inertiajs/vue3", () => ({
 
 describe("Dashboard/Index", () => {
 	it("shows the welcome steps on an empty database", async () => {
-		vi.spyOn(axios, "get").mockResolvedValue({
-			data: { current: null, cards: [], templateCount: 0 },
-		});
+		vi.spyOn(axios, "get").mockImplementation(async (url: string) => ({
+			data: url.includes("spaces")
+				? []
+				: { current: null, cards: [], templateCount: 0 },
+		}));
 		const wrapper = mount(Index, {
 			global: { stubs: { Head: true, Link: true } },
 		});

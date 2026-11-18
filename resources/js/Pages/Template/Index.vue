@@ -3,8 +3,11 @@ import { Head } from "@inertiajs/vue3";
 import TemplateForm from "@/Components/Pages/Template/TemplateForm.vue";
 import Icon from "@/Components/UI/Icon.vue";
 import { freqLabel, useTemplateIndex } from "@/Composables/Template/useTemplateIndex";
+import { useSpace } from "@/Composables/shared/useSpace";
+import { spaceName } from "@/Composables/Period/lineKind";
 import { formatCRC } from "@/Composables/shared/format";
 
+const { spaces } = useSpace();
 const { error, editing, groups, saved, toggle } = useTemplateIndex();
 </script>
 
@@ -30,7 +33,7 @@ const { error, editing, groups, saved, toggle } = useTemplateIndex();
 					<div class="template-index__row">
 						<div class="template-index__main" :class="{ 'template-index__off': !t.active }">
 							<span class="template-index__name">{{ t.name }}</span>
-							<span class="template-index__freq">{{ freqLabel(t) }}</span>
+							<span class="template-index__freq">{{ freqLabel(t) }}<template v-if="t.targetSpaceId !== null"> · → {{ spaceName(spaces, t.targetSpaceId) }}</template></span>
 						</div>
 						<span class="num" :class="{ 'template-index__off': !t.active }">{{ formatCRC(t.estimated) }}</span>
 						<label class="template-index__active">

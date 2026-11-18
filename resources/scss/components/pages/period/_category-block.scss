@@ -114,6 +114,11 @@
 		font-size: 12px;
 	}
 
+	&__transfer {
+		background: var(--teal-soft);
+		color: var(--teal);
+	}
+
 	&__auto {
 		background: var(--teal-soft);
 		color: var(--teal);

@@ -23,7 +23,7 @@ export const groupByCategory = (templates: Template[]) =>
 	})).filter((g) => g.items.length);
 
 export function useTemplateIndex() {
-	const { selectedId, spaceParams } = useSpace();
+	const { selectedId, spaceParams, ensureSpaces } = useSpace();
 	const templates = ref<Template[]>([]);
 	const error = ref("");
 	const editing = ref<number | "new" | null>(null);
@@ -40,8 +40,11 @@ export function useTemplateIndex() {
 			error.value = errorMessage(e);
 		}
 	}
-	load();
-	watch(selectedId, load);
+	// Wait for the space list so a stale stored id never reaches the API.
+	ensureSpaces().then(() => {
+		load();
+		watch(selectedId, load);
+	});
 
 	/** After a save or delete: close the form and reload. */
 	async function saved() {

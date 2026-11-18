@@ -1,7 +1,9 @@
 import axios from "axios";
 import { ref } from "vue";
+import { useSpace } from "@/Composables/shared/useSpace";
 import { fieldErrors } from "@/Composables/shared/http";
 import { plainAmount } from "@/Composables/shared/format";
+import { canSendToSpace } from "@/Composables/Period/lineKind";
 import type { Category, Line } from "@/Types/Pages/Period/Period";
 
 export function useLineForm(
@@ -13,6 +15,8 @@ export function useLineForm(
 	const actual = ref(
 		props.line?.actual != null ? plainAmount(props.line.actual) : "",
 	);
+	const { current } = useSpace();
+	const target = ref(props.line?.targetSpaceId ?? "");
 	const paid = ref(false); // create only; editing uses the row toggle
 	const confirmingDelete = ref(false);
 	const errors = ref<Record<string, string>>({});
@@ -38,6 +42,10 @@ export function useLineForm(
 				name: name.value,
 				estimated: estimated.value,
 				actual: actual.value.trim() ? actual.value : null,
+				// Only sent where the select is shown; "" clears the target.
+				...(canSendToSpace(props.category, props.line)
+					? { targetSpaceId: target.value === "" ? null : Number(target.value) }
+					: {}),
 			};
 			return props.line
 				? axios.put(`/lines/${props.line.id}/update`, body)
@@ -51,6 +59,8 @@ export function useLineForm(
 		call(() => axios.delete(`/lines/${props.line?.id}/delete`));
 
 	return {
+		current,
+		target,
 		name,
 		estimated,
 		actual,

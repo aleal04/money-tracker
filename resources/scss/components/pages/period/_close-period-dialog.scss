@@ -51,6 +51,12 @@
 			color: var(--muted);
 		}
 
+		&--group {
+			margin-top: 4px;
+			color: var(--teal);
+			font-weight: 600;
+		}
+
 		&--total {
 			border: 0;
 			font-weight: 600;

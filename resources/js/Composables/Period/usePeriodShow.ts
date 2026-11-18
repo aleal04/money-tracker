@@ -21,7 +21,7 @@ export const defaultTab = (lines: Line[]): Category =>
 
 /** Paying is allowed in a closed period; un-paying there would leave an unpaid line that is never carried. */
 export const canToggle = (l: Line, closed: boolean, busy: boolean): boolean =>
-	!(l.carried || busy || (closed && l.paid));
+	!(l.carried || l.source === "transfer" || busy || (closed && l.paid));
 
 export function usePeriodShow(periodId: Ref<number>) {
 	const { current, adoptSpace } = useSpace();
