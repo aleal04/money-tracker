@@ -69,4 +69,15 @@ class MoneyHelperTest extends TestCase
         $this->assertSame('-0.05', MoneyHelper::fromCents(MoneyHelper::toCents('-0.05')));
         $this->assertNull(MoneyHelper::parseAmount('-5'));
     }
+
+    /**
+     * Split across parts sums back and gives the remainder to the first parts.
+     */
+    public function test_split_across(): void
+    {
+        $parts = array_map(fn (int $i) => MoneyHelper::splitAcross(100001, 4, $i), [0, 1, 2, 3]);
+        $this->assertSame([25001, 25000, 25000, 25000], $parts);
+        $this->assertSame(100001, array_sum($parts));
+        $this->assertSame([1168, 1167], [MoneyHelper::splitAcross(2335, 2, 0), MoneyHelper::splitAcross(2335, 2, 1)]);
+    }
 }

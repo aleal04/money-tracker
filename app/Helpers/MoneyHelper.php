@@ -84,4 +84,12 @@ final class MoneyHelper
     {
         return $half === 1 ? $cents - ($cents >> 1) : $cents >> 1;
     }
+
+    /**
+     * Split cents into equal parts; the remainder cents go one each to the first parts (index is 0-based).
+     */
+    public static function splitAcross(int $cents, int $parts, int $index): int
+    {
+        return intdiv($cents, $parts) + ($index < $cents % $parts ? 1 : 0);
+    }
 }

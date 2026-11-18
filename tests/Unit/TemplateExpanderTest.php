@@ -57,4 +57,24 @@ class TemplateExpanderTest extends TestCase
     {
         $this->assertSame([], E::expand([$this->t(['active' => false])], 1));
     }
+
+    /**
+     * Flexible period expansion: repartido split and mensual_dia clamping.
+     */
+    public function test_expand_for_period(): void
+    {
+        $p = ['start' => '2026-11-16', 'end' => '2026-11-30', 'indexInMonth' => 1, 'partsInMonth' => 4];
+        $rep = $this->t(['frequency' => 'mensual_repartido', 'estimated' => 100001]);
+        $this->assertSame(25000, E::expandForPeriod([$rep], $p)[0]['estimated']);
+        $this->assertSame(25001, E::expandForPeriod([$rep], ['indexInMonth' => 0] + $p)[0]['estimated']);
+        $this->assertCount(1, E::expandForPeriod([$this->t(['frequency' => 'cada_periodo'])], $p));
+        $dia = fn (int $d) => $this->t(['frequency' => 'mensual_dia', 'dayOfMonth' => $d]);
+        $this->assertCount(1, E::expandForPeriod([$dia(16)], $p));
+        $this->assertSame([], E::expandForPeriod([$dia(15)], $p));
+        $this->assertCount(1, E::expandForPeriod([$dia(31)], $p));
+        $this->assertCount(1, E::expandForPeriod([$dia(31)], ['start' => '2026-11-24', 'end' => '2026-11-30'] + $p));
+        $this->assertSame([], E::expandForPeriod([$dia(31)], ['start' => '2026-11-01', 'end' => '2026-11-15'] + $p));
+        $this->assertCount(1, E::expandForPeriod([$dia(2)], ['start' => '2026-10-29', 'end' => '2026-11-04'] + $p));
+        $this->assertSame([], E::expandForPeriod([['active' => false] + $dia(16)], $p));
+    }
 }

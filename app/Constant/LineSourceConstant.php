@@ -11,4 +11,6 @@ final class LineSourceConstant
     public const CARRIED = 'carried';
 
     public const INSTALLMENTS = 'installments';
+
+    public const TRANSFER = 'transfer';
 }
