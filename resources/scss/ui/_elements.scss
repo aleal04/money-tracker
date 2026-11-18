@@ -63,6 +63,15 @@
 	}
 }
 
+.btn-danger-solid {
+	background: var(--danger);
+	color: #fff;
+
+	&:hover:not(:disabled) {
+		filter: brightness(0.95);
+	}
+}
+
 .icon-btn {
 	display: inline-flex;
 	align-items: center;

@@ -21,19 +21,16 @@ export const NAV_LINKS: NavLink[] = [
 		href: "/periods",
 		label: "Quincenas",
 		icon: "periods",
-		prefixes: ["/periods"],
 	},
 	{
 		href: "/installments",
 		label: "Cuotas",
 		icon: "installments",
-		prefixes: ["/installments"],
 	},
 	{
 		href: "/templates",
 		label: "Plantillas",
 		icon: "templates",
-		prefixes: ["/templates"],
 	},
 ];
 

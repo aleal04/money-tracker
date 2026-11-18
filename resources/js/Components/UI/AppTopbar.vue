@@ -14,7 +14,6 @@ const dark = computed(() => theme.value === "dark");
 			class="icon-btn"
 			:aria-label="dark ? 'Usar modo claro' : 'Usar modo oscuro'"
 			:title="dark ? 'Modo claro' : 'Modo oscuro'"
-			:aria-pressed="dark"
 			@click="toggleTheme"
 		>
 			<Icon :name="dark ? 'theme' : 'moon'" />
