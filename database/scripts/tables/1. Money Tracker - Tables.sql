@@ -12,6 +12,9 @@ USE money_tracker;
  * Cada bloque valida si el objeto ya existe, por lo que el archivo se puede ejecutar mas
  * de una vez. Dentro del archivo las tablas van en orden de llaves foraneas:
  * Card, Template, Period, Line, Installment.
+ * Las llaves unicas (UQ_) van dentro de cada CREATE TABLE IF NOT EXISTS, sin SQL dinamico
+ * (SET @/PREPARE/EXECUTE), para que el archivo corra igual en la terminal y en clientes
+ * graficos (extensiones de VS Code, DBeaver, Workbench).
  *
  * Convenciones (las del proyecto ssi): tablas y columnas en PascalCase, llave primaria
  * Id<Tabla>, llaves foraneas Fk<Referencia>, restricciones PK_/FK_/UQ_/IX_. Use siempre el
@@ -43,7 +46,8 @@ CREATE TABLE IF NOT EXISTS `Card` (
     UpdatedAt  DATETIME        NULL,
     DeletedAt  DATETIME        NULL,
     ActiveName VARCHAR(255)    GENERATED ALWAYS AS (CASE WHEN IsDeleted = 0 THEN Name ELSE NULL END) VIRTUAL,
-    CONSTRAINT PK_Card_IdCard PRIMARY KEY (IdCard)
+    CONSTRAINT PK_Card_IdCard PRIMARY KEY (IdCard),
+    CONSTRAINT UQ_Card_ActiveName UNIQUE (ActiveName)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 
@@ -91,7 +95,8 @@ CREATE TABLE IF NOT EXISTS `Period` (
     CreatedAt DATETIME          NULL DEFAULT CURRENT_TIMESTAMP,
     UpdatedAt DATETIME          NULL,
     DeletedAt DATETIME          NULL,
-    CONSTRAINT PK_Period_IdPeriod PRIMARY KEY (IdPeriod)
+    CONSTRAINT PK_Period_IdPeriod PRIMARY KEY (IdPeriod),
+    CONSTRAINT UQ_Period_Year_Month_Half UNIQUE (Year, Month, Half)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 
@@ -130,6 +135,7 @@ CREATE TABLE IF NOT EXISTS `Line` (
     DeletedAt       DATETIME        NULL,
     CuotasCardKey   BIGINT UNSIGNED GENERATED ALWAYS AS (CASE WHEN Source = 'installments' AND IsDeleted = 0 THEN FkCard ELSE NULL END) VIRTUAL,
     CONSTRAINT PK_Line_IdLine PRIMARY KEY (IdLine),
+    CONSTRAINT UQ_Line_FkPeriod_CuotasCardKey UNIQUE (FkPeriod, CuotasCardKey),
     CONSTRAINT FK_Line_Period FOREIGN KEY (FkPeriod) REFERENCES `Period` (IdPeriod) ON DELETE CASCADE,
     CONSTRAINT FK_Line_Template FOREIGN KEY (FkTemplate) REFERENCES `Template` (IdTemplate) ON DELETE SET NULL,
     CONSTRAINT FK_Line_Card FOREIGN KEY (FkCard) REFERENCES `Card` (IdCard) ON DELETE SET NULL,
