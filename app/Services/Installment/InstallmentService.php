@@ -3,6 +3,7 @@
 namespace App\Services\Installment;
 
 use App\Helpers\MoneyHelper;
+use App\Helpers\PeriodScheduleHelper;
 use App\Models\Installment\CardModel;
 use App\DTOs\Installment\CardStoreDto;
 use App\Services\Period\CuotasSyncService;
@@ -13,6 +14,7 @@ use App\DTOs\Installment\InstallmentUpdateDto;
 use App\Repositories\Space\SpaceQueryRepository;
 use App\Repositories\Installment\InstallmentRepository;
 use App\Repositories\Installment\InstallmentQueryRepository;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use App\Contracts\Services\Installment\InstallmentServiceContract;
 
 class InstallmentService implements InstallmentServiceContract
@@ -33,18 +35,24 @@ class InstallmentService implements InstallmentServiceContract
     ) {}
 
     /**
-     * The cards with their installments and totals (terminadas excluded from the totals).
+     * The cards of a space (primary when none is given) with their installments and totals (terminadas excluded from the
+     * totals). porPeriodo splits the monthly cuota across the periods of the space that start in the current month;
+     * porQuincena keeps the same amounts under its old name.
      *
-     * @return array<int, array<string, mixed>> The card views.
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
+     * @return array<int, array<string, mixed>> The card views; a missing space is a 404.
      */
-    public function cardList(): array
+    public function cardList(?int $spaceId = null): array
     {
-        $installments = $this->installmentQueryRepository->listInstallments()->groupBy('FkCard');
+        $space = $this->spaceQueryRepository->resolve($spaceId) ?? throw new NotFoundHttpException('No se encontró el espacio.');
+        $parts = PeriodScheduleHelper::periodsStartingInMonth($space->Frequency, $space->CustomDays, now()->startOfMonth()->toDateString());
+        $installments = $this->installmentQueryRepository->listInstallments($space->IdSpace)->groupBy('FkCard');
 
-        return $this->installmentQueryRepository->listCards()->map(function (CardModel $card) use ($installments): array {
+        return $this->installmentQueryRepository->listCards($space->IdSpace)->map(function (CardModel $card) use ($installments, $parts): array {
             $views = ($installments[$card->IdCard] ?? collect())->map(fn (InstallmentModel $i) => $this->toView($i));
             $live = $views->where('status', '!=', InstallmentStatusConstant::TERMINADA);
             $monthly = (int) $live->sum('cuota');
+            $porPeriodo = array_map(fn (int $index) => MoneyHelper::splitAcross($monthly, $parts, $index), range(0, $parts - 1));
 
             return [
                 'id' => $card->IdCard,
@@ -53,7 +61,8 @@ class InstallmentService implements InstallmentServiceContract
                 'totals' => [
                     'cuotaMensual' => $monthly,
                     'saldoFaltante' => (int) $live->sum(fn (array $v) => $v['saldo']['value']),
-                    'porQuincena' => [MoneyHelper::splitMonthly($monthly, 1), MoneyHelper::splitMonthly($monthly, 2)],
+                    'porQuincena' => $porPeriodo,
+                    'porPeriodo' => $porPeriodo,
                 ],
             ];
         })->all();

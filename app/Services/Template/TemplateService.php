@@ -11,6 +11,7 @@ use App\Repositories\Space\SpaceQueryRepository;
 use App\Repositories\Template\TemplateRepository;
 use App\Repositories\Template\TemplateQueryRepository;
 use App\Contracts\Services\Template\TemplateServiceContract;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class TemplateService implements TemplateServiceContract
 {
@@ -28,13 +29,16 @@ class TemplateService implements TemplateServiceContract
     ) {}
 
     /**
-     * Every template in creation order.
+     * The templates of a space (primary when none is given) in creation order.
      *
-     * @return array<int, array<string, mixed>> The template views.
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
+     * @return array<int, array<string, mixed>> The template views; a missing space is a 404.
      */
-    public function templateList(): array
+    public function templateList(?int $spaceId = null): array
     {
-        return $this->templateQueryRepository->listTemplates()->map(fn (TemplateModel $template) => $this->toView($template))->all();
+        $space = $this->spaceQueryRepository->resolve($spaceId) ?? throw new NotFoundHttpException('No se encontró el espacio.');
+
+        return $this->templateQueryRepository->listTemplates($space->IdSpace)->map(fn (TemplateModel $template) => $this->toView($template))->all();
     }
 
     /**

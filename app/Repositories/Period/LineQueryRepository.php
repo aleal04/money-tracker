@@ -3,7 +3,10 @@
 namespace App\Repositories\Period;
 
 use App\Models\Period\LineModel;
+use App\Constant\GeneralConstant;
+use App\Constant\CategoryConstant;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use App\Constant\LineSourceConstant;
 use App\Repositories\BaseQueryRepository;
 
@@ -60,5 +63,28 @@ class LineQueryRepository extends BaseQueryRepository
         return LineModel::query()
             ->where(['FkPeriod' => $periodId, 'FkCard' => $cardId, 'Source' => LineSourceConstant::INSTALLMENTS])
             ->first();
+    }
+
+    /**
+     * Ingreso and egreso in cents (actual, else estimated; carried lines left out) of every live period of a space that
+     * starts on or before a date, in a single grouped query.
+     *
+     * @param  int  $spaceId  The space identifier.
+     * @param  string  $startDate  The last start date to include 'Y-m-d'.
+     * @return Collection<int, object{ingreso:int,egreso:int}> The totals keyed by period id (periods without lines are absent).
+     */
+    public function totalsBySpaceUpTo(int $spaceId, string $startDate): Collection
+    {
+        $value = 'ROUND(COALESCE(`Line`.`Actual`, `Line`.`Estimated`) * 100)';
+
+        return DB::table('Line')
+            ->join('Period', 'Period.IdPeriod', '=', 'Line.FkPeriod')
+            ->where('Period.FkSpace', $spaceId)->where('Period.IsDeleted', GeneralConstant::NOT_DELETED)->where('Period.StartDate', '<=', $startDate)
+            ->where('Line.IsDeleted', GeneralConstant::NOT_DELETED)->whereNull('Line.FkCarriedToLine')
+            ->groupBy('Line.FkPeriod')
+            ->selectRaw('`Line`.`FkPeriod` AS `FkPeriod`, SUM(CASE WHEN `Line`.`Category` = ? THEN '.$value.' ELSE 0 END) AS `Ingreso`, SUM(CASE WHEN `Line`.`Category` <> ? THEN '.$value.' ELSE 0 END) AS `Egreso`', [CategoryConstant::INGRESO, CategoryConstant::INGRESO])
+            ->get()
+            ->keyBy('FkPeriod')
+            ->map(fn (object $row) => (object) ['ingreso' => (int) round((float) $row->Ingreso), 'egreso' => (int) round((float) $row->Egreso)]);
     }
 }

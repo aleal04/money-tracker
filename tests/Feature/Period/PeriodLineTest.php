@@ -95,7 +95,9 @@ class PeriodLineTest extends PeriodTestCase
         }
 
         $this->getJson("/periods/{$p['id']}/data")->assertJsonPath('summary.ingreso', 55763200)->assertJsonPath('summary.egreso', 49309600)
-            ->assertJsonPath('summary.disponible', 6453600)->assertJsonPath('summary.faltaPorPagar', 3090000);
+            ->assertJsonPath('summary.disponible', 6453600)->assertJsonPath('summary.faltaPorPagar', 3090000)
+            ->assertJsonPath('summary.saldoAnterior', 0)->assertJsonPath('summary.restante', 6453600)
+            ->assertJsonPath('summary.entro', 55763200)->assertJsonPath('summary.gastado', 49309600);
     }
 
     /**

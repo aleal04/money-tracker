@@ -19,7 +19,10 @@ class DashboardTest extends PeriodTestCase
      */
     public function test_data_when_empty(): void
     {
-        $this->getJson('/dashboard/data')->assertOk()->assertExactJson(['current' => null, 'cards' => [], 'templateCount' => 0]);
+        $this->getJson('/dashboard/data')->assertOk()->assertExactJson([
+            'current' => null, 'cards' => [], 'templateCount' => 0,
+            'spaces' => [['id' => $this->primarySpaceId(), 'name' => 'Salario', 'frequency' => 'biweekly', 'isPrimary' => true, 'current' => null]],
+        ]);
     }
 
     /**
@@ -39,5 +42,25 @@ class DashboardTest extends PeriodTestCase
             ->assertJsonStructure(['current' => ['lines', 'summary'], 'cards' => [['id', 'name', 'installments', 'totals' => ['cuotaMensual', 'saldoFaltante', 'porQuincena']]]])
             ->assertJsonPath('templateCount', 3)
             ->assertJsonCount(1, 'cards');
+    }
+
+    /**
+     * The spaces payload carries each space's latest period with its live remaining balance; ?space= scopes cards and templates.
+     */
+    public function test_spaces_payload_and_space_param(): void
+    {
+        $this->seedReloj();
+        $savings = $this->postJson('/spaces/store', ['name' => 'Ahorros', 'frequency' => 'monthly', 'initialBalance' => '100'])->assertCreated()->json('space');
+        $period = $this->makePeriod($this->dates(11, 1));
+        $this->postJson("/periods/{$period['id']}/lines/store", ['category' => 'ingreso', 'name' => 'Pago', 'estimated' => '1.000'])->assertCreated();
+        $savingsPeriod = $this->postJson('/periods/store', ['spaceId' => $savings['id'], 'startDate' => '2026-11-01', 'endDate' => '2026-11-30'])->assertCreated()->json('period');
+
+        $spaces = $this->getJson('/dashboard/data')->assertOk()->assertJsonCount(1, 'cards')->json('spaces');
+        $this->assertSame(['periodId' => $period['id'], 'label' => 'I Quincena Noviembre 2026', 'restante' => 100000 - 552131], $spaces[0]['current']);
+        $this->assertSame(['periodId' => $savingsPeriod['id'], 'label' => 'Noviembre 2026', 'restante' => 10000], $spaces[1]['current']);
+        $this->assertSame([true, false], array_column($spaces, 'isPrimary'));
+
+        $this->getJson("/dashboard/data?space={$savings['id']}")->assertOk()->assertJsonCount(0, 'cards')->assertJsonPath('current.period.id', $savingsPeriod['id']);
+        $this->getJson('/dashboard/data?space=9999')->assertNotFound();
     }
 }

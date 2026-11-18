@@ -3,6 +3,7 @@
 namespace App\Contracts\Controllers\Installment;
 
 use Inertia\Response;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\Installment\StoreCardFormRequest;
 use App\Http\Requests\Installment\StoreInstallmentFormRequest;
@@ -18,11 +19,12 @@ interface InstallmentControllerContract
     public function index(): Response;
 
     /**
-     * The cards with their installments and totals as JSON.
+     * The cards of the space (`?space=`, primary by default) with their installments and totals as JSON.
      *
+     * @param  Request  $request  The request with the optional space.
      * @return JsonResponse The card views.
      */
-    public function cardList(): JsonResponse;
+    public function cardList(Request $request): JsonResponse;
 
     /**
      * Store a card.

@@ -9,11 +9,12 @@ use App\DTOs\Installment\InstallmentUpdateDto;
 interface InstallmentServiceContract
 {
     /**
-     * The cards with their installments and totals (terminadas excluded from the totals).
+     * The cards of a space (primary when none is given) with their installments and totals (terminadas excluded from the totals).
      *
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
      * @return array<int, array<string, mixed>> The card views.
      */
-    public function cardList(): array;
+    public function cardList(?int $spaceId = null): array;
 
     /**
      * Store a card.

@@ -8,11 +8,12 @@ use App\DTOs\Template\TemplateUpdateDto;
 interface TemplateServiceContract
 {
     /**
-     * Every template in creation order.
+     * The templates of a space (primary when none is given) in creation order.
      *
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
      * @return array<int, array<string, mixed>> The template views.
      */
-    public function templateList(): array;
+    public function templateList(?int $spaceId = null): array;
 
     /**
      * Store a template.

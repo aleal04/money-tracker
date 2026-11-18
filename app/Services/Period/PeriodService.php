@@ -3,11 +3,13 @@
 namespace App\Services\Period;
 
 use Closure;
+use Illuminate\Support\Arr;
 use App\Helpers\MoneyHelper;
 use App\Helpers\PeriodKeyHelper;
 use App\Models\Period\LineModel;
 use App\Models\Space\SpaceModel;
 use App\Models\Period\PeriodModel;
+use Illuminate\Support\Collection;
 use App\DTOs\Period\PeriodStoreDto;
 use App\Constant\LineSourceConstant;
 use App\DTOs\Period\PeriodUpdateDto;
@@ -243,13 +245,48 @@ class PeriodService implements PeriodServiceContract
         $ids = $this->periodQueryRepository->listChronological($period->FkSpace)->pluck('IdPeriod')->values();
         $index = $ids->search($periodId);
         $lines = $this->lineQueryRepository->listByPeriod($periodId)->map(fn (LineModel $line) => $line->toView())->all();
+        $summary = PeriodSummaryCalculator::summarize($lines);
+        $balance = $this->balanceOf($period, $ids->slice(0, $index + 1));
 
         return [
             'period' => $period->toView(),
             'prevId' => $ids[$index - 1] ?? null,
             'nextId' => $ids[$index + 1] ?? null,
             'lines' => $lines,
-            'summary' => PeriodSummaryCalculator::summarize($lines),
+            'summary' => $summary + ['saldoAnterior' => $balance['saldoAnterior'], 'restante' => $balance['restante'], 'entro' => $summary['ingreso'], 'gastado' => $summary['egreso']],
         ];
+    }
+
+    /**
+     * The latest period of a space with its live remaining balance, for the home summary.
+     *
+     * @param  int  $spaceId  The space identifier.
+     * @return array{periodId:int,label:string,restante:int}|null The current period, or null when the space has none.
+     */
+    public function currentOf(int $spaceId): ?array
+    {
+        $period = $this->periodQueryRepository->latest($spaceId);
+        if ($period === null) {
+            return null;
+        }
+        $ids = $this->periodQueryRepository->listChronological($spaceId)->pluck('IdPeriod')->values();
+
+        return ['periodId' => $period->IdPeriod, 'label' => $period->label(), 'restante' => $this->balanceOf($period, $ids)['restante']];
+    }
+
+    /**
+     * Saldo anterior and restante of a period: the chain over the periods of its space up to it, live (open periods
+     * count, carried lines do not), with a single grouped lines query.
+     *
+     * @param  PeriodModel  $period  The period.
+     * @param  Collection<int, int>  $ids  The ids of the space's periods by start date, ending with this one.
+     * @return array{saldoAnterior:int,restante:int} The balance in cents.
+     */
+    private function balanceOf(PeriodModel $period, Collection $ids): array
+    {
+        $totals = $this->lineQueryRepository->totalsBySpaceUpTo($period->FkSpace, $period->StartDate);
+        $summaries = $ids->map(fn (int $id) => $totals[$id] ?? (object) ['ingreso' => 0, 'egreso' => 0]);
+
+        return Arr::last(BalanceCalculator::chain(MoneyHelper::requireCents($period->space->InitialBalance), $summaries));
     }
 }

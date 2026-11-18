@@ -9,5 +9,6 @@ Route::get('/dashboard/data', [DashboardController::class, 'data'])->name('dashb
 require __DIR__.'/periods.php';
 require __DIR__.'/installments.php';
 require __DIR__.'/templates.php';
+require __DIR__.'/spaces.php';
 
 Route::fallback(fn () => abort(404));

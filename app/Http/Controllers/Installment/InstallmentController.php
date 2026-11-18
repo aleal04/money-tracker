@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Installment;
 
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\DTOs\Installment\CardStoreDto;
@@ -35,13 +36,14 @@ class InstallmentController extends Controller implements InstallmentControllerC
     }
 
     /**
-     * The cards with their installments and totals as JSON.
+     * The cards of the space (`?space=`, primary by default) with their installments and totals as JSON.
      *
+     * @param  Request  $request  The request with the optional space.
      * @return JsonResponse The card views.
      */
-    public function cardList(): JsonResponse
+    public function cardList(Request $request): JsonResponse
     {
-        return response()->json($this->installmentService->cardList());
+        return response()->json($this->installmentService->cardList($this->spaceIdInput($request, 'space')));
     }
 
     /**

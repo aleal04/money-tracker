@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Template;
 
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\DTOs\Template\TemplateStoreDto;
@@ -33,13 +34,14 @@ class TemplateController extends Controller implements TemplateControllerContrac
     }
 
     /**
-     * The templates as JSON.
+     * The templates of the space (`?space=`, primary by default) as JSON.
      *
+     * @param  Request  $request  The request with the optional space.
      * @return JsonResponse The template views.
      */
-    public function templateList(): JsonResponse
+    public function templateList(Request $request): JsonResponse
     {
-        return response()->json($this->templateService->templateList());
+        return response()->json($this->templateService->templateList($this->spaceIdInput($request, 'space')));
     }
 
     /**

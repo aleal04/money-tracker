@@ -23,12 +23,13 @@ class TemplateQueryRepository extends BaseQueryRepository
     }
 
     /**
-     * Every template in creation order.
+     * The templates of a space in creation order.
      *
+     * @param  int  $spaceId  The space identifier.
      * @return Collection<int, TemplateModel> The templates.
      */
-    public function listTemplates(): Collection
+    public function listTemplates(int $spaceId): Collection
     {
-        return TemplateModel::query()->orderBy('IdTemplate')->get();
+        return TemplateModel::query()->where('FkSpace', $spaceId)->orderBy('IdTemplate')->get();
     }
 }

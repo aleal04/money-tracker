@@ -35,22 +35,24 @@ class InstallmentQueryRepository extends BaseQueryRepository
     }
 
     /**
-     * Every card in creation order.
+     * The cards of a space in creation order.
      *
+     * @param  int  $spaceId  The space identifier.
      * @return Collection<int, CardModel> The cards.
      */
-    public function listCards(): Collection
+    public function listCards(int $spaceId): Collection
     {
-        return CardModel::query()->orderBy('IdCard')->get();
+        return CardModel::query()->where('FkSpace', $spaceId)->orderBy('IdCard')->get();
     }
 
     /**
-     * Every installment in creation order.
+     * The installments of the cards of a space in creation order.
      *
+     * @param  int  $spaceId  The space identifier.
      * @return Collection<int, InstallmentModel> The installments.
      */
-    public function listInstallments(): Collection
+    public function listInstallments(int $spaceId): Collection
     {
-        return InstallmentModel::query()->orderBy('IdInstallment')->get();
+        return InstallmentModel::query()->whereIn('FkCard', CardModel::query()->where('FkSpace', $spaceId)->select('IdCard'))->orderBy('IdInstallment')->get();
     }
 }
