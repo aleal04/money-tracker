@@ -2,7 +2,9 @@
 
 namespace App\Models\Installment;
 
+use App\Helpers\MoneyHelper;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\Installment\InstallmentCalculator;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InstallmentModel extends Model
@@ -41,5 +43,44 @@ class InstallmentModel extends Model
     public function card(): BelongsTo
     {
         return $this->belongsTo(CardModel::class, 'card_id');
+    }
+
+    /**
+     * The calculators' camelCase input, with money in cents.
+     *
+     * @return array<string, mixed> The input.
+     */
+    public function toInput(): array
+    {
+        return [
+            'id' => $this->id,
+            'cardId' => $this->card_id,
+            'type' => $this->type,
+            'totalInstallments' => $this->total_installments,
+            'paidInstallments' => $this->paid_installments,
+            'lastAdvancedMonth' => $this->last_advanced_month,
+            'initialBalance' => (int) MoneyHelper::toCents($this->initial_balance),
+            'installmentAmount' => MoneyHelper::toCents($this->installment_amount),
+            'balanceOverride' => MoneyHelper::toCents($this->balance_override),
+        ];
+    }
+
+    /**
+     * The JSON view: input plus merchant, item, cancelSoon, cuota, saldo and status.
+     *
+     * @return array<string, mixed> The view.
+     */
+    public function toView(): array
+    {
+        $input = $this->toInput();
+
+        return $input + [
+            'merchant' => $this->merchant,
+            'item' => $this->item,
+            'cancelSoon' => $this->cancel_soon,
+            'cuota' => InstallmentCalculator::cuota($input),
+            'saldo' => InstallmentCalculator::saldoFaltante($input),
+            'status' => InstallmentCalculator::status($input),
+        ];
     }
 }

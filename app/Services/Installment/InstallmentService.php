@@ -1,0 +1,154 @@
+<?php
+
+namespace App\Services\Installment;
+
+use App\Helpers\MoneyHelper;
+use App\Models\Installment\CardModel;
+use App\DTOs\Installment\CardStoreDto;
+use App\Services\Period\CuotasSyncService;
+use App\Constant\InstallmentStatusConstant;
+use App\Models\Installment\InstallmentModel;
+use App\DTOs\Installment\InstallmentStoreDto;
+use App\DTOs\Installment\InstallmentUpdateDto;
+use App\Repositories\Installment\InstallmentRepository;
+use App\Repositories\Installment\InstallmentQueryRepository;
+use App\Contracts\Services\Installment\InstallmentServiceContract;
+
+class InstallmentService implements InstallmentServiceContract
+{
+    /**
+     * Create the installment service with its dependencies.
+     *
+     * @param  InstallmentRepository  $installmentRepository  The card and installment writes.
+     * @param  InstallmentQueryRepository  $installmentQueryRepository  The card and installment reads.
+     * @param  CuotasSyncService  $cuotasSyncService  The cuotas lines sync.
+     */
+    public function __construct(
+        private readonly InstallmentRepository $installmentRepository,
+        private readonly InstallmentQueryRepository $installmentQueryRepository,
+        private readonly CuotasSyncService $cuotasSyncService,
+    ) {}
+
+    /**
+     * The cards with their installments and totals (terminadas excluded from the totals).
+     *
+     * @return array<int, array<string, mixed>> The card views.
+     */
+    public function cardList(): array
+    {
+        $installments = $this->installmentQueryRepository->listInstallments()->groupBy('card_id');
+
+        return $this->installmentQueryRepository->listCards()->map(function (CardModel $card) use ($installments): array {
+            $views = ($installments[$card->id] ?? collect())->map(fn (InstallmentModel $i) => $i->toView());
+            $live = $views->where('status', '!=', InstallmentStatusConstant::TERMINADA);
+            $monthly = (int) $live->sum('cuota');
+
+            return [
+                'id' => $card->id,
+                'name' => $card->name,
+                'installments' => $views->values()->all(),
+                'totals' => [
+                    'cuotaMensual' => $monthly,
+                    'saldoFaltante' => (int) $live->sum(fn (array $v) => $v['saldo']['value']),
+                    'porQuincena' => [MoneyHelper::splitMonthly($monthly, 1), MoneyHelper::splitMonthly($monthly, 2)],
+                ],
+            ];
+        })->all();
+    }
+
+    /**
+     * Store a card.
+     *
+     * @param  CardStoreDto  $cardData  The card fields.
+     * @return object The result of the store operation.
+     */
+    public function storeCard(CardStoreDto $cardData): object
+    {
+        return $this->installmentRepository->storeCard($cardData);
+    }
+
+    /**
+     * Store an installment and sync the cuotas lines in the same transaction.
+     *
+     * @param  InstallmentStoreDto  $installmentData  The installment fields.
+     * @return object The result of the store operation.
+     */
+    public function storeInstallment(InstallmentStoreDto $installmentData): object
+    {
+        return $this->installmentRepository->transaction(function () use ($installmentData): object {
+            if ($this->installmentQueryRepository->findCard($installmentData->cardId) === null) {
+                return createValidationErrorResponse('No se encontró la tarjeta.', ['statusCode' => 404]);
+            }
+
+            $installment = $this->installmentRepository->insert($installmentData->toArray());
+            $this->cuotasSyncService->syncWithinTransaction();
+
+            return createValidationSuccessResponse('Cuota creada correctamente.', ['installment' => $installment->fresh()->toView()]);
+        }, 'No se pudo crear la cuota.');
+    }
+
+    /**
+     * Update an installment and sync the cuotas lines in the same transaction.
+     *
+     * @param  InstallmentUpdateDto  $installmentData  The installment identifier and changed fields.
+     * @return object The result of the update operation.
+     */
+    public function updateInstallment(InstallmentUpdateDto $installmentData): object
+    {
+        return $this->installmentRepository->transaction(function () use ($installmentData): object {
+            $installment = $this->installmentQueryRepository->findInstallment($installmentData->installmentId, true);
+            if ($installment === null) {
+                return createValidationErrorResponse('No se encontró la cuota.', ['statusCode' => 404]);
+            }
+            if ($installmentData->cardId !== null && $this->installmentQueryRepository->findCard($installmentData->cardId) === null) {
+                return createValidationErrorResponse('No se encontró la tarjeta.', ['statusCode' => 404]);
+            }
+
+            $installment->update($installmentData->toArray());
+            $this->cuotasSyncService->syncWithinTransaction();
+
+            return createValidationSuccessResponse('Cuota actualizada correctamente.', ['installment' => $installment->fresh()->toView()]);
+        }, 'No se pudo actualizar la cuota.');
+    }
+
+    /**
+     * Delete an installment and sync the cuotas lines in the same transaction.
+     *
+     * @param  int  $installmentId  The installment identifier.
+     * @return object The result of the delete operation.
+     */
+    public function deleteInstallment(int $installmentId): object
+    {
+        return $this->installmentRepository->transaction(function () use ($installmentId): object {
+            $installment = $this->installmentQueryRepository->findInstallment($installmentId, true);
+            if ($installment === null) {
+                return createValidationErrorResponse('No se encontró la cuota.', ['statusCode' => 404]);
+            }
+
+            $installment->delete();
+            $this->cuotasSyncService->syncWithinTransaction();
+
+            return createValidationSuccessResponse('Cuota eliminada correctamente.');
+        }, 'No se pudo eliminar la cuota.');
+    }
+
+    /**
+     * Toggle the cancel-soon flag of an installment.
+     *
+     * @param  int  $installmentId  The installment identifier.
+     * @return object The result of the toggle operation.
+     */
+    public function toggleCancelSoon(int $installmentId): object
+    {
+        return $this->installmentRepository->transaction(function () use ($installmentId): object {
+            $installment = $this->installmentQueryRepository->findInstallment($installmentId, true);
+            if ($installment === null) {
+                return createValidationErrorResponse('No se encontró la cuota.', ['statusCode' => 404]);
+            }
+
+            $installment->update(['cancel_soon' => ! $installment->cancel_soon]);
+
+            return createValidationSuccessResponse('Cuota actualizada correctamente.', ['installment' => $installment->fresh()->toView()]);
+        }, 'No se pudo actualizar la cuota.');
+    }
+}

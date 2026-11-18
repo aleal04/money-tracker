@@ -10,15 +10,19 @@ use App\Helpers\MoneyHelper;
  */
 trait ValidatesAmountTrait
 {
+    /** The largest accepted amount, in cents (999999999999.99). */
+    private const MAX_AMOUNT_CENTS = 99999999999999;
+
     /**
-     * A rule that fails with "Monto inválido" when the value is not a parseable amount.
+     * A rule that fails with "Monto inválido" when the value is not a parseable amount or exceeds 999999999999.99.
      *
      * @return Closure(string, mixed, Closure): void The closure rule.
      */
     protected function amountRule(): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail): void {
-            if (! (is_string($value) || is_int($value) || is_float($value)) || MoneyHelper::parseAmount((string) $value) === null) {
+            $cents = is_string($value) || is_int($value) || is_float($value) ? MoneyHelper::parseAmount((string) $value) : null;
+            if ($cents === null || $cents > self::MAX_AMOUNT_CENTS) {
                 $fail('Monto inválido');
             }
         };

@@ -77,17 +77,7 @@ class PeriodQueryRepository extends BaseQueryRepository
      */
     public function listInstallmentInputs(): Collection
     {
-        return InstallmentModel::query()->orderBy('id')->get()->map(fn (InstallmentModel $i) => [
-            'id' => $i->id,
-            'cardId' => $i->card_id,
-            'type' => $i->type,
-            'totalInstallments' => $i->total_installments,
-            'paidInstallments' => $i->paid_installments,
-            'lastAdvancedMonth' => $i->last_advanced_month,
-            'initialBalance' => (int) MoneyHelper::toCents($i->initial_balance),
-            'installmentAmount' => MoneyHelper::toCents($i->installment_amount),
-            'balanceOverride' => MoneyHelper::toCents($i->balance_override),
-        ]);
+        return InstallmentModel::query()->orderBy('id')->get()->map(fn (InstallmentModel $i) => $i->toInput());
     }
 
     /**
