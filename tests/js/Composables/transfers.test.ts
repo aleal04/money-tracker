@@ -92,21 +92,33 @@ describe("splitPreview", () => {
 
 describe("spaceRows", () => {
 	it("maps restante or null (sin periodos)", () => {
-		const data = {
-			1: {
-				current: { summary: { restante: -500 } },
-				cards: [],
-				templateCount: 0,
+		const rows = spaceRows([
+			{
+				id: 1,
+				name: "Salario",
+				frequency: "biweekly",
+				customDays: null,
+				isPrimary: true,
+				current: { periodId: 1, label: "x", restante: -500 },
 			},
-		} as never;
-		const rows = spaceRows(spaces, data);
+			{
+				id: 2,
+				name: "Ahorro",
+				frequency: "custom",
+				customDays: 10,
+				isPrimary: false,
+				current: null,
+			},
+		]);
 		expect(rows[0]).toMatchObject({
 			id: 1,
-			name: "Salario",
 			frequency: "Quincenal",
 			restante: -500,
 		});
-		expect(rows[1].restante).toBeNull();
+		expect(rows[1]).toMatchObject({
+			frequency: "Personalizada (10 días)",
+			restante: null,
+		});
 	});
 });
 

@@ -30,7 +30,7 @@ export const finishingLabel = (c: CardView): string =>
 		.join(", ");
 
 export function useDashboard() {
-	const { spaces, selectedId, current, spaceParams, ensureSpaces, setSpace } =
+	const { selectedId, current, spaceParams, ensureSpaces, setSpace } =
 		useSpace();
 	const data = ref<DashboardData | null>(null);
 	const error = ref("");
@@ -39,6 +39,8 @@ export function useDashboard() {
 
 	async function load() {
 		try {
+			// Drop a stale stored space id before the first request.
+			await ensureSpaces();
 			data.value = (
 				await axios.get<DashboardData>("/dashboard/data", {
 					params: spaceParams(),
@@ -49,32 +51,9 @@ export function useDashboard() {
 			error.value = errorMessage(e);
 		}
 	}
-	const overview = ref<Record<number, DashboardData | undefined>>({});
-	/** Latest period of every space for the "Tus espacios" panel (one dashboard call each). */
-	async function loadOverview() {
-		const entries = await Promise.all(
-			spaces.value.map(
-				async (s) =>
-					[
-						s.id,
-						await axios
-							.get<DashboardData>("/dashboard/data", {
-								params: { space: s.id },
-							})
-							.then((r) => r.data)
-							.catch(() => undefined),
-					] as const,
-			),
-		);
-		overview.value = Object.fromEntries(entries);
-	}
-	const rows = computed(() => spaceRows(spaces.value, overview.value));
-	// Wait for the space list first so a stale stored id is dropped before the first request.
-	ensureSpaces().then(async () => {
-		await load();
-		watch(selectedId, load);
-		loadOverview();
-	});
+	const rows = computed(() => spaceRows(data.value?.spaces ?? []));
+	watch(selectedId, load);
+	load();
 
 	const pending = computed(() =>
 		pendingLines(data.value?.current?.lines ?? []),
@@ -89,7 +68,6 @@ export function useDashboard() {
 		try {
 			await axios.post(`/lines/${l.id}/toggle-paid`);
 			await load();
-			loadOverview();
 		} catch (e) {
 			error.value = errorMessage(e);
 		} finally {

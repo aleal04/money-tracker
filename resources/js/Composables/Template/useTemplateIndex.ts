@@ -30,6 +30,8 @@ export function useTemplateIndex() {
 
 	async function load() {
 		try {
+			// Drop a stale stored space id before the first request.
+			await ensureSpaces();
 			templates.value = (
 				await axios.get<Template[]>("/templates/get-template-list", {
 					params: spaceParams(),
@@ -40,11 +42,8 @@ export function useTemplateIndex() {
 			error.value = errorMessage(e);
 		}
 	}
-	// Wait for the space list so a stale stored id never reaches the API.
-	ensureSpaces().then(() => {
-		load();
-		watch(selectedId, load);
-	});
+	watch(selectedId, load);
+	load();
 
 	/** After a save or delete: close the form and reload. */
 	async function saved() {

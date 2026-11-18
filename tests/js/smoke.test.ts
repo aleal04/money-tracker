@@ -18,7 +18,7 @@ describe("Dashboard/Index", () => {
 		vi.spyOn(axios, "get").mockImplementation(async (url: string) => ({
 			data: url.includes("spaces")
 				? []
-				: { current: null, cards: [], templateCount: 0 },
+				: { current: null, cards: [], templateCount: 0, spaces: [] },
 		}));
 		const wrapper = mount(Index, {
 			global: { stubs: { Head: true, Link: true } },

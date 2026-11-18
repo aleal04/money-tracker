@@ -43,6 +43,7 @@ class DashboardService implements DashboardServiceContract
                 'id' => $space['id'],
                 'name' => $space['name'],
                 'frequency' => $space['frequency'],
+                'customDays' => $space['customDays'],
                 'isPrimary' => $space['isPrimary'],
                 'current' => $this->periodService->currentOf($space['id']),
             ], $this->spaceService->spaceList()),

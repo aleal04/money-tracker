@@ -21,7 +21,7 @@ class DashboardTest extends PeriodTestCase
     {
         $this->getJson('/dashboard/data')->assertOk()->assertExactJson([
             'current' => null, 'cards' => [], 'templateCount' => 0,
-            'spaces' => [['id' => $this->primarySpaceId(), 'name' => 'Salario', 'frequency' => 'biweekly', 'isPrimary' => true, 'current' => null]],
+            'spaces' => [['id' => $this->primarySpaceId(), 'name' => 'Salario', 'frequency' => 'biweekly', 'customDays' => null, 'isPrimary' => true, 'current' => null]],
         ]);
     }
 

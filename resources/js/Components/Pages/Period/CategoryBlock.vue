@@ -42,7 +42,7 @@ const expanded = ref<Record<number, boolean>>({});
 							class="category-block__check"
 							:disabled="!canToggle(l, closed, busy)"
 							:aria-pressed="l.paid"
-							:aria-label="lineKind(l) === 'destination' ? readOnlyHint : `Marcar como pagado: ${l.name}`"
+							:aria-label="lineKind(l) === 'destination' ? `${l.name}: ${readOnlyHint}` : `Marcar como pagado: ${l.name}`"
 							:title="lineKind(l) === 'destination' ? readOnlyHint : undefined"
 							@click="emit('toggle', l)"
 						>
