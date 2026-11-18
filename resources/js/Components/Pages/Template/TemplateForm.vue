@@ -5,7 +5,7 @@ import type { Template } from "@/Types/Pages/Template/Template";
 
 const props = defineProps<{ template?: Template }>();
 const emit = defineEmits<{ saved: []; cancel: [] }>();
-const { name, category, estimated, freq, confirmingDelete, errors, busy, submit, remove } = useTemplateForm(props, () => emit("saved"));
+const { name, category, estimated, freq, day, confirmingDelete, errors, busy, submit, remove } = useTemplateForm(props, () => emit("saved"));
 </script>
 
 <template>
@@ -26,12 +26,15 @@ const { name, category, estimated, freq, confirmingDelete, errors, busy, submit,
 		</label>
 		<label class="field">Frecuencia
 			<select v-model="freq" class="input">
-				<option value="quincenal">Cada quincena</option>
-				<option value="mensual_dividido">Mensual ÷ 2</option>
-				<option value="mensual_en_quincena_1">Mensual en I quincena</option>
-				<option value="mensual_en_quincena_2">Mensual en II quincena</option>
+				<option value="cada_periodo">Cada periodo</option>
+				<option value="mensual_repartido">Mensual repartido</option>
+				<option value="mensual_dia">Mensual el día…</option>
 			</select>
-			<span v-if="errors.frequency || errors.half" role="alert" class="err">{{ errors.frequency ?? errors.half }}</span>
+			<span v-if="errors.frequency" role="alert" class="err">{{ errors.frequency }}</span>
+		</label>
+		<label v-if="freq === 'mensual_dia'" class="field">Día del mes
+			<input v-model="day" type="number" min="1" max="31" inputmode="numeric" class="input" />
+			<span v-if="errors.dayOfMonth" role="alert" class="err">{{ errors.dayOfMonth }}</span>
 		</label>
 		<p v-if="errors.form" role="alert" class="err form-wide">{{ errors.form }}</p>
 		<div class="form-actions form-wide">

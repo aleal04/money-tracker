@@ -24,11 +24,15 @@ export interface Line {
 	carried: boolean;
 }
 
+/** year/month/half are only set for biweekly periods on calendar halves; dates are "YYYY-MM-DD". */
 export interface Period {
 	id: number;
-	year: number;
-	month: number;
-	half: 1 | 2;
+	spaceId: number;
+	startDate: string;
+	endDate: string;
+	year: number | null;
+	month: number | null;
+	half: 1 | 2 | null;
 	closed: boolean;
 	label: string;
 }

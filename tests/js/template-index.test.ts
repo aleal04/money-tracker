@@ -12,8 +12,8 @@ describe("Template/Index", () => {
 			name: "Kolbi",
 			category: "servicio",
 			estimated: 100,
-			frequency: "quincenal",
-			half: null,
+			frequency: "cada_periodo",
+			dayOfMonth: null,
 			active: true,
 		};
 		vi.spyOn(axios, "get").mockResolvedValue({ data: [t] });

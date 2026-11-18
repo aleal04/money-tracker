@@ -14,7 +14,8 @@ import {
 	freqLabel,
 	groupByCategory,
 } from "@/Composables/Template/useTemplateIndex";
-import { fromChoice, toChoice } from "@/Composables/Template/useTemplateForm";
+import { dayFor } from "@/Composables/Template/useTemplateForm";
+import { quincenaDates } from "@/Composables/Period/periodDates";
 import { toInt } from "@/Composables/Installment/useInstallmentForm";
 import { formatCRC } from "@/Composables/shared/format";
 import type {
@@ -39,8 +40,8 @@ const line = (p: Partial<Line>) =>
 const tpl = (p: Partial<Template>) =>
 	({
 		category: "servicio",
-		frequency: "quincenal",
-		half: null,
+		frequency: "cada_periodo",
+		dayOfMonth: null,
 		...p,
 	}) as Template;
 
@@ -93,28 +94,27 @@ describe("installments", () => {
 
 describe("templates", () => {
 	it("labels frequency", () => {
-		expect(freqLabel(tpl({}))).toBe("Cada quincena");
-		expect(freqLabel(tpl({ frequency: "mensual_dividido" }))).toBe(
-			"Mensual ÷ 2",
+		expect(freqLabel(tpl({}))).toBe("Cada periodo");
+		expect(freqLabel(tpl({ frequency: "mensual_repartido" }))).toBe(
+			"Mensual repartido",
 		);
-		expect(freqLabel(tpl({ frequency: "mensual_en_quincena", half: 1 }))).toBe(
-			"Mensual en I quincena",
-		);
-		expect(freqLabel(tpl({ frequency: "mensual_en_quincena", half: 2 }))).toBe(
-			"Mensual en II quincena",
+		expect(freqLabel(tpl({ frequency: "mensual_dia", dayOfMonth: 16 }))).toBe(
+			"Mensual el día 16",
 		);
 	});
-	it("round-trips the frequency dropdown", () => {
-		expect(toChoice(tpl({ frequency: "mensual_en_quincena", half: 2 }))).toBe(
-			"mensual_en_quincena_2",
-		);
-		expect(fromChoice("mensual_en_quincena_1")).toEqual({
-			frequency: "mensual_en_quincena",
-			half: 1,
+	it("sends the day only for mensual_dia", () => {
+		expect(dayFor("mensual_dia", "16")).toBe(16);
+		expect(dayFor("mensual_dia", " ")).toBeNaN();
+		expect(dayFor("cada_periodo", "16")).toBeNull();
+	});
+	it("maps a quincena to its dates", () => {
+		expect(quincenaDates(2026, 10, 1)).toEqual({
+			startDate: "2026-10-01",
+			endDate: "2026-10-15",
 		});
-		expect(fromChoice("quincenal")).toEqual({
-			frequency: "quincenal",
-			half: null,
+		expect(quincenaDates(2028, 2, 2)).toEqual({
+			startDate: "2028-02-16",
+			endDate: "2028-02-29",
 		});
 	});
 	it("groups by category, skipping empty ones", () => {
@@ -134,8 +134,8 @@ describe("template toggle failure", () => {
 				name: "A",
 				category: "servicio",
 				estimated: 100,
-				frequency: "quincenal",
-				half: null,
+				frequency: "cada_periodo",
+				dayOfMonth: null,
 				active: true,
 			},
 		];

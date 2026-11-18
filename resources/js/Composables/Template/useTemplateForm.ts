@@ -9,23 +9,13 @@ import type {
 	TemplateBody,
 } from "@/Types/Pages/Template/Template";
 
-/** The form has one frequency dropdown: "mensual_en_quincena" is split by half ("..._1" / "..._2"). */
-export const toChoice = (t?: Pick<Template, "frequency" | "half">): string =>
-	t
-		? t.frequency === "mensual_en_quincena"
-			? `mensual_en_quincena_${t.half}`
-			: t.frequency
-		: "quincenal";
-
-export function fromChoice(choice: string): {
-	frequency: Frequency;
-	half: 1 | 2 | null;
-} {
-	const m = /^mensual_en_quincena_([12])$/.exec(choice);
-	return m
-		? { frequency: "mensual_en_quincena", half: Number(m[1]) as 1 | 2 }
-		: { frequency: choice as Frequency, half: null };
-}
+/** The day is only sent for "mensual_dia"; an empty input is NaN so the API flags the field. */
+export const dayFor = (frequency: Frequency, day: string): number | null =>
+	frequency === "mensual_dia"
+		? day.trim() === ""
+			? Number.NaN
+			: Number(day)
+		: null;
 
 export function useTemplateForm(
 	props: { template?: Template },
@@ -35,7 +25,8 @@ export function useTemplateForm(
 	const name = ref(t?.name ?? "");
 	const category = ref<Category>(t?.category ?? "servicio");
 	const estimated = ref(t ? plainAmount(t.estimated) : "");
-	const freq = ref(toChoice(t));
+	const freq = ref<Frequency>(t?.frequency ?? "cada_periodo");
+	const day = ref(t?.dayOfMonth ? String(t.dayOfMonth) : "1");
 	const confirmingDelete = ref(false);
 	const errors = ref<Record<string, string>>({});
 	const busy = ref(false);
@@ -60,7 +51,8 @@ export function useTemplateForm(
 				name: name.value,
 				category: category.value,
 				estimated: estimated.value,
-				...fromChoice(freq.value),
+				frequency: freq.value,
+				dayOfMonth: dayFor(freq.value, day.value),
 			};
 			return t
 				? axios.put(`/templates/${t.id}/update`, body)
@@ -73,6 +65,7 @@ export function useTemplateForm(
 		category,
 		estimated,
 		freq,
+		day,
 		confirmingDelete,
 		errors,
 		busy,

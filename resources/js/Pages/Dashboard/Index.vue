@@ -34,7 +34,7 @@ const { data, error, busy, creating, pending, installmentCount, pay, createNext 
 				<SummaryCards :summary="data.current.summary" />
 				<div class="dashboard-index__grid">
 					<PendingPanel :period-id="data.current.period.id" :pending="pending" :busy="busy" @pay="pay" />
-					<CardsPanel :cards="data.cards" :half="data.current.period.half" />
+					<CardsPanel :cards="data.cards" :half="data.current.period.half ?? 1" />
 				</div>
 			</template>
 		</template>

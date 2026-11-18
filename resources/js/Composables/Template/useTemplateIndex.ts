@@ -4,13 +4,15 @@ import { CATEGORIES } from "@/Constants/Pages/Period/categories";
 import { errorMessage } from "@/Composables/shared/http";
 import type { Template } from "@/Types/Pages/Template/Template";
 
-/** "Cada quincena" / "Mensual ÷ 2" / "Mensual en I|II quincena". */
-export const freqLabel = (t: Pick<Template, "frequency" | "half">): string =>
-	t.frequency === "quincenal"
-		? "Cada quincena"
-		: t.frequency === "mensual_dividido"
-			? "Mensual ÷ 2"
-			: `Mensual en ${t.half === 1 ? "I" : "II"} quincena`;
+/** "Cada periodo" / "Mensual repartido" / "Mensual el día N". */
+export const freqLabel = (
+	t: Pick<Template, "frequency" | "dayOfMonth">,
+): string =>
+	t.frequency === "cada_periodo"
+		? "Cada periodo"
+		: t.frequency === "mensual_repartido"
+			? "Mensual repartido"
+			: `Mensual el día ${t.dayOfMonth}`;
 
 /** Templates grouped by category, skipping empty categories. */
 export const groupByCategory = (templates: Template[]) =>

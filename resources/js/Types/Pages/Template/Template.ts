@@ -1,18 +1,16 @@
 import type { Category } from "@/Types/Pages/Period/Period";
 
-export type Frequency =
-	| "quincenal"
-	| "mensual_dividido"
-	| "mensual_en_quincena";
+export type Frequency = "cada_periodo" | "mensual_repartido" | "mensual_dia";
 
 /** Money is integer cents. */
 export interface Template {
 	id: number;
+	spaceId: number;
 	name: string;
 	category: Category;
 	estimated: number;
 	frequency: Frequency;
-	half: 1 | 2 | null;
+	dayOfMonth: number | null;
 	active: boolean;
 }
 
@@ -22,5 +20,5 @@ export interface TemplateBody {
 	category: Category;
 	estimated: string;
 	frequency: Frequency;
-	half: 1 | 2 | null;
+	dayOfMonth: number | null;
 }
