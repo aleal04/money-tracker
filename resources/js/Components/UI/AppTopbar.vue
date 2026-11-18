@@ -3,25 +3,26 @@ import { computed } from "vue";
 import { spaceFreqLabel } from "@/Composables/Space/useSpaceIndex";
 import { useSpace } from "@/Composables/shared/useSpace";
 import { useTheme } from "@/Composables/shared/useTheme";
+import SelectInput from "@/Components/UI/Inputs/SelectInput.vue";
 import Icon from "./Icon.vue";
 
 const { theme, toggleTheme } = useTheme();
 const { spaces, current, loadSpaces, setSpace } = useSpace();
 loadSpaces().catch(() => undefined);
+const spaceOptions = computed(() => spaces.value.map((s) => ({ label: `${s.name} · ${spaceFreqLabel(s)}`, value: s.id })));
 const dark = computed(() => theme.value === "dark");
 </script>
 
 <template>
 	<header class="app-topbar">
-		<select
+		<SelectInput
 			v-if="current"
-			class="input app-topbar__space"
-			aria-label="Espacio"
-			:value="current.id"
-			@change="setSpace(Number(($event.target as HTMLSelectElement).value))"
-		>
-			<option v-for="s in spaces" :key="s.id" :value="s.id">{{ s.name }} · {{ spaceFreqLabel(s) }}</option>
-		</select>
+			class="app-topbar__space"
+			:model-value="current.id"
+			:options="spaceOptions"
+			:input-attrs="{ 'aria-label': 'Espacio' }"
+			@update:model-value="setSpace(Number($event))"
+		/>
 		<button
 			type="button"
 			class="icon-btn"

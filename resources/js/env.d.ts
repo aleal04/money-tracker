@@ -3,3 +3,4 @@ declare module "*.vue" {
 	const component: DefineComponent<object, object, unknown>;
 	export default component;
 }
+declare module "vue3-select-component/styles";

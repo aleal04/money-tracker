@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import SelectInput from "@/Components/UI/Inputs/SelectInput.vue";
 import { useLineForm } from "@/Composables/Period/useLineForm";
 import { canSendToSpace, targetOptions } from "@/Composables/Period/lineKind";
 import { useSpace } from "@/Composables/shared/useSpace";
@@ -8,6 +10,7 @@ const props = defineProps<{ periodId: number; category: Category; line?: Line }>
 const emit = defineEmits<{ saved: []; cancel: [] }>();
 const { spaces } = useSpace();
 const { current, target, name, estimated, actual, paid, confirmingDelete, errors, busy, submit, remove } = useLineForm(props, () => emit("saved"));
+const targets = computed(() => [{ label: "Ninguno", value: "" }, ...targetOptions(spaces.value, current.value?.id).map((s) => ({ label: s.name, value: s.id }))]);
 </script>
 
 <template>
@@ -25,10 +28,7 @@ const { current, target, name, estimated, actual, paid, confirmingDelete, errors
 			<span v-if="errors.actual" role="alert" class="err">{{ errors.actual }}</span>
 		</label>
 		<label v-if="canSendToSpace(category, line) && targetOptions(spaces, current?.id).length" class="field">Enviar a espacio
-			<select v-model="target" class="input">
-				<option value="">Ninguno</option>
-				<option v-for="s in targetOptions(spaces, current?.id)" :key="s.id" :value="s.id">{{ s.name }}</option>
-			</select>
+			<SelectInput v-model="target" :options="targets" />
 			<span v-if="errors.targetSpaceId" role="alert" class="err">{{ errors.targetSpaceId }}</span>
 		</label>
 		<label v-if="!line" class="line-form__paid">

@@ -1,3 +1,6 @@
+import "vue3-select-component/styles";
+import "@vuepic/vue-datepicker/dist/main.css";
+
 import { createApp, type DefineComponent, h } from "vue";
 
 import { createInertiaApp } from "@inertiajs/vue3";

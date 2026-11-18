@@ -1,0 +1,26 @@
+// vue3-select-component (SelectInput.vue) mapped to the app tokens; dark mode follows the tokens.
+.vue-select {
+	--vs-min-height: 44px;
+	--vs-border: 1px solid var(--line);
+	--vs-border-radius: 12px;
+	--vs-background-color: var(--surface);
+	--vs-text-color: var(--ink);
+	--vs-font-family: var(--font-sans);
+	--vs-font-size: 16px;
+	--vs-placeholder-color: var(--muted);
+	--vs-outline-color: color-mix(in srgb, var(--teal) 20%, transparent);
+	--vs-outline-width: 2px;
+	--vs-disabled-background-color: var(--pill);
+	--vs-indicator-icon-color: var(--muted);
+	--vs-menu-background-color: var(--surface);
+	--vs-menu-border: 1px solid var(--line);
+	--vs-menu-box-shadow: var(--shadow-card);
+	--vs-menu-z-index: 30;
+	--vs-option-text-color: var(--ink);
+	--vs-option-hover-background-color: var(--teal-soft);
+	--vs-option-hover-text-color: var(--ink);
+	--vs-option-focused-background-color: var(--teal-soft);
+	--vs-option-focused-text-color: var(--ink);
+	--vs-option-selected-background-color: var(--teal);
+	--vs-option-selected-text-color: var(--on-accent-selected, #fff);
+}

@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import { onMounted, useTemplateRef } from "vue";
+import DatePicker from "@/Components/UI/Inputs/DatePicker.vue";
 
 defineProps<{ errors: Record<string, string>; busy: boolean }>();
 const start = defineModel<string>("start", { required: true });
 const end = defineModel<string>("end", { required: true });
 defineEmits<{ save: []; cancel: [] }>();
-const first = useTemplateRef<HTMLInputElement>("first");
-onMounted(() => first.value?.focus());
+const form = useTemplateRef<HTMLFormElement>("form");
+onMounted(() => form.value?.querySelector("input")?.focus());
 </script>
 
 <template>
-	<form class="form-panel period-dates-form" @submit.prevent="$emit('save')">
+	<form ref="form" class="form-panel period-dates-form" @submit.prevent="$emit('save')">
 		<label class="field">Inicio
-			<input ref="first" v-model="start" type="date" class="input" />
+			<DatePicker v-model="start" input-id="period-dates-start" />
 			<span v-if="errors.startDate" role="alert" class="err">{{ errors.startDate }}</span>
 		</label>
 		<label class="field">Fin
-			<input v-model="end" type="date" class="input" />
+			<DatePicker v-model="end" input-id="period-dates-end" />
 			<span v-if="errors.endDate" role="alert" class="err">{{ errors.endDate }}</span>
 		</label>
 		<p v-if="errors.form" role="alert" class="err form-wide">{{ errors.form }}</p>

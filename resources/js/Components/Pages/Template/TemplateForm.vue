@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import SelectInput from "@/Components/UI/Inputs/SelectInput.vue";
 import { CATEGORIES } from "@/Constants/Pages/Period/categories";
 import { useTemplateForm } from "@/Composables/Template/useTemplateForm";
 import type { Template } from "@/Types/Pages/Template/Template";
@@ -6,6 +8,16 @@ import type { Template } from "@/Types/Pages/Template/Template";
 const props = defineProps<{ template?: Template }>();
 const emit = defineEmits<{ saved: []; cancel: [] }>();
 const { spaces, current, target, name, category, estimated, freq, day, confirmingDelete, errors, busy, submit, remove } = useTemplateForm(props, () => emit("saved"));
+const categoryOptions = CATEGORIES.map((c) => ({ label: c.label, value: c.key }));
+const freqOptions = [
+	{ label: "Cada periodo", value: "cada_periodo" },
+	{ label: "Mensual repartido", value: "mensual_repartido" },
+	{ label: "Mensual el día…", value: "mensual_dia" },
+];
+const targetOptions = computed(() => [
+	{ label: "Ninguno", value: "" },
+	...spaces.value.filter((x) => x.id !== (props.template?.spaceId ?? current.value?.id)).map((s) => ({ label: s.name, value: s.id })),
+]);
 </script>
 
 <template>
@@ -15,9 +27,7 @@ const { spaces, current, target, name, category, estimated, freq, day, confirmin
 			<span v-if="errors.name" role="alert" class="err">{{ errors.name }}</span>
 		</label>
 		<label class="field">Categoría
-			<select v-model="category" class="input">
-				<option v-for="c in CATEGORIES" :key="c.key" :value="c.key">{{ c.label }}</option>
-			</select>
+			<SelectInput v-model="category" :options="categoryOptions" />
 			<span v-if="errors.category" role="alert" class="err">{{ errors.category }}</span>
 		</label>
 		<label class="field">Monto
@@ -25,11 +35,7 @@ const { spaces, current, target, name, category, estimated, freq, day, confirmin
 			<span v-if="errors.estimated" role="alert" class="err">{{ errors.estimated }}</span>
 		</label>
 		<label class="field">Frecuencia
-			<select v-model="freq" class="input">
-				<option value="cada_periodo">Cada periodo</option>
-				<option value="mensual_repartido">Mensual repartido</option>
-				<option value="mensual_dia">Mensual el día…</option>
-			</select>
+			<SelectInput v-model="freq" :options="freqOptions" />
 			<span v-if="errors.frequency" role="alert" class="err">{{ errors.frequency }}</span>
 		</label>
 		<label v-if="freq === 'mensual_dia'" class="field">Día del mes
@@ -37,10 +43,7 @@ const { spaces, current, target, name, category, estimated, freq, day, confirmin
 			<span v-if="errors.dayOfMonth" role="alert" class="err">{{ errors.dayOfMonth }}</span>
 		</label>
 		<label v-if="category !== 'ingreso' && spaces.length > 1" class="field">Enviar a espacio
-			<select v-model="target" class="input">
-				<option value="">Ninguno</option>
-				<option v-for="s in spaces.filter((x) => x.id !== (template?.spaceId ?? current?.id))" :key="s.id" :value="s.id">{{ s.name }}</option>
-			</select>
+			<SelectInput v-model="target" :options="targetOptions" />
 			<span v-if="errors.targetSpaceId" role="alert" class="err">{{ errors.targetSpaceId }}</span>
 		</label>
 		<p v-if="errors.form" role="alert" class="err form-wide">{{ errors.form }}</p>

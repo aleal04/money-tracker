@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import SelectInput from "@/Components/UI/Inputs/SelectInput.vue";
 import { useInstallmentForm } from "@/Composables/Installment/useInstallmentForm";
 import type { Installment } from "@/Types/Pages/Installment/Installment";
 
 const props = defineProps<{ cardId: number; installment?: Installment }>();
 const emit = defineEmits<{ saved: []; cancel: [] }>();
+const typeOptions = [
+	{ label: "Tasa 0", value: "tasa0" },
+	{ label: "Minicuotas", value: "minicuotas" },
+];
 const { merchant, item, type, total, paid, initial, cuotaAmount, override, confirmingDelete, errors, busy, submit, remove } = useInstallmentForm(props, () => emit("saved"));
 </script>
 
@@ -18,10 +23,7 @@ const { merchant, item, type, total, paid, initial, cuotaAmount, override, confi
 			<span v-if="errors.item" role="alert" class="err">{{ errors.item }}</span>
 		</label>
 		<label class="field">Forma de pago
-			<select v-model="type" class="input">
-				<option value="tasa0">Tasa 0</option>
-				<option value="minicuotas">Minicuotas</option>
-			</select>
+			<SelectInput v-model="type" :options="typeOptions" />
 			<span v-if="errors.type" role="alert" class="err">{{ errors.type }}</span>
 		</label>
 		<label class="field">Cuotas totales

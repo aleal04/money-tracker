@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, useTemplateRef } from "vue";
+import SelectInput from "@/Components/UI/Inputs/SelectInput.vue";
 import { useSpaceForm } from "@/Composables/Space/useSpaceIndex";
 import type { Space } from "@/Types/Pages/Space/Space";
 
@@ -7,6 +8,12 @@ const props = defineProps<{ space?: Space }>();
 const emit = defineEmits<{ saved: []; cancel: [] }>();
 const first = useTemplateRef<HTMLInputElement>("first");
 onMounted(() => first.value?.focus());
+const frequencyOptions = [
+	{ label: "Semanal", value: "weekly" },
+	{ label: "Quincenal", value: "biweekly" },
+	{ label: "Mensual", value: "monthly" },
+	{ label: "Personalizada", value: "custom" },
+];
 const { name, frequency, customDays, initialBalance, confirmingDelete, errors, busy, submit, remove } = useSpaceForm(props, () => emit("saved"));
 </script>
 
@@ -17,12 +24,12 @@ const { name, frequency, customDays, initialBalance, confirmingDelete, errors, b
 			<span v-if="errors.name" role="alert" class="err">{{ errors.name }}</span>
 		</label>
 		<label class="field">Frecuencia
-			<select v-model="frequency" :disabled="space?.hasPeriods" aria-describedby="space-frequency-hint" class="input">
-				<option value="weekly">Semanal</option>
-				<option value="biweekly">Quincenal</option>
-				<option value="monthly">Mensual</option>
-				<option value="custom">Personalizada</option>
-			</select>
+			<SelectInput
+				v-model="frequency"
+				:options="frequencyOptions"
+				:is-disabled="space?.hasPeriods"
+				:input-attrs="{ 'aria-describedby': 'space-frequency-hint' }"
+			/>
 			<span v-if="space?.hasPeriods" id="space-frequency-hint" class="field-hint">No se puede cambiar: el espacio ya tiene periodos.</span>
 			<span v-if="errors.frequency" role="alert" class="err">{{ errors.frequency }}</span>
 		</label>

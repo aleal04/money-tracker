@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DatePicker from "@/Components/UI/Inputs/DatePicker.vue";
 import { useCreatePeriod } from "@/Composables/Period/useCreatePeriod";
 
 defineProps<{ cancellable?: boolean }>();
@@ -9,11 +10,11 @@ const { startDate, endDate, errors, busy, create } = useCreatePeriod();
 <template>
 	<form class="form-panel" @submit.prevent="create">
 		<label class="field">Inicio
-			<input v-model="startDate" type="date" class="input" />
+			<DatePicker v-model="startDate" input-id="create-period-start" />
 			<span v-if="errors.startDate" role="alert" class="err">{{ errors.startDate }}</span>
 		</label>
 		<label class="field">Fin
-			<input v-model="endDate" type="date" class="input" />
+			<DatePicker v-model="endDate" input-id="create-period-end" />
 			<span v-if="errors.endDate" role="alert" class="err">{{ errors.endDate }}</span>
 		</label>
 		<p v-if="errors.form" role="alert" class="alert form-wide">{{ errors.form }}</p>

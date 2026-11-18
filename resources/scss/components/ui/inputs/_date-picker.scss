@@ -1,0 +1,46 @@
+// @vuepic/vue-datepicker (DatePicker.vue) mapped to the app tokens. The `:root` prefix beats the library's
+// .dp__theme_light/.dp__theme_dark blocks regardless of stylesheet order; the dark prop only flips the library classes.
+:root .date-picker {
+	--dp-font-family: var(--font-sans);
+	--dp-font-size: 16px;
+	--dp-border-radius: 12px;
+	--dp-cell-border-radius: 8px;
+	--dp-background-color: var(--surface);
+	--dp-text-color: var(--ink);
+	--dp-border-color: var(--line);
+	--dp-menu-border-color: var(--line);
+	--dp-border-color-hover: var(--teal);
+	--dp-border-color-focus: var(--teal);
+	--dp-hover-color: var(--teal-soft);
+	--dp-hover-text-color: var(--ink);
+	--dp-hover-icon-color: var(--teal);
+	--dp-primary-color: var(--teal);
+	--dp-primary-text-color: #fff;
+	--dp-secondary-color: var(--muted);
+	--dp-highlight-color: color-mix(in srgb, var(--yellow) 25%, transparent);
+	--dp-icon-color: var(--muted);
+	--dp-disabled-color: var(--pill);
+	--dp-disabled-color-text: var(--muted);
+	--dp-danger-color: var(--danger);
+	--dp-scroll-bar-background: var(--pill);
+	--dp-scroll-bar-color: var(--line);
+
+	.dp__input {
+		min-height: 44px;
+		padding-top: 0;
+		padding-bottom: 0;
+		box-sizing: border-box;
+
+		&:focus {
+			box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 20%, transparent);
+		}
+	}
+
+	.dp__input_wrap {
+		min-height: 44px;
+	}
+
+	.dp__menu {
+		box-shadow: var(--shadow-card);
+	}
+}

@@ -5,6 +5,8 @@
 @use "components/ui/app-sidebar";
 @use "components/ui/app-topbar";
 @use "components/ui/logo";
+@use "components/ui/inputs/select-input";
+@use "components/ui/inputs/date-picker";
 @use "pages/space/index" as space-index;
 @use "pages/period/index";
 @use "pages/period/show";
