@@ -12,7 +12,7 @@
 
 	&__title {
 		margin: 0;
-		color: var(--teal);
+		color: var(--ink);
 		font-size: 16px;
 		font-weight: 600;
 	}
@@ -50,7 +50,7 @@
 		height: 44px;
 		padding: 0;
 		border: 0;
-		border-radius: 12px;
+		border-radius: var(--radius-control);
 		background: transparent;
 		cursor: pointer;
 
@@ -67,8 +67,8 @@
 	&__box {
 		width: 20px;
 		height: 20px;
-		border: 2px solid color-mix(in srgb, var(--muted) 60%, transparent);
-		border-radius: 6px;
+		border: 1.5px solid color-mix(in srgb, var(--muted) 60%, transparent);
+		border-radius: 5px;
 	}
 
 	&__name {

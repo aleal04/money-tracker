@@ -8,14 +8,14 @@
 
 	&__title {
 		margin: 0;
-		color: var(--teal);
+		color: var(--ink);
 		font-size: 16px;
 		font-weight: 600;
 	}
 
 	&__group {
 		padding-left: 12px;
-		border-left: 4px solid var(--status-active);
+		border-left: 2px solid var(--status-active);
 
 		&--por_terminar {
 			border-color: var(--status-soon);
@@ -41,16 +41,18 @@
 	}
 
 	&__pill {
-		background: color-mix(in srgb, var(--status-active) 15%, transparent);
-		color: var(--ink);
+		background: var(--success-soft);
+		color: var(--success);
 	}
 
 	&__group--por_terminar &__pill {
-		background: color-mix(in srgb, var(--status-soon) 25%, transparent);
+		background: var(--warning-soft);
+		color: var(--warning);
 	}
 
 	&__group--terminada &__pill {
-		background: color-mix(in srgb, var(--status-done) 15%, transparent);
+		background: var(--pill);
+		color: var(--ink-soft);
 	}
 
 	&__count,
@@ -70,18 +72,16 @@
 	}
 
 	&__item {
-		margin: 4px 0;
 		padding: 8px;
 		border-top: 1px solid var(--line);
-		border-radius: 12px;
 
 		&:first-child {
 			border-top: 0;
 		}
 
 		&--soon {
-			background: color-mix(in srgb, var(--yellow-soft) 60%, transparent);
-			box-shadow: var(--shadow-card);
+			background: color-mix(in srgb, var(--warning-soft) 60%, transparent);
+			box-shadow: inset 2px 0 0 var(--status-soon);
 		}
 	}
 
@@ -103,8 +103,8 @@
 
 	&__tag {
 		margin-left: 8px;
-		background: var(--yellow);
-		color: var(--on-accent);
+		background: var(--warning-soft);
+		color: var(--warning);
 	}
 
 	&__body {
@@ -143,8 +143,8 @@
 		align-items: center;
 		gap: 8px 24px;
 		padding: 8px 12px;
-		border-radius: 12px;
-		background: var(--pill);
+		border-radius: var(--radius-control);
+		background: var(--subtle);
 		font-size: 14px;
 
 		span {
@@ -156,7 +156,7 @@
 		margin-left: auto;
 		padding: 0 8px;
 		background: transparent;
-		color: var(--teal);
+		color: var(--primary);
 	}
 
 	@media (min-width: $bp-md) {

@@ -4,7 +4,7 @@ export interface SummaryCard {
 	key: string;
 	label: string;
 	value: number;
-	/** Restante is red when negative and teal otherwise; the rest have no tone. */
+	/** Restante is red when negative and green otherwise; the rest have no tone. */
 	tone: "negative" | "positive" | null;
 }
 

@@ -7,7 +7,7 @@
 
     <title>Money Tracker</title>
 
-    <meta name="theme-color" content="#0f6e64" />
+    <meta name="theme-color" content="#ffffff" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/png" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -20,7 +20,7 @@
             var t = localStorage.getItem('theme')
             if (t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark')
-                document.querySelector('meta[name="theme-color"]').setAttribute('content', '#121614')
+                document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f1012')
             }
         } catch (e) {}
     </script>

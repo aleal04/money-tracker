@@ -6,9 +6,10 @@
 
 body {
 	margin: 0;
-	background: var(--cream);
+	background: var(--bg);
 	color: var(--ink);
 	font-family: var(--font-sans);
+	font-size: 14px;
 	-webkit-font-smoothing: antialiased;
 	overflow-x: hidden;
 }

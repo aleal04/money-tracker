@@ -11,7 +11,7 @@
 	height: var(--topbar-h);
 	padding: 0 12px;
 	border-bottom: 1px solid var(--line);
-	background: color-mix(in srgb, var(--cream) 85%, transparent);
+	background: color-mix(in srgb, var(--bg) 85%, transparent);
 	backdrop-filter: blur(8px);
 
 	@media (min-width: $bp-md) {
@@ -34,10 +34,12 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		padding: 4px;
-		border-radius: 16px;
-		background: var(--teal);
-		color: #fff;
+		min-height: var(--control-h);
+		padding: 2px;
+		border: 1px solid var(--line);
+		border-radius: var(--radius-control);
+		background: var(--surface);
+		color: var(--ink);
 
 		@media (min-width: $bp-md) {
 			padding-left: 8px;
@@ -49,17 +51,18 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 32px;
-		height: 32px;
-		border-radius: 50%;
-		background: rgb(255 255 255 / 15%);
+		width: 30px;
+		height: 30px;
+		border-radius: 6px;
+		background: var(--primary-soft);
+		color: var(--primary);
 	}
 
 	&__name {
 		display: none;
 		padding: 0 4px;
 		font-size: 14px;
-		font-weight: 600;
+		font-weight: 500;
 
 		@media (min-width: $bp-md) {
 			display: inline;

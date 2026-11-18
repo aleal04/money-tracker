@@ -7,7 +7,7 @@
 	display: flex;
 	align-items: flex-end;
 	justify-content: center;
-	background: rgb(31 35 40 / 40%);
+	background: rgb(17 17 19 / 45%);
 
 	&__panel {
 		display: grid;
@@ -17,12 +17,13 @@
 		padding: 24px 24px max(24px, env(safe-area-inset-bottom));
 		border-radius: var(--radius-card) var(--radius-card) 0 0;
 		background: var(--surface);
-		box-shadow: var(--shadow-card);
+		border: 1px solid var(--line);
+		box-shadow: var(--shadow-pop);
 	}
 
 	&__title {
 		margin: 0;
-		color: var(--teal);
+		color: var(--ink);
 		font-size: 18px;
 		font-weight: 600;
 	}
@@ -53,7 +54,7 @@
 
 		&--group {
 			margin-top: 4px;
-			color: var(--teal);
+			color: var(--ink);
 			font-weight: 600;
 		}
 

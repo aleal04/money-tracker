@@ -5,18 +5,30 @@
 	grid-template-columns: 1fr 1fr;
 	gap: 12px;
 
+	// Flat tinted tiles: neutral by default, green/red when the value carries a tone.
 	&__item {
 		padding: 16px;
+		border-color: transparent;
+		background: var(--subtle);
+
+		&:has(.summary-cards__value--positive) {
+			background: var(--success-soft);
+		}
+
+		&:has(.summary-cards__value--negative) {
+			background: var(--danger-soft);
+		}
 	}
 
 	&__value {
-		margin-top: 4px;
+		margin-top: 6px;
+		color: var(--ink);
 		font-size: 16px;
 		font-weight: 600;
 		font-variant-numeric: tabular-nums;
 
 		&--positive {
-			color: var(--teal);
+			color: var(--success);
 		}
 
 		&--negative {

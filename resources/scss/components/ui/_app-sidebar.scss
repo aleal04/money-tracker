@@ -8,17 +8,17 @@
 	flex-direction: column;
 	width: var(--sidebar-w);
 	padding-bottom: env(safe-area-inset-bottom);
-	border-radius: 0 var(--radius-card) var(--radius-card) 0;
-	background: var(--surface);
-	box-shadow: var(--shadow-card);
+	border-right: 1px solid var(--line);
+	background: var(--subtle);
 
 	&__logo {
 		justify-content: center;
-		padding-top: 20px;
+		height: var(--topbar-h);
+		border-bottom: 1px solid var(--line);
 
 		@media (min-width: $bp-md) {
 			justify-content: flex-start;
-			padding: 28px 24px 0;
+			padding: 0 20px;
 		}
 	}
 
@@ -26,10 +26,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		padding: 24px 8px 0;
+		padding: 12px 8px 0;
 
 		@media (min-width: $bp-md) {
-			padding: 32px 12px 0;
+			padding: 16px 12px 0;
 		}
 	}
 
@@ -40,8 +40,9 @@
 		justify-content: center;
 		gap: 2px;
 		min-height: 56px;
-		border-radius: 12px;
-		color: var(--muted);
+		border: 1px solid transparent;
+		border-radius: var(--radius-control);
+		color: var(--ink-soft);
 		font-size: 10px;
 		font-weight: 500;
 
@@ -52,16 +53,18 @@
 
 		&--active,
 		&--active:hover {
-			background: var(--teal-soft);
-			color: var(--teal);
+			border-color: var(--line);
+			background: var(--surface);
+			color: var(--ink);
+			font-weight: 600;
 		}
 
 		@media (min-width: $bp-md) {
 			flex-direction: row;
 			justify-content: flex-start;
-			gap: 12px;
-			min-height: 44px;
-			padding: 0 12px;
+			gap: 10px;
+			min-height: 38px;
+			padding: 0 10px;
 			font-size: 14px;
 		}
 	}

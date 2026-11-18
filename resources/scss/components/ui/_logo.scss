@@ -9,11 +9,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 32px;
-		height: 32px;
-		border-radius: 8px;
-		background: var(--teal);
-		color: #fff;
+		width: 28px;
+		height: 28px;
+		border-radius: var(--radius-control);
+		background: var(--primary);
+		color: var(--on-primary);
 		font-size: 16px;
 		font-weight: 700;
 	}
@@ -21,7 +21,7 @@
 	&__word {
 		display: none;
 		color: var(--ink);
-		font-size: 18px;
+		font-size: 16px;
 		font-weight: 700;
 		letter-spacing: -0.01em;
 

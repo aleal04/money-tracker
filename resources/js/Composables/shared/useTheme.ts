@@ -4,8 +4,8 @@ type Theme = "light" | "dark";
 
 const KEY = "theme";
 const THEME_COLOR: Record<Theme, string> = {
-	light: "#0f6e64",
-	dark: "#121614",
+	light: "#ffffff",
+	dark: "#0f1012",
 };
 
 function stored(): Theme | null {

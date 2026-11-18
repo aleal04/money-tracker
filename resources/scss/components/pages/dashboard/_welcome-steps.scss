@@ -8,7 +8,7 @@
 
 	&__title {
 		margin: 0;
-		color: var(--teal);
+		color: var(--ink);
 		font-size: 18px;
 		font-weight: 600;
 	}
@@ -34,8 +34,9 @@
 		align-items: center;
 		gap: 12px;
 		padding: 16px;
-		border-radius: 16px;
-		background: color-mix(in srgb, var(--cream) 60%, transparent);
+		border: 1px solid var(--line);
+		border-radius: var(--radius-card);
+		background: var(--subtle);
 	}
 
 	&__num {
@@ -45,8 +46,8 @@
 		width: 32px;
 		height: 32px;
 		border-radius: 50%;
-		background: var(--teal);
-		color: #fff;
+		background: var(--primary-soft);
+		color: var(--primary-dark);
 		font-size: 14px;
 		font-weight: 600;
 	}

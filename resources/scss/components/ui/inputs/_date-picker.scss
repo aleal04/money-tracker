@@ -6,22 +6,22 @@
 :root .dp--theme-light,
 :root .dp--theme-dark {
 	--dp-font-family: var(--font-sans);
-	--dp-font-size: 16px;
-	--dp-border-radius: 12px;
-	--dp-cell-border-radius: 8px;
+	--dp-font-size: var(--control-font);
+	--dp-border-radius: var(--radius-control);
+	--dp-cell-border-radius: 6px;
 	--dp-background-color: var(--surface);
 	--dp-text-color: var(--ink);
 	--dp-border-color: var(--line);
 	--dp-menu-border-color: var(--line);
-	--dp-border-color-hover: var(--teal);
-	--dp-border-color-focus: var(--teal);
-	--dp-hover-color: var(--teal-soft);
+	--dp-border-color-hover: color-mix(in srgb, var(--ink) 25%, var(--line));
+	--dp-border-color-focus: var(--primary);
+	--dp-hover-color: var(--pill);
 	--dp-hover-text-color: var(--ink);
-	--dp-hover-icon-color: var(--teal);
-	--dp-primary-color: var(--teal);
-	--dp-primary-text-color: #fff;
+	--dp-hover-icon-color: var(--ink);
+	--dp-primary-color: var(--primary);
+	--dp-primary-text-color: var(--on-primary);
 	--dp-secondary-color: var(--muted);
-	--dp-highlight-color: color-mix(in srgb, var(--yellow) 25%, transparent);
+	--dp-highlight-color: var(--primary-soft);
 	--dp-icon-color: var(--muted);
 	--dp-disabled-color: var(--pill);
 	--dp-disabled-color-text: var(--muted);
@@ -30,21 +30,21 @@
 	--dp-scroll-bar-color: var(--line);
 
 	.dp--input {
-		min-height: 44px;
+		min-height: var(--control-h);
 		padding-top: 0;
 		padding-bottom: 0;
 		box-sizing: border-box;
 
 		&:focus {
-			box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 20%, transparent);
+			box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent);
 		}
 	}
 
 	.dp--input-wrap {
-		min-height: 44px;
+		min-height: var(--control-h);
 	}
 
 	.dp--menu {
-		box-shadow: var(--shadow-card);
+		box-shadow: var(--shadow-pop);
 	}
 }

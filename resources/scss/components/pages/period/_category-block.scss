@@ -5,7 +5,7 @@
 
 	&__title {
 		margin: 0 0 8px;
-		color: var(--teal);
+		color: var(--ink);
 		font-size: 16px;
 		font-weight: 600;
 	}
@@ -31,13 +31,12 @@
 		align-items: center;
 		column-gap: 8px;
 		min-height: 52px;
-		margin: 4px 0;
 		padding: 0 4px;
-		border-radius: 12px;
 		font-size: 14px;
 
+		// Unpaid: a thin amber marker instead of a fill; the empty checkbox already says it.
 		&--pending {
-			background: color-mix(in srgb, var(--yellow-soft) 60%, transparent);
+			box-shadow: inset 2px 0 0 var(--status-soon);
 		}
 
 		&--carried {
@@ -79,15 +78,15 @@
 		justify-content: center;
 		width: 20px;
 		height: 20px;
-		border: 2px solid color-mix(in srgb, var(--muted) 60%, transparent);
-		border-radius: 6px;
+		border: 1.5px solid color-mix(in srgb, var(--muted) 60%, transparent);
+		border-radius: 5px;
 		background: var(--surface);
 		font-size: 12px;
 
 		&--on {
-			border-color: var(--teal);
-			background: var(--teal);
-			color: #fff;
+			border-color: var(--primary);
+			background: var(--primary);
+			color: var(--on-primary);
 		}
 	}
 
@@ -115,13 +114,13 @@
 	}
 
 	&__transfer {
-		background: var(--teal-soft);
-		color: var(--teal);
+		background: var(--info-soft);
+		color: var(--info);
 	}
 
 	&__auto {
-		background: var(--teal-soft);
-		color: var(--teal);
+		background: var(--warning-soft);
+		color: var(--warning);
 	}
 
 	&__amount {
@@ -145,7 +144,7 @@
 		summary {
 			min-height: 44px;
 			padding: 12px 0;
-			color: var(--teal);
+			color: var(--primary);
 			font-size: 14px;
 			cursor: pointer;
 		}
@@ -158,9 +157,9 @@
 		justify-content: space-between;
 		gap: 8px;
 		margin-top: 12px;
-		padding: 4px 12px;
-		border-radius: 12px;
-		background: var(--pill);
+		padding: 8px 12px;
+		border-radius: var(--radius-control);
+		background: var(--subtle);
 		color: var(--muted);
 		font-size: 12px;
 
@@ -177,7 +176,7 @@
 		min-height: 44px;
 		padding: 0 8px;
 		background: transparent;
-		color: var(--teal);
+		color: var(--primary);
 	}
 
 	@media (min-width: $bp-md) {
