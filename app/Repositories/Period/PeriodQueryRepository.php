@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Period;
 
+use Carbon\CarbonImmutable;
 use App\Helpers\MoneyHelper;
 use App\Models\Period\PeriodModel;
 use Illuminate\Support\Collection;
@@ -27,47 +28,66 @@ class PeriodQueryRepository extends BaseQueryRepository
     }
 
     /**
-     * The most recent period, optionally locking its row.
+     * The most recent period of a space (by start date), optionally locking its row.
      *
+     * @param  int  $spaceId  The space identifier.
      * @param  bool  $lock  Whether to lock the row (FOR UPDATE).
-     * @return PeriodModel|null The latest period, or null when there are none.
+     * @return PeriodModel|null The latest period, or null when the space has none.
      */
-    public function latest(bool $lock = false): ?PeriodModel
+    public function latest(int $spaceId, bool $lock = false): ?PeriodModel
     {
-        $query = PeriodModel::query()->orderByDesc('Year')->orderByDesc('Month')->orderByDesc('Half');
+        $query = PeriodModel::query()->where('FkSpace', $spaceId)->orderByDesc('StartDate');
 
         return ($lock ? $query->lockForUpdate() : $query)->first();
     }
 
     /**
-     * Every period in chronological order.
+     * Periods in chronological order (by space, then start date), of one space or of every space.
      *
+     * @param  int|null  $spaceId  The space identifier, or null for every space.
      * @return Collection<int, PeriodModel> The periods.
      */
-    public function listChronological(): Collection
+    public function listChronological(?int $spaceId = null): Collection
     {
-        return PeriodModel::query()->orderBy('Year')->orderBy('Month')->orderBy('Half')->get();
+        return PeriodModel::query()->when($spaceId !== null, fn ($q) => $q->where('FkSpace', $spaceId))->orderBy('FkSpace')->orderBy('StartDate')->get();
     }
 
     /**
-     * Find a period by its year, month and half key.
+     * The period of the same space that starts right after the given one.
      *
-     * @param  array{year:int,month:int,half:int}  $key  The period key.
-     * @return PeriodModel|null The period, or null when not found.
+     * @param  PeriodModel  $period  The period.
+     * @return PeriodModel|null The next period, or null when there is none.
      */
-    public function findByKey(array $key): ?PeriodModel
+    public function nextOf(PeriodModel $period): ?PeriodModel
     {
-        return PeriodModel::query()->where(PeriodModel::keyColumns($key))->first();
+        return PeriodModel::query()->where('FkSpace', $period->FkSpace)->where('StartDate', '>', $period->StartDate)->orderBy('StartDate')->first();
     }
 
     /**
-     * Every card.
+     * Whether another period of the space starts in the same month as $startDate.
      *
+     * @param  int  $spaceId  The space identifier.
+     * @param  string  $startDate  A start date 'Y-m-d'.
+     * @param  int  $exceptPeriodId  The period to ignore.
+     * @return bool True when another period starts in that month.
+     */
+    public function hasOtherStartingInMonth(int $spaceId, string $startDate, int $exceptPeriodId): bool
+    {
+        $first = CarbonImmutable::parse($startDate)->startOfMonth();
+
+        return PeriodModel::query()->where('FkSpace', $spaceId)->where('IdPeriod', '<>', $exceptPeriodId)
+            ->where('StartDate', '>=', $first->toDateString())->where('StartDate', '<', $first->addMonth()->toDateString())->exists();
+    }
+
+    /**
+     * The cards of a space.
+     *
+     * @param  int  $spaceId  The space identifier.
      * @return Collection<int, CardModel> The cards.
      */
-    public function listCards(): Collection
+    public function listCards(int $spaceId): Collection
     {
-        return CardModel::query()->orderBy('IdCard')->get();
+        return CardModel::query()->where('FkSpace', $spaceId)->orderBy('IdCard')->get();
     }
 
     /**
@@ -81,19 +101,20 @@ class PeriodQueryRepository extends BaseQueryRepository
     }
 
     /**
-     * Active templates mapped to the TemplateExpander input, with the amount in cents.
+     * Active templates of a space mapped to the TemplateExpander input, with the amount in cents.
      *
+     * @param  int  $spaceId  The space identifier.
      * @return Collection<int, array<string, mixed>> The templates.
      */
-    public function listActiveTemplateInputs(): Collection
+    public function listActiveTemplateInputs(int $spaceId): Collection
     {
-        return TemplateModel::query()->where('Active', true)->orderBy('IdTemplate')->get()->map(fn (TemplateModel $t) => [
+        return TemplateModel::query()->where(['FkSpace' => $spaceId, 'Active' => true])->orderBy('IdTemplate')->get()->map(fn (TemplateModel $t) => [
             'id' => $t->IdTemplate,
             'name' => $t->Name,
             'category' => $t->Category,
             'estimated' => (int) MoneyHelper::toCents($t->Estimated),
             'frequency' => $t->Frequency,
-            'half' => $t->Half,
+            'dayOfMonth' => $t->DayOfMonth,
             'active' => true,
         ]);
     }

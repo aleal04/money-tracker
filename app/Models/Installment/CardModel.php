@@ -44,7 +44,7 @@ class CardModel extends Model
      *
      * @var list<string>
      */
-    protected $fillable = ['Name'];
+    protected $fillable = ['FkSpace', 'Name'];
 
     /**
      * Lines that refer to this card.

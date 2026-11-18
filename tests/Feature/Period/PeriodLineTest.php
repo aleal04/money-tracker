@@ -38,7 +38,7 @@ class PeriodLineTest extends PeriodTestCase
     public function test_parses_amounts(): void
     {
         $p = $this->makePeriod();
-        $this->assertSame('I Quincena Noviembre', $this->getJson("/periods/{$p['id']}/data")->json('period.label'));
+        $this->assertSame('I Quincena Noviembre 2026', $this->getJson("/periods/{$p['id']}/data")->json('period.label'));
         $this->assertNull($this->getJson("/periods/{$p['id']}/data")->json('prevId'));
 
         foreach (['5.900' => 590000, '₡ 10.865' => 1086500, '5.900,50' => 590050] as $input => $cents) {
@@ -82,7 +82,7 @@ class PeriodLineTest extends PeriodTestCase
      */
     public function test_summarizes_the_excel_quincena(): void
     {
-        $p = $this->makePeriod(['year' => 2026, 'month' => 10, 'half' => 1]);
+        $p = $this->makePeriod($this->dates(10, 1));
         $rows = [
             ['ingreso', 557632, true],
             ['servicio', 10865, true], ['servicio', 16146, true], ['servicio', 68460, true], ['servicio', 45000, true],
@@ -103,8 +103,8 @@ class PeriodLineTest extends PeriodTestCase
      */
     public function test_prev_and_next_ids(): void
     {
-        $a = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 1]);
-        $b = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 2]);
+        $a = $this->makePeriod($this->dates(11, 1));
+        $b = $this->makePeriod($this->dates(11, 2));
 
         $this->getJson("/periods/{$a['id']}/data")->assertJsonPath('prevId', null)->assertJsonPath('nextId', $b['id']);
         $this->getJson("/periods/{$b['id']}/data")->assertJsonPath('prevId', $a['id'])->assertJsonPath('nextId', null);
@@ -163,7 +163,7 @@ class PeriodLineTest extends PeriodTestCase
     public function test_carried_lines_are_immutable_and_arrastre_is_protected(): void
     {
         $p = $this->makePeriod();
-        $next = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 2]);
+        $next = $this->makePeriod($this->dates(11, 2));
         $original = $this->addLine($p['id'], ['category' => 'gasto', 'name' => 'Deuda', 'estimated' => '5.000'])->json('line.id');
         $arrastre = LineModel::create(['FkPeriod' => $next['id'], 'Category' => 'gasto', 'Name' => 'Arrastre', 'Estimated' => '5000.00', 'Source' => 'carried']);
         LineModel::whereKey($original)->update(['FkCarriedToLine' => $arrastre->IdLine]);

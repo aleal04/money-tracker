@@ -54,13 +54,9 @@ final class PeriodScheduleHelper
         $month = self::MONTHS[$s->month - 1].' '.$s->year;
         $sameMonth = $s->format('Y-m') === $e->format('Y-m');
         $monthEnd = $e->toDateString() === $s->endOfMonth()->toDateString();
-        if ($frequency === SpaceFrequencyConstant::BIWEEKLY && $sameMonth) {
-            if ($s->day === 1 && $e->day === 15) {
-                return 'I Quincena '.$month;
-            }
-            if ($s->day === 16 && $monthEnd) {
-                return 'II Quincena '.$month;
-            }
+        $half = self::half($frequency, $start, $end);
+        if ($half !== null) {
+            return ($half === 1 ? 'I' : 'II').' Quincena '.$month;
         }
         if ($frequency === SpaceFrequencyConstant::MONTHLY && $s->day === 1 && $monthEnd) {
             return $month;
@@ -71,6 +67,40 @@ final class PeriodScheduleHelper
         $a = $s->day.' '.self::SHORT[$s->month - 1].($s->year !== $e->year ? ' '.$s->year : '');
 
         return $a.' – '.$e->day.' '.self::SHORT[$e->month - 1].' '.$e->year;
+    }
+
+    /**
+     * The quincena (1 or 2) of a biweekly period on calendar halves (1–15, 16–end of month); null otherwise.
+     */
+    public static function half(string $frequency, string $start, string $end): ?int
+    {
+        $s = CarbonImmutable::parse($start);
+        $e = CarbonImmutable::parse($end);
+
+        return match (true) {
+            $frequency !== SpaceFrequencyConstant::BIWEEKLY || $s->format('Y-m') !== $e->format('Y-m') => null,
+            $s->day === 1 && $e->day === 15 => 1,
+            $s->day === 16 && $e->day === $e->daysInMonth => 2,
+            default => null,
+        };
+    }
+
+    /**
+     * 0-based position of the period starting at $start among the projected periods that start in its month
+     * (biweekly: 0 for days 1–15, 1 after; monthly: 0; weekly/custom: steps back that stay in the month).
+     */
+    public static function indexInMonth(string $frequency, ?int $customDays, string $start): int
+    {
+        $d = CarbonImmutable::parse($start);
+        if ($frequency === SpaceFrequencyConstant::BIWEEKLY) {
+            return $d->day <= 15 ? 0 : 1;
+        }
+        if ($frequency === SpaceFrequencyConstant::MONTHLY) {
+            return 0;
+        }
+        $step = $frequency === SpaceFrequencyConstant::WEEKLY ? 7 : max(1, (int) $customDays);
+
+        return intdiv($d->day - 1, $step);
     }
 
     /**

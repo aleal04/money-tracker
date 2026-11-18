@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\Dashboard\DashboardService;
 use App\Contracts\Controllers\Dashboard\DashboardControllerContract;
@@ -28,12 +29,13 @@ class DashboardController extends Controller implements DashboardControllerContr
     }
 
     /**
-     * The home page data as JSON.
+     * The home page data as JSON for the space (`?space=`, primary by default).
      *
+     * @param  Request  $request  The request with the optional space.
      * @return JsonResponse The latest period detail, the cards and the template count.
      */
-    public function data(): JsonResponse
+    public function data(Request $request): JsonResponse
     {
-        return response()->json($this->dashboardService->data());
+        return response()->json($this->dashboardService->data($request->integer('space') ?: null));
     }
 }

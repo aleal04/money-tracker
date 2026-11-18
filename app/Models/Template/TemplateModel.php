@@ -42,7 +42,7 @@ class TemplateModel extends Model
      *
      * @var list<string>
      */
-    protected $fillable = ['Name', 'Category', 'Estimated', 'Frequency', 'Half', 'Active'];
+    protected $fillable = ['FkSpace', 'FkTargetSpace', 'Name', 'Category', 'Estimated', 'Frequency', 'DayOfMonth', 'Active'];
 
     /**
      * The attributes that should be cast.
@@ -50,7 +50,7 @@ class TemplateModel extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'Half' => 'integer',
+        'DayOfMonth' => 'integer',
         'Estimated' => 'decimal:2',
         'Active' => 'boolean',
         'IsDeleted' => 'boolean',

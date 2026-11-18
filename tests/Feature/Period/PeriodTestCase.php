@@ -14,23 +14,26 @@ use App\Models\Installment\InstallmentModel;
 abstract class PeriodTestCase extends TestCase
 {
     /**
-     * Create a period through the HTTP endpoint and return its JSON view.
+     * Create a period of the primary space through the HTTP endpoint and return its JSON view.
      *
-     * @param  array<string, int>  $key  The period key.
+     * @param  array{startDate:string,endDate:string}|null  $dates  The period dates; I Quincena Noviembre 2026 by default.
      * @return array<string, mixed> The period view.
      */
-    protected function makePeriod(array $key = ['year' => 2026, 'month' => 11, 'half' => 1]): array
+    protected function makePeriod(?array $dates = null): array
     {
-        return $this->postJson('/periods/store', $key)->assertCreated()->json('period');
+        return $this->postJson('/periods/store', $dates ?? $this->dates(11, 1))->assertCreated()->json('period');
     }
 
     /**
-     * Seed the three recurring templates of the NestJS tests.
+     * Seed the three recurring templates of the NestJS tests (CONAPE was "mensual en I quincena": day 1).
      */
     protected function seedTemplates(): void
     {
-        foreach ([['Kolbi', 1086500, 'quincenal', null], ['Banco Popular', 24000000, 'mensual_dividido', null], ['CONAPE', 6846000, 'mensual_en_quincena', 1]] as [$name, $cents, $frequency, $half]) {
-            TemplateModel::create(['Name' => $name, 'Category' => 'deuda_fija', 'Estimated' => MoneyHelper::fromCents($cents), 'Frequency' => $frequency, 'Half' => $half, 'Active' => true]);
+        foreach ([['Kolbi', 1086500, 'cada_periodo', null], ['Banco Popular', 24000000, 'mensual_repartido', null], ['CONAPE', 6846000, 'mensual_dia', 1]] as [$name, $cents, $frequency, $day]) {
+            TemplateModel::create([
+                'FkSpace' => $this->primarySpaceId(), 'Name' => $name, 'Category' => 'deuda_fija', 'Estimated' => MoneyHelper::fromCents($cents),
+                'Frequency' => $frequency, 'DayOfMonth' => $day, 'Active' => true,
+            ]);
         }
     }
 
@@ -41,7 +44,7 @@ abstract class PeriodTestCase extends TestCase
      */
     protected function seedReloj(): CardModel
     {
-        $card = CardModel::create(['Name' => 'TC BAC']);
+        $card = CardModel::create(['FkSpace' => $this->primarySpaceId(), 'Name' => 'TC BAC']);
         $this->seedInstallment($card, 'Reloj', 'tasa0', 24, 12, 1104261 * 24, null);
 
         return $card;
@@ -93,7 +96,7 @@ abstract class PeriodTestCase extends TestCase
     }
 
     /**
-     * The period model by key.
+     * The period model of a 2026 quincena of the primary space.
      *
      * @param  int  $month  The month.
      * @param  int  $half  The half.
@@ -101,6 +104,6 @@ abstract class PeriodTestCase extends TestCase
      */
     protected function period(int $month, int $half): PeriodModel
     {
-        return PeriodModel::where(['Year' => 2026, 'Month' => $month, 'Half' => $half])->firstOrFail();
+        return PeriodModel::where(['FkSpace' => $this->primarySpaceId(), 'StartDate' => $this->dates($month, $half)['startDate']])->firstOrFail();
     }
 }

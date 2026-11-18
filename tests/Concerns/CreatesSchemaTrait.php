@@ -2,8 +2,10 @@
 
 namespace Tests\Concerns;
 
+use Illuminate\Support\Facades\DB;
 use App\Constant\LineSourceConstant;
 use Illuminate\Support\Facades\Schema;
+use App\Constant\SpaceFrequencyConstant;
 use Illuminate\Database\Schema\Blueprint;
 
 /**
@@ -15,12 +17,13 @@ use Illuminate\Database\Schema\Blueprint;
 trait CreatesSchemaTrait
 {
     /**
-     * Create the five tables, with foreign keys ON, before each test.
+     * Create the tables, with foreign keys ON, and seed the primary space (as the inserts script does) before each test.
      */
     protected function setUpCreatesSchemaTrait(): void
     {
         Schema::enableForeignKeyConstraints();
         $this->createSchema();
+        DB::table('Space')->insert(['Name' => 'Salario', 'Frequency' => SpaceFrequencyConstant::BIWEEKLY, 'InitialBalance' => '0.00', 'IsPrimary' => true, 'Sort' => 0]);
     }
 
     /**
@@ -28,8 +31,24 @@ trait CreatesSchemaTrait
      */
     protected function createSchema(): void
     {
+        Schema::create('Space', function (Blueprint $table) {
+            $table->id('IdSpace');
+            $table->string('Name');
+            $table->string('Frequency');
+            $table->unsignedSmallInteger('CustomDays')->nullable();
+            $table->decimal('InitialBalance', 14, 2)->default(0);
+            $table->boolean('IsPrimary')->default(false);
+            $table->integer('Sort')->default(0);
+            $this->auditColumns($table);
+            $table->string('ActiveName')->nullable()->virtualAs('CASE WHEN IsDeleted = 0 THEN Name ELSE NULL END');
+            $table->boolean('ActivePrimary')->nullable()->virtualAs('CASE WHEN IsDeleted = 0 AND IsPrimary = 1 THEN 1 ELSE NULL END');
+            $table->unique('ActiveName', 'UQ_Space_ActiveName');
+            $table->unique('ActivePrimary', 'UQ_Space_ActivePrimary');
+        });
+
         Schema::create('Card', function (Blueprint $table) {
             $table->id('IdCard');
+            $table->foreignId('FkSpace')->constrained('Space', 'IdSpace', 'FK_Card_Space');
             $table->string('Name');
             $this->auditColumns($table);
             $table->string('ActiveName')->nullable()->virtualAs('CASE WHEN IsDeleted = 0 THEN Name ELSE NULL END');
@@ -38,23 +57,26 @@ trait CreatesSchemaTrait
 
         Schema::create('Template', function (Blueprint $table) {
             $table->id('IdTemplate');
+            $table->foreignId('FkSpace')->constrained('Space', 'IdSpace', 'FK_Template_Space');
+            $table->foreignId('FkTargetSpace')->nullable()->constrained('Space', 'IdSpace', 'FK_Template_TargetSpace');
             $table->string('Name');
             $table->string('Category');
             $table->decimal('Estimated', 14, 2);
             $table->string('Frequency');
-            $table->unsignedTinyInteger('Half')->nullable();
+            $table->unsignedTinyInteger('DayOfMonth')->nullable();
             $table->boolean('Active')->default(true);
             $this->auditColumns($table);
         });
 
         Schema::create('Period', function (Blueprint $table) {
             $table->id('IdPeriod');
-            $table->unsignedSmallInteger('Year');
-            $table->unsignedTinyInteger('Month');
-            $table->unsignedTinyInteger('Half');
+            $table->foreignId('FkSpace')->constrained('Space', 'IdSpace', 'FK_Period_Space');
+            $table->date('StartDate');
+            $table->date('EndDate');
             $table->boolean('Closed')->default(false);
             $this->auditColumns($table);
-            $table->unique(['Year', 'Month', 'Half'], 'UQ_Period_Year_Month_Half');
+            $table->date('ActiveStart')->nullable()->virtualAs('CASE WHEN IsDeleted = 0 THEN StartDate ELSE NULL END');
+            $table->unique(['FkSpace', 'ActiveStart'], 'UQ_Period_FkSpace_ActiveStart');
         });
 
         Schema::create('Line', function (Blueprint $table) {
@@ -70,6 +92,8 @@ trait CreatesSchemaTrait
             $table->foreignId('FkTemplate')->nullable()->constrained('Template', 'IdTemplate', 'FK_Line_Template')->nullOnDelete();
             $table->foreignId('FkCard')->nullable()->constrained('Card', 'IdCard', 'FK_Line_Card')->nullOnDelete();
             $table->foreignId('FkCarriedToLine')->nullable()->constrained('Line', 'IdLine', 'FK_Line_CarriedToLine')->nullOnDelete();
+            $table->foreignId('FkTargetSpace')->nullable()->constrained('Space', 'IdSpace', 'FK_Line_TargetSpace');
+            $table->foreignId('FkTransferFromLine')->nullable()->constrained('Line', 'IdLine', 'FK_Line_TransferFromLine')->nullOnDelete();
             $table->integer('Sort')->default(0);
             $this->auditColumns($table);
             $table->unsignedBigInteger('CuotasCardKey')

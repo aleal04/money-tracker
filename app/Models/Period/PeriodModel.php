@@ -2,10 +2,12 @@
 
 namespace App\Models\Period;
 
-use App\Helpers\PeriodKeyHelper;
+use App\Models\Space\SpaceModel;
+use App\Helpers\PeriodScheduleHelper;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\LogicalDeleteTrait;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PeriodModel extends Model
 {
@@ -40,11 +42,11 @@ class PeriodModel extends Model
     const UPDATED_AT = 'UpdatedAt';
 
     /**
-     * The attributes that are mass assignable .
+     * The attributes that are mass assignable (StartDate/EndDate stay 'Y-m-d' strings).
      *
      * @var list<string>
      */
-    protected $fillable = ['Year', 'Month', 'Half', 'Closed'];
+    protected $fillable = ['FkSpace', 'StartDate', 'EndDate', 'Closed'];
 
     /**
      * The attributes that should be cast.
@@ -52,9 +54,7 @@ class PeriodModel extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'Year' => 'integer',
-        'Month' => 'integer',
-        'Half' => 'integer',
+        'FkSpace' => 'integer',
         'Closed' => 'boolean',
         'IsDeleted' => 'boolean',
     ];
@@ -68,30 +68,57 @@ class PeriodModel extends Model
     }
 
     /**
-     * Map a period key to its table columns.
-     *
-     * @param  array{year:int,month:int,half:int}  $key  The period key.
-     * @return array{Year:int,Month:int,Half:int} The column values.
+     * The space this period belongs to.
      */
-    public static function keyColumns(array $key): array
+    public function space(): BelongsTo
     {
-        return ['Year' => $key['year'], 'Month' => $key['month'], 'Half' => $key['half']];
+        return $this->belongsTo(SpaceModel::class, 'FkSpace', 'IdSpace');
     }
 
     /**
-     * The stable JSON shape of the period, with its label.
+     * The label of the period per its space frequency, e.g. "I Quincena Octubre 2026".
+     */
+    public function label(): string
+    {
+        return PeriodScheduleHelper::label($this->space->Frequency, $this->StartDate, $this->EndDate);
+    }
+
+    /**
+     * Where the period sits among the projected periods of its space that start in its month (for monthly splits).
      *
-     * @return array{id:int,year:int,month:int,half:int,closed:bool,label:string}
+     * @return array{start:string,end:string,indexInMonth:int,partsInMonth:int} The period dates and month slot.
+     */
+    public function monthSlot(): array
+    {
+        $space = $this->space;
+
+        return [
+            'start' => $this->StartDate,
+            'end' => $this->EndDate,
+            'indexInMonth' => PeriodScheduleHelper::indexInMonth($space->Frequency, $space->CustomDays, $this->StartDate),
+            'partsInMonth' => PeriodScheduleHelper::periodsStartingInMonth($space->Frequency, $space->CustomDays, $this->StartDate),
+        ];
+    }
+
+    /**
+     * The stable JSON shape of the period. year/month/half are only set for biweekly periods on calendar halves.
+     *
+     * @return array{id:int,spaceId:int,startDate:string,endDate:string,year:?int,month:?int,half:?int,closed:bool,label:string}
      */
     public function toView(): array
     {
+        $half = PeriodScheduleHelper::half($this->space->Frequency, $this->StartDate, $this->EndDate);
+
         return [
             'id' => $this->IdPeriod,
-            'year' => $this->Year,
-            'month' => $this->Month,
-            'half' => $this->Half,
+            'spaceId' => $this->FkSpace,
+            'startDate' => $this->StartDate,
+            'endDate' => $this->EndDate,
+            'year' => $half === null ? null : (int) substr($this->StartDate, 0, 4),
+            'month' => $half === null ? null : (int) substr($this->StartDate, 5, 2),
+            'half' => $half,
             'closed' => $this->Closed,
-            'label' => PeriodKeyHelper::label($this->Year, $this->Month, $this->Half),
+            'label' => $this->label(),
         ];
     }
 }

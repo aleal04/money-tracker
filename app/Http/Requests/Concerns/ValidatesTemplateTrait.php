@@ -7,7 +7,7 @@ use App\Constant\TemplateFrequencyConstant;
 use Illuminate\Contracts\Validation\Validator;
 
 /**
- * Field rules and the half check shared by the store and update template requests.
+ * Field rules and the day-of-month check shared by the store and update template requests.
  */
 trait ValidatesTemplateTrait
 {
@@ -28,7 +28,8 @@ trait ValidatesTemplateTrait
             'category' => [...$first, 'in:'.implode(',', CategoryConstant::ALL)],
             'estimated' => [...$first, $this->amountRule()],
             'frequency' => [...$first, 'in:'.implode(',', TemplateFrequencyConstant::ALL)],
-            'half' => ['sometimes', 'nullable'],
+            'dayOfMonth' => ['sometimes', 'nullable'],
+            'spaceId' => ['sometimes', 'nullable', 'integer'],
             'active' => ['sometimes', 'boolean'],
         ];
     }
@@ -46,6 +47,7 @@ trait ValidatesTemplateTrait
             'estimated.required' => 'Monto inválido',
             'frequency.*' => 'Frecuencia inválida',
             'active.*' => 'Valor inválido',
+            'spaceId.*' => 'Espacio inválido',
         ];
     }
 
@@ -60,17 +62,17 @@ trait ValidatesTemplateTrait
     }
 
     /**
-     * Half must be 1 or 2 when the merged frequency is mensual_en_quincena; otherwise it is ignored (stored null).
+     * dayOfMonth must be an integer 1 to 31 when the merged frequency is mensual_dia; otherwise it is ignored (stored null).
      *
      * @param  Validator  $validator  The validator.
      * @param  mixed  $frequency  The merged frequency.
-     * @param  mixed  $half  The merged half.
+     * @param  mixed  $dayOfMonth  The merged day of the month.
      */
-    protected function checkHalf(Validator $validator, mixed $frequency, mixed $half): void
+    protected function checkDayOfMonth(Validator $validator, mixed $frequency, mixed $dayOfMonth): void
     {
-        $valid = in_array($half, [1, 2, '1', '2'], true);
-        if ($frequency === TemplateFrequencyConstant::MENSUAL_EN_QUINCENA && ! $valid && ! $validator->errors()->has('half')) {
-            $validator->errors()->add('half', 'Quincena requerida');
+        $day = filter_var($dayOfMonth, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 31]]);
+        if ($frequency === TemplateFrequencyConstant::MENSUAL_DIA && $day === false && ! $validator->errors()->has('dayOfMonth')) {
+            $validator->errors()->add('dayOfMonth', 'Día del mes inválido (1 a 31)');
         }
     }
 }

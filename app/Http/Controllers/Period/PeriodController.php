@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Period;
 
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\DTOs\Period\PeriodStoreDto;
 use App\Http\Controllers\Controller;
@@ -27,13 +28,14 @@ class PeriodController extends Controller implements PeriodControllerContract
     ) {}
 
     /**
-     * Redirect to the latest period, or show the create form when there are none.
+     * Redirect to the latest period of the space (`?space=`, primary by default), or show the create form when there are none.
      *
+     * @param  Request  $request  The request with the optional space.
      * @return Response|RedirectResponse The index page or the redirect.
      */
-    public function index(): Response|RedirectResponse
+    public function index(Request $request): Response|RedirectResponse
     {
-        $latestId = $this->periodService->latestPeriodId();
+        $latestId = $this->periodService->latestPeriodId($request->integer('space') ?: null);
 
         return $latestId === null ? Inertia::render('Period/Index') : redirect()->route('periods.show', $latestId);
     }
@@ -67,7 +69,7 @@ class PeriodController extends Controller implements PeriodControllerContract
     /**
      * Create a period (idempotent).
      *
-     * @param  StorePeriodFormRequest  $requestData  The validated period key.
+     * @param  StorePeriodFormRequest  $requestData  The validated space and dates.
      * @return JsonResponse The result of the store operation.
      */
     public function store(StorePeriodFormRequest $requestData): JsonResponse
@@ -76,13 +78,14 @@ class PeriodController extends Controller implements PeriodControllerContract
     }
 
     /**
-     * Create the period that follows the latest one.
+     * Create the period that follows the latest one of the space (`spaceId`, primary by default).
      *
+     * @param  Request  $request  The request with the optional space.
      * @return JsonResponse The result of the store operation.
      */
-    public function storeNext(): JsonResponse
+    public function storeNext(Request $request): JsonResponse
     {
-        return $this->respond($this->periodService->storeNextPeriod(), 201);
+        return $this->respond($this->periodService->storeNextPeriod($request->integer('spaceId') ?: null), 201);
     }
 
     /**

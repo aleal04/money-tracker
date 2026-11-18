@@ -4,7 +4,6 @@ namespace App\Services\Period;
 
 use Closure;
 use App\Helpers\MoneyHelper;
-use App\Helpers\PeriodKeyHelper;
 use App\Models\Period\LineModel;
 use App\Constant\CategoryConstant;
 use Illuminate\Support\Collection;
@@ -51,7 +50,8 @@ class PeriodCloseService implements PeriodCloseServiceContract
     }
 
     /**
-     * Close the period in one transaction (idempotent), carrying its unpaid egresos into one arrastre line of the next period.
+     * Close the period in one transaction (idempotent), carrying its unpaid egresos into one arrastre line of the next
+     * period of its space (created with the proposed dates when there is none).
      *
      * @param  int  $periodId  The period identifier.
      * @return object The response with arrastreLineId (null when nothing was carried), or a 404/409 error.
@@ -70,8 +70,8 @@ class PeriodCloseService implements PeriodCloseServiceContract
             }
 
             $unpaid = $this->unpaidEgresos($periodId, true); // lock after the period row, so line writes serialise with the close
-            $nextKey = PeriodKeyHelper::next($period->Year, $period->Month, $period->Half);
-            if ($unpaid->isNotEmpty() && $this->periodQueryRepository->findByKey($nextKey)?->Closed) {
+            $next = $this->periodQueryRepository->nextOf($period);
+            if ($unpaid->isNotEmpty() && $next?->Closed) {
                 $stop($result = createValidationErrorResponse('La quincena siguiente está cerrada; reabrila primero', ['statusCode' => 409]));
 
                 return $result;
@@ -82,13 +82,15 @@ class PeriodCloseService implements PeriodCloseServiceContract
                 return createValidationSuccessResponse('Quincena cerrada.', ['arrastreLineId' => null]);
             }
 
-            $created = $this->periodService->createWithinTransaction($nextKey);
-            $stop($created);
+            if ($next === null) {
+                $created = $this->periodService->createAfter($period);
+                $stop($created);
+            }
             $total = MoneyHelper::fromCents($this->total($unpaid));
             $arrastre = $this->lineRepository->insert([
-                'FkPeriod' => $created->get('period')['id'],
+                'FkPeriod' => $next?->IdPeriod ?? $created->get('period')['id'],
                 'Category' => CategoryConstant::DEUDA_FIJA,
-                'Name' => 'Arrastre '.PeriodKeyHelper::label($period->Year, $period->Month, $period->Half),
+                'Name' => 'Arrastre '.$period->label(),
                 'Estimated' => $total,
                 'Actual' => $total,
                 'Source' => LineSourceConstant::CARRIED,

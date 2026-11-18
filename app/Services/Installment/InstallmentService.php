@@ -10,6 +10,7 @@ use App\Constant\InstallmentStatusConstant;
 use App\Models\Installment\InstallmentModel;
 use App\DTOs\Installment\InstallmentStoreDto;
 use App\DTOs\Installment\InstallmentUpdateDto;
+use App\Repositories\Space\SpaceQueryRepository;
 use App\Repositories\Installment\InstallmentRepository;
 use App\Repositories\Installment\InstallmentQueryRepository;
 use App\Contracts\Services\Installment\InstallmentServiceContract;
@@ -22,11 +23,13 @@ class InstallmentService implements InstallmentServiceContract
      * @param  InstallmentRepository  $installmentRepository  The card and installment writes.
      * @param  InstallmentQueryRepository  $installmentQueryRepository  The card and installment reads.
      * @param  CuotasSyncService  $cuotasSyncService  The cuotas lines sync.
+     * @param  SpaceQueryRepository  $spaceQueryRepository  The space reads.
      */
     public function __construct(
         private readonly InstallmentRepository $installmentRepository,
         private readonly InstallmentQueryRepository $installmentQueryRepository,
         private readonly CuotasSyncService $cuotasSyncService,
+        private readonly SpaceQueryRepository $spaceQueryRepository,
     ) {}
 
     /**
@@ -57,14 +60,18 @@ class InstallmentService implements InstallmentServiceContract
     }
 
     /**
-     * Store a card.
+     * Store a card in its space (primary when none is given).
      *
      * @param  CardStoreDto  $cardData  The card fields.
-     * @return object The result of the store operation.
+     * @return object The result of the store operation, or a 404 error when the space is not found.
      */
     public function storeCard(CardStoreDto $cardData): object
     {
-        return $this->installmentRepository->storeCard($cardData);
+        $space = $this->spaceQueryRepository->resolve($cardData->spaceId);
+
+        return $space === null
+            ? createValidationErrorResponse('No se encontró el espacio.', ['statusCode' => 404])
+            : $this->installmentRepository->storeCard($cardData, $space->IdSpace);
     }
 
     /**

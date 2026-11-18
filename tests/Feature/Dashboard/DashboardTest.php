@@ -29,12 +29,12 @@ class DashboardTest extends PeriodTestCase
     {
         $this->seedTemplates();
         $this->seedReloj();
-        $this->makePeriod(['year' => 2026, 'month' => 10, 'half' => 2]);
-        $latest = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 1]);
+        $this->makePeriod($this->dates(10, 2));
+        $latest = $this->makePeriod($this->dates(11, 1));
 
         $this->getJson('/dashboard/data')->assertOk()
             ->assertJsonPath('current.period.id', $latest['id'])
-            ->assertJsonPath('current.period.label', 'I Quincena Noviembre')
+            ->assertJsonPath('current.period.label', 'I Quincena Noviembre 2026')
             ->assertJsonPath('current.prevId', $latest['id'] - 1)
             ->assertJsonStructure(['current' => ['lines', 'summary'], 'cards' => [['id', 'name', 'installments', 'totals' => ['cuotaMensual', 'saldoFaltante', 'porQuincena']]]])
             ->assertJsonPath('templateCount', 3)

@@ -39,7 +39,7 @@ class ClosePeriodTest extends PeriodTestCase
      */
     private function october(): array
     {
-        return $this->makePeriod(['year' => 2026, 'month' => 10, 'half' => 1]);
+        return $this->makePeriod($this->dates(10, 1));
     }
 
     public function test_carries_unpaid_egresos_into_one_arrastre_line(): void
@@ -60,7 +60,7 @@ class ClosePeriodTest extends PeriodTestCase
         $arrastre = $this->arrastres(10, 2);
         $this->assertCount(1, $arrastre);
         $this->assertSame($arrastreId, $arrastre[0]->IdLine);
-        $this->assertSame(['Arrastre I Quincena Octubre', 'deuda_fija', false], [$arrastre[0]->Name, $arrastre[0]->Category, $arrastre[0]->Paid]);
+        $this->assertSame(['Arrastre I Quincena Octubre 2026', 'deuda_fija', false], [$arrastre[0]->Name, $arrastre[0]->Category, $arrastre[0]->Paid]);
         $this->assertSame([3090000, 3090000], [$arrastre[0]->toView()['estimated'], $arrastre[0]->toView()['actual']]);
         $this->assertSame([$a['id'], $b['id'], $c['id']], LineModel::where('FkCarriedToLine', $arrastreId)->orderBy('IdLine')->pluck('IdLine')->all());
         $this->assertTrue($this->period(10, 1)->Closed);
@@ -101,7 +101,7 @@ class ClosePeriodTest extends PeriodTestCase
     {
         $this->seedTemplates();
         $p = $this->october();
-        $this->makePeriod(['year' => 2026, 'month' => 10, 'half' => 2]);
+        $this->makePeriod($this->dates(10, 2));
         $this->addLine($p['id'], ['name' => 'X', 'estimated' => '5.000']);
         $before = LineModel::where('FkPeriod', $this->period(10, 2)->IdPeriod)->where('Source', 'template')->count();
 
@@ -121,7 +121,7 @@ class ClosePeriodTest extends PeriodTestCase
         $this->postJson("/periods/{$arr2->FkPeriod}/close")->assertCreated();
 
         $arr3 = $this->arrastres(11, 1)[0];
-        $this->assertSame('Arrastre II Quincena Octubre', $arr3->Name);
+        $this->assertSame('Arrastre II Quincena Octubre 2026', $arr3->Name);
         $this->assertSame(300, $arr3->toView()['estimated']);
         $this->assertSame([$arr2->IdLine], LineModel::where('FkCarriedToLine', $arr3->IdLine)->pluck('IdLine')->all());
         $this->assertSame([$a['id'], $b['id']], LineModel::where('FkCarriedToLine', $arr2->IdLine)->orderBy('IdLine')->pluck('IdLine')->all());
@@ -130,7 +130,7 @@ class ClosePeriodTest extends PeriodTestCase
     public function test_rejects_when_next_period_is_closed_and_there_is_something_to_carry(): void
     {
         $p = $this->october();
-        $next = $this->makePeriod(['year' => 2026, 'month' => 10, 'half' => 2]);
+        $next = $this->makePeriod($this->dates(10, 2));
         $this->postJson("/periods/{$next['id']}/close")->assertCreated();
         $this->addLine($p['id'], ['name' => 'X', 'estimated' => '5.000']);
 
@@ -143,7 +143,7 @@ class ClosePeriodTest extends PeriodTestCase
     public function test_closes_with_nothing_to_carry_even_if_next_period_is_closed(): void
     {
         $p = $this->october();
-        $next = $this->makePeriod(['year' => 2026, 'month' => 10, 'half' => 2]);
+        $next = $this->makePeriod($this->dates(10, 2));
         $this->postJson("/periods/{$next['id']}/close")->assertCreated();
 
         $this->postJson("/periods/{$p['id']}/close")->assertCreated()->assertJson(['arrastreLineId' => null]);

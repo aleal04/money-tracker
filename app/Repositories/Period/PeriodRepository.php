@@ -5,6 +5,7 @@ namespace App\Repositories\Period;
 use Closure;
 use App\Models\Period\PeriodModel;
 use Illuminate\Support\Facades\DB;
+use App\Models\Installment\CardModel;
 use App\Models\Installment\InstallmentModel;
 use App\Services\Installment\InstallmentCalculator;
 use App\Repositories\Concerns\RunsTransactionStepsTrait;
@@ -26,17 +27,21 @@ class PeriodRepository
     }
 
     /**
-     * Insert the period if its key is absent (atomic on the unique key, no nested transaction); to run inside a transaction.
+     * Insert the period if no live period of the space starts on that date (atomic on UQ_Period_FkSpace_ActiveStart,
+     * no nested transaction); to run inside a transaction.
      *
-     * @param  array{year:int,month:int,half:int}  $key  The period key.
+     * @param  int  $spaceId  The space identifier.
+     * @param  string  $startDate  The start date 'Y-m-d'.
+     * @param  string  $endDate  The end date 'Y-m-d' (ignored when the period already exists).
      * @return array{period: PeriodModel, created: bool} The period and whether this call created it.
      */
-    public function insertIfAbsent(array $key): array
+    public function insertIfAbsent(int $spaceId, string $startDate, string $endDate): array
     {
-        $columns = PeriodModel::keyColumns($key);
-        $created = PeriodModel::query()->insertOrIgnore([...$columns, 'Closed' => false, 'CreatedAt' => now(), 'UpdatedAt' => now()]) === 1;
+        $created = PeriodModel::query()->insertOrIgnore([
+            'FkSpace' => $spaceId, 'StartDate' => $startDate, 'EndDate' => $endDate, 'Closed' => false, 'CreatedAt' => now(), 'UpdatedAt' => now(),
+        ]) === 1;
 
-        return ['period' => PeriodModel::query()->where($columns)->lockForUpdate()->firstOrFail(), 'created' => $created];
+        return ['period' => PeriodModel::query()->where(['FkSpace' => $spaceId, 'StartDate' => $startDate])->lockForUpdate()->firstOrFail(), 'created' => $created];
     }
 
     /**
@@ -51,13 +56,15 @@ class PeriodRepository
     }
 
     /**
-     * Advance the paid cuotas of every installment up to the target month; to run inside a transaction.
+     * Advance the paid cuotas of the installments of the space's cards up to the target month; to run inside a transaction.
      *
+     * @param  int  $spaceId  The space identifier.
      * @param  string  $targetMonth  The month key "YYYY-MM" to advance to.
      */
-    public function advanceInstallments(string $targetMonth): void
+    public function advanceInstallments(int $spaceId, string $targetMonth): void
     {
-        foreach (InstallmentModel::query()->get() as $installment) {
+        $cardIds = CardModel::query()->where('FkSpace', $spaceId)->pluck('IdCard');
+        foreach (InstallmentModel::query()->whereIn('FkCard', $cardIds)->get() as $installment) {
             $next = InstallmentCalculator::advance($installment->PaidInstallments, $installment->TotalInstallments, $installment->LastAdvancedMonth, $targetMonth);
 
             if ($next['paid'] !== $installment->PaidInstallments || $next['lastAdvanced'] !== $installment->LastAdvancedMonth) {

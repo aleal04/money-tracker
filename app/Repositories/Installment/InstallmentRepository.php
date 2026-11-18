@@ -29,12 +29,13 @@ class InstallmentRepository
      * Store a card.
      *
      * @param  CardStoreDto  $cardData  The card fields.
+     * @param  int  $spaceId  The resolved space identifier.
      * @return object The response with the card, or a 500 error.
      */
-    public function storeCard(CardStoreDto $cardData): object
+    public function storeCard(CardStoreDto $cardData, int $spaceId): object
     {
-        return $this->transaction(function () use ($cardData): object {
-            $card = CardModel::query()->create($cardData->toArray());
+        return $this->transaction(function () use ($cardData, $spaceId): object {
+            $card = CardModel::query()->create($cardData->toArray() + ['FkSpace' => $spaceId]);
 
             return createValidationSuccessResponse('Tarjeta creada correctamente.', ['card' => ['id' => $card->IdCard, 'name' => $card->Name]]);
         }, 'No se pudo crear la tarjeta.');

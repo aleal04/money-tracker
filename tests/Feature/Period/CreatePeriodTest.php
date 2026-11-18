@@ -3,7 +3,9 @@
 namespace Tests\Feature\Period;
 
 use App\Models\Period\LineModel;
+use App\Models\Space\SpaceModel;
 use App\Models\Period\PeriodModel;
+use App\Models\Installment\CardModel;
 use App\Models\Installment\InstallmentModel;
 
 class CreatePeriodTest extends PeriodTestCase
@@ -14,8 +16,8 @@ class CreatePeriodTest extends PeriodTestCase
     public function test_expands_templates_per_half(): void
     {
         $this->seedTemplates();
-        $p1 = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 1]);
-        $p2 = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 2]);
+        $p1 = $this->makePeriod($this->dates(11, 1));
+        $p2 = $this->makePeriod($this->dates(11, 2));
 
         $h1 = LineModel::where('FkPeriod', $p1['id'])->get()->map(fn ($l) => [$l->Name, $l->Estimated, $l->Source, $l->Paid])->sort()->values()->all();
         $this->assertSame([['Banco Popular', '120000.00', 'template', false], ['CONAPE', '68460.00', 'template', false], ['Kolbi', '10865.00', 'template', false]], $h1);
@@ -24,34 +26,41 @@ class CreatePeriodTest extends PeriodTestCase
     }
 
     /**
-     * Creating an existing key returns the same period and adds no lines.
+     * Creating an existing start date returns the same period and adds no lines; the view has dates and the derived key.
      */
     public function test_is_idempotent(): void
     {
         $this->seedTemplates();
         $a = $this->makePeriod();
-        $b = $this->postJson('/periods/store', ['year' => 2026, 'month' => 11, 'half' => 1])->assertCreated()->json('period');
+        $b = $this->postJson('/periods/store', $this->dates(11, 1))->assertCreated()->json('period');
 
         $this->assertSame($a['id'], $b['id']);
-        $this->assertSame('I Quincena Noviembre', $a['label']);
+        $this->assertSame('I Quincena Noviembre 2026', $a['label']);
+        $this->assertSame(['startDate' => '2026-11-01', 'endDate' => '2026-11-15', 'year' => 2026, 'month' => 11, 'half' => 1], array_intersect_key($a, array_flip(['startDate', 'endDate', 'year', 'month', 'half'])));
         $this->assertSame(1, PeriodModel::count());
         $this->assertSame(3, LineModel::count());
     }
 
     /**
-     * Installments advance only on the first half of a new month.
+     * Installments advance only on the first period of a new month in the space.
      */
-    public function test_advances_installments_only_on_half_one_of_a_new_month(): void
+    public function test_advances_installments_only_on_first_period_of_a_new_month(): void
     {
         $this->seedReloj();
+        $other = SpaceModel::create(['Name' => 'Ahorro', 'Frequency' => 'monthly']);
+        $otherCard = CardModel::create(['FkSpace' => $other->IdSpace, 'Name' => 'Otra']);
+        $this->seedInstallment($otherCard, 'Tele', 'tasa0', 10, 2, 100000, null);
         $state = fn () => InstallmentModel::first()->only(['PaidInstallments', 'LastAdvancedMonth']);
 
-        $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 1]);
+        $this->makePeriod($this->dates(11, 1));
         $this->assertSame(['PaidInstallments' => 12, 'LastAdvancedMonth' => '2026-10'], $state());
-        $this->makePeriod(['year' => 2026, 'month' => 12, 'half' => 1]);
+        $this->makePeriod($this->dates(12, 1));
         $this->assertSame(['PaidInstallments' => 13, 'LastAdvancedMonth' => '2026-11'], $state());
-        $this->makePeriod(['year' => 2026, 'month' => 12, 'half' => 2]);
+        $this->makePeriod($this->dates(12, 2));
         $this->assertSame(13, $state()['PaidInstallments']);
+        $this->makePeriod($this->dates(1, 2, 2027)); // first period of January, even if it is the II quincena
+        $this->assertSame(['PaidInstallments' => 14, 'LastAdvancedMonth' => '2026-12'], $state());
+        $this->assertSame(2, InstallmentModel::where('FkCard', $otherCard->IdCard)->value('PaidInstallments'));
     }
 
     /**
@@ -73,10 +82,10 @@ class CreatePeriodTest extends PeriodTestCase
     {
         $this->postJson('/periods/next')->assertStatus(409)->assertJsonPath('message', 'No hay quincenas para continuar.');
 
-        $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 1]);
+        $this->makePeriod($this->dates(11, 1));
         $this->postJson('/periods/next')->assertCreated()->assertJsonPath('period.half', 2)->assertJsonPath('period.month', 11);
 
-        $this->makePeriod(['year' => 2026, 'month' => 12, 'half' => 2]);
+        $this->makePeriod($this->dates(12, 2));
         $this->postJson('/periods/next')->assertCreated()->assertJsonPath('period.year', 2027)->assertJsonPath('period.month', 1)->assertJsonPath('period.half', 1);
     }
 
@@ -89,16 +98,20 @@ class CreatePeriodTest extends PeriodTestCase
         $this->postJson('/periods/next')->assertCreated();
         $this->postJson('/periods/next')->assertCreated();
 
-        $keys = PeriodModel::get()->map(fn ($p) => "$p->Year-$p->Month-$p->Half");
+        $keys = PeriodModel::get()->map(fn ($p) => "$p->FkSpace-$p->StartDate");
         $this->assertSame($keys->count(), $keys->unique()->count());
     }
 
     /**
-     * Invalid keys give 422 with errors per field.
+     * Invalid dates give 422 with errors per field; an unknown space gives 404.
      */
-    public function test_rejects_invalid_key(): void
+    public function test_rejects_invalid_dates(): void
     {
-        $this->postJson('/periods/store', ['year' => 1999, 'month' => 13, 'half' => 3])
-            ->assertStatus(422)->assertJsonValidationErrors(['year', 'month', 'half']);
+        $this->postJson('/periods/store', ['startDate' => '2026-13-01', 'endDate' => 'x'])
+            ->assertStatus(422)->assertJsonValidationErrors(['startDate', 'endDate']);
+        $this->postJson('/periods/store', ['startDate' => '2026-11-15', 'endDate' => '2026-11-01'])
+            ->assertStatus(422)->assertJsonValidationErrors(['endDate' => 'El fin debe ser igual o posterior al inicio']);
+        $this->postJson('/periods/store', ['spaceId' => 999] + $this->dates(11, 1))->assertNotFound();
+        $this->postJson('/periods/next', ['spaceId' => 999])->assertNotFound();
     }
 }

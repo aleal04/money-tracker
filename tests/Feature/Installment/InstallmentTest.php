@@ -225,8 +225,8 @@ class InstallmentTest extends PeriodTestCase
     {
         $c = $this->mkCard();
         $this->mkInst($c, ['item' => 'Reloj'])->assertCreated();
-        $nov2 = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 2]);
-        $dic1 = $this->makePeriod(['year' => 2026, 'month' => 12, 'half' => 1]);
+        $nov2 = $this->makePeriod($this->dates(11, 2));
+        $dic1 = $this->makePeriod($this->dates(12, 1));
         $this->assertSame('5521.30', $this->cuotasLines($nov2['id'])->sole()->Estimated);
 
         $this->mkInst($c, ['item' => 'Wallet', 'totalInstallments' => 18, 'paidInstallments' => 17, 'initialBalance' => '18.000'])->assertCreated();

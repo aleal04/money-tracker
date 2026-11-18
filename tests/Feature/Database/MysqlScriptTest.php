@@ -4,6 +4,7 @@ namespace Tests\Feature\Database;
 
 use Tests\TestCase;
 use App\Models\Period\LineModel;
+use App\Models\Space\SpaceModel;
 use App\Models\Period\PeriodModel;
 use App\Models\Installment\CardModel;
 use App\Models\Template\TemplateModel;
@@ -18,7 +19,7 @@ class MysqlScriptTest extends TestCase
     {
         $sql = file_get_contents(base_path('database/scripts/tables/1. Money Tracker - Tables.sql'));
 
-        foreach ([CardModel::class, TemplateModel::class, PeriodModel::class, LineModel::class, InstallmentModel::class] as $class) {
+        foreach ([SpaceModel::class, CardModel::class, TemplateModel::class, PeriodModel::class, LineModel::class, InstallmentModel::class] as $class) {
             $model = new $class;
             $this->assertSame(1, preg_match('/CREATE TABLE IF NOT EXISTS `?'.$model->getTable().'`? \((.*?)\n\) ENGINE/s', $sql, $match), $model->getTable().' is missing in the script');
 

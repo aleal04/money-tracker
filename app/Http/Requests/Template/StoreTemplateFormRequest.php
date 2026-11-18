@@ -29,12 +29,12 @@ class StoreTemplateFormRequest extends FormRequest
     }
 
     /**
-     * Configure the validator with the half check.
+     * Configure the validator with the day-of-month check.
      *
      * @return array<int, callable> The after-validation callbacks.
      */
     public function after(): array
     {
-        return [fn (Validator $validator) => $this->checkHalf($validator, $this->input('frequency'), $this->input('half'))];
+        return [fn (Validator $validator) => $this->checkDayOfMonth($validator, $this->input('frequency'), $this->input('dayOfMonth'))];
     }
 }

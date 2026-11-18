@@ -74,4 +74,29 @@ class PeriodScheduleHelperTest extends TestCase
         $this->assertSame(4, P::periodsStartingInMonth('weekly', null, '2026-11-12'));
         $this->assertSame(3, P::periodsStartingInMonth('custom', 10, '2026-11-11'));
     }
+
+    /**
+     * Quincena number only for biweekly calendar halves (February and leap year included).
+     */
+    public function test_half(): void
+    {
+        $this->assertSame(1, P::half('biweekly', '2026-10-01', '2026-10-15'));
+        $this->assertSame(2, P::half('biweekly', '2026-10-16', '2026-10-31'));
+        $this->assertSame(2, P::half('biweekly', '2028-02-16', '2028-02-29'));
+        $this->assertNull(P::half('biweekly', '2028-02-16', '2028-02-28'));
+        $this->assertNull(P::half('biweekly', '2026-10-10', '2026-10-24'));
+        $this->assertNull(P::half('monthly', '2026-10-01', '2026-10-15'));
+    }
+
+    /**
+     * Index within the month matches the projection count.
+     */
+    public function test_index_in_month(): void
+    {
+        $this->assertSame([0, 1], [P::indexInMonth('biweekly', null, '2026-11-01'), P::indexInMonth('biweekly', null, '2026-11-16')]);
+        $this->assertSame(0, P::indexInMonth('monthly', null, '2026-11-01'));
+        $this->assertSame([0, 4], [P::indexInMonth('weekly', null, '2026-10-01'), P::indexInMonth('weekly', null, '2026-10-29')]);
+        $this->assertSame(1, P::indexInMonth('weekly', null, '2026-11-12'));
+        $this->assertSame(1, P::indexInMonth('custom', 10, '2026-11-11'));
+    }
 }

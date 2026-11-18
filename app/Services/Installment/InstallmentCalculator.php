@@ -95,11 +95,13 @@ final class InstallmentCalculator
     }
 
     /**
-     * Amount of the "Cuotas" line for a half: unfinished cuotas summed, then split monthly.
+     * Amount of the "Cuotas" line for one period: unfinished cuotas summed, then split across the periods of the month.
      *
      * @param  iterable<array<string, mixed>|object>  $installments
+     * @param  int  $partsInMonth  Periods of the space that start in the month.
+     * @param  int  $indexInMonth  0-based position of the period among them.
      */
-    public static function cuotasLineAmount(iterable $installments, int $half): int
+    public static function cuotasLineAmount(iterable $installments, int $partsInMonth, int $indexInMonth): int
     {
         $sum = 0;
         foreach ($installments as $i) {
@@ -109,6 +111,6 @@ final class InstallmentCalculator
             }
         }
 
-        return MoneyHelper::splitMonthly($sum, $half);
+        return MoneyHelper::splitAcross($sum, $partsInMonth, $indexInMonth);
     }
 }

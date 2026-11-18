@@ -21,6 +21,7 @@ cd database/scripts
 docker exec -i mysql mysql -uroot -p < "database/1. Money Tracker - Database.sql"
 docker exec -i mysql mysql -uroot -p < "tables/1. Money Tracker - Tables.sql"
 docker exec -i mysql mysql -uroot -p < "indexes/1. Money Tracker - Indexes.sql"
+docker exec -i mysql mysql -uroot -p < "inserts/1. Money Tracker - Inserts.sql"   # espacio principal "Salario"
 docker exec -i mysql mysql -uroot -p < "logins/1. Application - Login.sql"
 ```
 

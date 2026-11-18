@@ -101,7 +101,9 @@ class InstallmentCalculatorTest extends TestCase
             $this->mk(['initialBalance' => 5000000, 'totalInstallments' => 12, 'paidInstallments' => 12]),
             $this->mk(['type' => 'minicuotas', 'totalInstallments' => 18, 'paidInstallments' => 17, 'installmentAmount' => 251460]),
         ];
-        $this->assertSame(677861, C::cuotasLineAmount($list, 1));
-        $this->assertSame(677860, C::cuotasLineAmount($list, 2));
+        $this->assertSame(677861, C::cuotasLineAmount($list, 2, 0));
+        $this->assertSame(677860, C::cuotasLineAmount($list, 2, 1));
+        $this->assertSame(1355721, C::cuotasLineAmount($list, 1, 0));
+        $this->assertSame([271145, 271144, 271144, 271144, 271144], array_map(fn ($i) => C::cuotasLineAmount($list, 5, $i), range(0, 4)));
     }
 }

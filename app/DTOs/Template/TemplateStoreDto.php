@@ -15,16 +15,18 @@ class TemplateStoreDto
      * @param  string  $category  The category.
      * @param  int  $estimated  The estimated amount in cents.
      * @param  string  $frequency  The frequency.
-     * @param  int|null  $half  The quincena (1 or 2), only for mensual_en_quincena.
+     * @param  int|null  $dayOfMonth  The day of the month (1 to 31), only for mensual_dia.
      * @param  bool  $active  Whether the template is expanded into new periods.
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
      */
     public function __construct(
         public readonly string $name,
         public readonly string $category,
         public readonly int $estimated,
         public readonly string $frequency,
-        public readonly ?int $half,
+        public readonly ?int $dayOfMonth,
         public readonly bool $active,
+        public readonly ?int $spaceId,
     ) {}
 
     /**
@@ -42,13 +44,14 @@ class TemplateStoreDto
             category: (string) $request->input('category'),
             estimated: (int) MoneyHelper::parseAmount((string) $request->input('estimated')),
             frequency: $frequency,
-            half: $frequency === TemplateFrequencyConstant::MENSUAL_EN_QUINCENA ? (int) $request->input('half') : null,
+            dayOfMonth: $frequency === TemplateFrequencyConstant::MENSUAL_DIA ? (int) $request->input('dayOfMonth') : null,
             active: $request->boolean('active', true),
+            spaceId: $request->filled('spaceId') ? (int) $request->input('spaceId') : null,
         );
     }
 
     /**
-     * Convert the DTO to the template columns.
+     * Convert the DTO to the template columns (the service adds FkSpace).
      *
      * @return array<string, mixed> The template columns.
      */
@@ -59,7 +62,7 @@ class TemplateStoreDto
             'Category' => $this->category,
             'Estimated' => MoneyHelper::fromCents($this->estimated),
             'Frequency' => $this->frequency,
-            'Half' => $this->half,
+            'DayOfMonth' => $this->dayOfMonth,
             'Active' => $this->active,
         ];
     }

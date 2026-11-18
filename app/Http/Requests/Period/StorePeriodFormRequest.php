@@ -22,9 +22,9 @@ class StorePeriodFormRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'year' => ['required', 'integer', 'between:2000,2100'],
-            'month' => ['required', 'integer', 'between:1,12'],
-            'half' => ['required', 'integer', 'in:1,2'],
+            'spaceId' => ['sometimes', 'nullable', 'integer'],
+            'startDate' => ['required', 'date_format:Y-m-d', 'after_or_equal:2000-01-01', 'before:2101-01-01'],
+            'endDate' => ['required', 'date_format:Y-m-d', 'after_or_equal:startDate', 'before:2101-01-01'],
         ];
     }
 
@@ -36,9 +36,10 @@ class StorePeriodFormRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'year.*' => 'Año inválido',
-            'month.*' => 'Mes inválido',
-            'half.*' => 'Quincena inválida',
+            'spaceId.*' => 'Espacio inválido',
+            'startDate.*' => 'Fecha de inicio inválida',
+            'endDate.after_or_equal' => 'El fin debe ser igual o posterior al inicio',
+            'endDate.*' => 'Fecha de fin inválida',
         ];
     }
 }

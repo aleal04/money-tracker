@@ -52,18 +52,18 @@ class CuotasSyncTest extends PeriodTestCase
     }
 
     /**
-     * The all-open sync skips open periods older than the latest I quincena month.
+     * The all-open sync skips open periods older than the latest month of the space.
      */
-    public function test_all_open_sync_skips_periods_before_latest_first_half_month(): void
+    public function test_all_open_sync_skips_periods_before_the_latest_month(): void
     {
         $card = $this->seedReloj();
-        $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 2]);
+        $this->makePeriod($this->dates(11, 2));
         $this->seedWallet($card);
         $this->sync();
         $nov2 = $this->period(11, 2);
         $this->assertSame('6778.60', $this->cuotasLines($nov2->IdPeriod)->sole()->Estimated);
 
-        $dec1 = $this->makePeriod(['year' => 2026, 'month' => 12, 'half' => 1]); // Reloj 13/24, Wallet finished
+        $dec1 = $this->makePeriod($this->dates(12, 1)); // Reloj 13/24, Wallet finished
         $this->assertSame('5521.31', $this->cuotasLines($dec1['id'])->sole()->Estimated);
 
         $this->seedInstallment($card, 'X', 'minicuotas', 18, 0, 100000 * 18, 100000, '2026-11');

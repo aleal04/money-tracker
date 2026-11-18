@@ -15,8 +15,8 @@ class TemplateUpdateDto
      * @param  string|null  $category  The new category, or null when not sent.
      * @param  int|null  $estimated  The new estimated amount in cents, or null when not sent.
      * @param  string|null  $frequency  The new frequency, or null when not sent.
-     * @param  bool  $hasHalf  Whether half was sent.
-     * @param  int|null  $half  The new quincena.
+     * @param  bool  $hasDayOfMonth  Whether dayOfMonth was sent.
+     * @param  int|null  $dayOfMonth  The new day of the month.
      * @param  bool|null  $active  The new active flag, or null when not sent.
      */
     public function __construct(
@@ -25,8 +25,8 @@ class TemplateUpdateDto
         public readonly ?string $category,
         public readonly ?int $estimated,
         public readonly ?string $frequency,
-        public readonly bool $hasHalf,
-        public readonly ?int $half,
+        public readonly bool $hasDayOfMonth,
+        public readonly ?int $dayOfMonth,
         public readonly ?bool $active,
     ) {}
 
@@ -44,8 +44,8 @@ class TemplateUpdateDto
             category: $request->has('category') ? (string) $request->input('category') : null,
             estimated: $request->has('estimated') ? (int) MoneyHelper::parseAmount((string) $request->input('estimated')) : null,
             frequency: $request->has('frequency') ? (string) $request->input('frequency') : null,
-            hasHalf: $request->has('half'),
-            half: $request->input('half') === null ? null : (int) $request->input('half'),
+            hasDayOfMonth: $request->has('dayOfMonth'),
+            dayOfMonth: $request->input('dayOfMonth') === null ? null : (int) $request->input('dayOfMonth'),
             active: $request->has('active') ? $request->boolean('active') : null,
         );
     }
@@ -65,8 +65,8 @@ class TemplateUpdateDto
             'Active' => $this->active,
         ], fn ($value) => $value !== null);
 
-        if ($this->hasHalf) {
-            $changes['Half'] = $this->half;
+        if ($this->hasDayOfMonth) {
+            $changes['DayOfMonth'] = $this->dayOfMonth;
         }
 
         return $changes;

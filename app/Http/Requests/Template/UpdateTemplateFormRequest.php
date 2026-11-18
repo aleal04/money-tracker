@@ -30,7 +30,7 @@ class UpdateTemplateFormRequest extends FormRequest
     }
 
     /**
-     * Configure the validator: the half check runs on the stored template merged with the sent fields.
+     * Configure the validator: the day-of-month check runs on the stored template merged with the sent fields.
      *
      * @return array<int, callable> The after-validation callbacks.
      */
@@ -42,10 +42,10 @@ class UpdateTemplateFormRequest extends FormRequest
                 return; // The service answers 404.
             }
 
-            $this->checkHalf(
+            $this->checkDayOfMonth(
                 $validator,
                 $this->has('frequency') ? $this->input('frequency') : $current->Frequency,
-                $this->has('half') ? $this->input('half') : $current->Half,
+                $this->has('dayOfMonth') ? $this->input('dayOfMonth') : $current->DayOfMonth,
             );
         }];
     }

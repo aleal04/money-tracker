@@ -7,6 +7,7 @@ use App\Models\Template\TemplateModel;
 use App\DTOs\Template\TemplateStoreDto;
 use App\DTOs\Template\TemplateUpdateDto;
 use App\Constant\TemplateFrequencyConstant;
+use App\Repositories\Space\SpaceQueryRepository;
 use App\Repositories\Template\TemplateRepository;
 use App\Repositories\Template\TemplateQueryRepository;
 use App\Contracts\Services\Template\TemplateServiceContract;
@@ -18,10 +19,12 @@ class TemplateService implements TemplateServiceContract
      *
      * @param  TemplateRepository  $templateRepository  The template writes.
      * @param  TemplateQueryRepository  $templateQueryRepository  The template reads.
+     * @param  SpaceQueryRepository  $spaceQueryRepository  The space reads.
      */
     public function __construct(
         private readonly TemplateRepository $templateRepository,
         private readonly TemplateQueryRepository $templateQueryRepository,
+        private readonly SpaceQueryRepository $spaceQueryRepository,
     ) {}
 
     /**
@@ -35,22 +38,26 @@ class TemplateService implements TemplateServiceContract
     }
 
     /**
-     * Store a template.
+     * Store a template in its space (primary when none is given).
      *
      * @param  TemplateStoreDto  $templateData  The template fields.
-     * @return object The result of the store operation.
+     * @return object The result of the store operation, or a 404 error when the space is not found.
      */
     public function storeTemplate(TemplateStoreDto $templateData): object
     {
         return $this->templateRepository->transaction(function () use ($templateData): object {
-            $template = $this->templateRepository->insert($templateData->toArray());
+            $space = $this->spaceQueryRepository->resolve($templateData->spaceId);
+            if ($space === null) {
+                return createValidationErrorResponse('No se encontró el espacio.', ['statusCode' => 404]);
+            }
+            $template = $this->templateRepository->insert($templateData->toArray() + ['FkSpace' => $space->IdSpace]);
 
             return createValidationSuccessResponse('Plantilla creada correctamente.', ['template' => $this->toView($template->fresh())]);
         }, 'No se pudo crear la plantilla.');
     }
 
     /**
-     * Update a template; half is cleared when the resulting frequency is not mensual_en_quincena.
+     * Update a template; the day of the month is cleared when the resulting frequency is not mensual_dia.
      *
      * @param  TemplateUpdateDto  $templateData  The template identifier and changed fields.
      * @return object The result of the update operation.
@@ -64,8 +71,8 @@ class TemplateService implements TemplateServiceContract
             }
 
             $changes = $templateData->toArray();
-            if (($changes['Frequency'] ?? $template->Frequency) !== TemplateFrequencyConstant::MENSUAL_EN_QUINCENA) {
-                $changes['Half'] = null;
+            if (($changes['Frequency'] ?? $template->Frequency) !== TemplateFrequencyConstant::MENSUAL_DIA) {
+                $changes['DayOfMonth'] = null;
             }
             $this->templateRepository->update($template, $changes);
 
@@ -103,11 +110,12 @@ class TemplateService implements TemplateServiceContract
     {
         return [
             'id' => $template->IdTemplate,
+            'spaceId' => $template->FkSpace,
             'name' => $template->Name,
             'category' => $template->Category,
             'estimated' => MoneyHelper::requireCents($template->Estimated),
             'frequency' => $template->Frequency,
-            'half' => $template->Half,
+            'dayOfMonth' => $template->DayOfMonth,
             'active' => $template->Active,
         ];
     }

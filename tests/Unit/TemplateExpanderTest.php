@@ -15,39 +15,51 @@ class TemplateExpanderTest extends TestCase
      */
     private function t(array $o = []): array
     {
-        return $o + ['id' => 1, 'name' => 't', 'category' => 'gasto', 'estimated' => 1000000, 'frequency' => 'quincenal', 'half' => null, 'active' => true];
+        return $o + ['id' => 1, 'name' => 't', 'category' => 'gasto', 'estimated' => 1000000, 'frequency' => 'cada_periodo', 'dayOfMonth' => null, 'active' => true];
     }
 
     /**
-     * Quincenal in both halves.
+     * A biweekly period on calendar halves, as the TemplateExpander input.
+     *
+     * @return array{start:string,end:string,indexInMonth:int,partsInMonth:int}
      */
-    public function test_quincenal_in_both_halves(): void
+    private function half(int $half): array
     {
-        $this->assertSame(1000000, E::expand([$this->t()], 1)[0]['estimated']);
-        $this->assertSame(1000000, E::expand([$this->t()], 2)[0]['estimated']);
-        $this->assertSame(['templateId' => 1, 'name' => 't', 'category' => 'gasto', 'estimated' => 1000000], E::expand([(object) $this->t()], 1)[0]);
+        return $half === 1
+            ? ['start' => '2026-11-01', 'end' => '2026-11-15', 'indexInMonth' => 0, 'partsInMonth' => 2]
+            : ['start' => '2026-11-16', 'end' => '2026-11-30', 'indexInMonth' => 1, 'partsInMonth' => 2];
     }
 
     /**
-     * Mensual dividido splits.
+     * Cada periodo in both halves.
      */
-    public function test_mensual_dividido_splits(): void
+    public function test_cada_periodo_in_both_halves(): void
     {
-        $t = $this->t(['frequency' => 'mensual_dividido', 'estimated' => 2335]);
-        $this->assertSame(1168, E::expand([$t], 1)[0]['estimated']);
-        $this->assertSame(1167, E::expand([$t], 2)[0]['estimated']);
+        $this->assertSame(1000000, E::expandForPeriod([$this->t()], $this->half(1))[0]['estimated']);
+        $this->assertSame(1000000, E::expandForPeriod([$this->t()], $this->half(2))[0]['estimated']);
+        $this->assertSame(['templateId' => 1, 'name' => 't', 'category' => 'gasto', 'estimated' => 1000000], E::expandForPeriod([(object) $this->t()], $this->half(1))[0]);
     }
 
     /**
-     * Mensual en quincena only in its half.
+     * Mensual repartido splits between the halves like the old ceil/floor.
      */
-    public function test_mensual_en_quincena_only_in_its_half(): void
+    public function test_mensual_repartido_splits_between_halves(): void
     {
-        $t = $this->t(['frequency' => 'mensual_en_quincena', 'half' => 2]);
-        $this->assertSame([], E::expand([$t], 1));
-        $this->assertCount(1, E::expand([$t], 2));
-        $this->assertCount(1, E::expand([['half' => '2'] + $t], 2));
-        $this->assertSame([], E::expand([['half' => '1'] + $t], 2));
+        $t = $this->t(['frequency' => 'mensual_repartido', 'estimated' => 2335]);
+        $this->assertSame(1168, E::expandForPeriod([$t], $this->half(1))[0]['estimated']);
+        $this->assertSame(1167, E::expandForPeriod([$t], $this->half(2))[0]['estimated']);
+    }
+
+    /**
+     * Mensual día 1 / 16 lands only in the I / II quincena.
+     */
+    public function test_mensual_dia_only_in_its_half(): void
+    {
+        $t = $this->t(['frequency' => 'mensual_dia', 'dayOfMonth' => 16]);
+        $this->assertSame([], E::expandForPeriod([$t], $this->half(1)));
+        $this->assertCount(1, E::expandForPeriod([$t], $this->half(2)));
+        $this->assertCount(1, E::expandForPeriod([['dayOfMonth' => '1'] + $t], $this->half(1)));
+        $this->assertSame([], E::expandForPeriod([['dayOfMonth' => '1'] + $t], $this->half(2)));
     }
 
     /**
@@ -55,7 +67,7 @@ class TemplateExpanderTest extends TestCase
      */
     public function test_inactive_absent(): void
     {
-        $this->assertSame([], E::expand([$this->t(['active' => false])], 1));
+        $this->assertSame([], E::expandForPeriod([$this->t(['active' => false])], $this->half(1)));
     }
 
     /**

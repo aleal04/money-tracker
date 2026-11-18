@@ -47,7 +47,7 @@ class LineModel extends Model
      *
      * @var list<string>
      */
-    protected $fillable = ['FkPeriod', 'Category', 'Name', 'Estimated', 'Actual', 'Paid', 'PaidAt', 'Source', 'FkTemplate', 'FkCard', 'FkCarriedToLine', 'Sort'];
+    protected $fillable = ['FkPeriod', 'Category', 'Name', 'Estimated', 'Actual', 'Paid', 'PaidAt', 'Source', 'FkTemplate', 'FkCard', 'FkCarriedToLine', 'FkTargetSpace', 'FkTransferFromLine', 'Sort'];
 
     /**
      * The attributes that should be cast.

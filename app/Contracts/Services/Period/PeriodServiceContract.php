@@ -2,39 +2,53 @@
 
 namespace App\Contracts\Services\Period;
 
+use App\Models\Space\SpaceModel;
+use App\Models\Period\PeriodModel;
 use App\DTOs\Period\PeriodStoreDto;
 
 interface PeriodServiceContract
 {
     /**
-     * Create the period of the given key in one transaction (idempotent).
+     * Create the period of a space (primary when none is given) in one transaction (idempotent on the start date).
      *
-     * @param  PeriodStoreDto  $periodData  The period key.
-     * @return object The response with the period view.
+     * @param  PeriodStoreDto  $periodData  The space and dates.
+     * @return object The response with the period view, or a 404 error.
      */
     public function storePeriod(PeriodStoreDto $periodData): object;
 
     /**
-     * Create the period that follows the latest one.
+     * Create the period that follows the latest one of a space (primary when none is given).
      *
-     * @return object The response with the period view, or a 409 error when there are no periods.
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
+     * @return object The response with the period view, or a 404/409 error.
      */
-    public function storeNextPeriod(): object;
+    public function storeNextPeriod(?int $spaceId = null): object;
+
+    /**
+     * Create the period its space's frequency proposes right after the given one; to run inside a transaction.
+     *
+     * @param  PeriodModel  $period  The period to continue from.
+     * @return object The response with the period view.
+     */
+    public function createAfter(PeriodModel $period): object;
 
     /**
      * Create the period without opening a transaction, to run inside an outer one.
      *
-     * @param  array{year:int,month:int,half:int}  $key  The period key.
+     * @param  SpaceModel  $space  The space.
+     * @param  string  $startDate  The start date 'Y-m-d'.
+     * @param  string  $endDate  The end date 'Y-m-d'.
      * @return object The response with the period view.
      */
-    public function createWithinTransaction(array $key): object;
+    public function createWithinTransaction(SpaceModel $space, string $startDate, string $endDate): object;
 
     /**
-     * The id of the latest period, or null when there are none.
+     * The id of the latest period of a space (primary when none is given), or null when there are none.
      *
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
      * @return int|null The latest period id.
      */
-    public function latestPeriodId(): ?int;
+    public function latestPeriodId(?int $spaceId = null): ?int;
 
     /**
      * Whether a period exists.

@@ -23,13 +23,14 @@ class DashboardService implements DashboardServiceContract
     ) {}
 
     /**
-     * Build the home page data.
+     * Build the home page data for a space (primary when none is given).
      *
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
      * @return array{current: ?array, cards: array, templateCount: int} The latest period detail (null when none), the card views and the template count.
      */
-    public function data(): array
+    public function data(?int $spaceId = null): array
     {
-        $latestId = $this->periodService->latestPeriodId();
+        $latestId = $this->periodService->latestPeriodId($spaceId);
 
         return [
             'current' => $latestId === null ? null : $this->periodService->detail($latestId),

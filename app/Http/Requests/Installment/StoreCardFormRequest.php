@@ -23,7 +23,10 @@ class StoreCardFormRequest extends FormRequest
      */
     public function rules(): array
     {
-        return ['name' => ['required', 'string', 'max:255', Rule::unique('Card', 'Name')->where(fn ($query) => $query->where('IsDeleted', GeneralConstant::NOT_DELETED))]];
+        return [
+            'name' => ['required', 'string', 'max:255', Rule::unique('Card', 'Name')->where(fn ($query) => $query->where('IsDeleted', GeneralConstant::NOT_DELETED))],
+            'spaceId' => ['sometimes', 'nullable', 'integer'],
+        ];
     }
 
     /**
@@ -33,7 +36,7 @@ class StoreCardFormRequest extends FormRequest
      */
     public function messages(): array
     {
-        return ['name.unique' => 'Ya existe una tarjeta con ese nombre', 'name.*' => 'Nombre requerido'];
+        return ['name.unique' => 'Ya existe una tarjeta con ese nombre', 'name.*' => 'Nombre requerido', 'spaceId.*' => 'Espacio inválido'];
     }
 
     /**

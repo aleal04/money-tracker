@@ -33,7 +33,7 @@ class CuotasSyncService implements CuotasSyncServiceContract
     /**
      * Sync the "Cuotas <card>" lines in their own transaction.
      *
-     * @param  int|null  $periodId  The period to sync, or null for every open period since the latest I quincena month.
+     * @param  int|null  $periodId  The period to sync, or null for every open period since the latest month of its space.
      * @return object The success response, or the error response.
      */
     public function sync(?int $periodId = null): object
@@ -54,11 +54,12 @@ class CuotasSyncService implements CuotasSyncServiceContract
     public function syncWithinTransaction(?int $periodId = null): void
     {
         $installments = $this->periodQueryRepository->listInstallmentInputs();
-        $cards = $this->periodQueryRepository->listCards();
+        $cards = [];
 
         foreach ($this->periodsToSync($periodId) as $period) {
-            foreach ($cards as $card) {
-                $amount = InstallmentCalculator::cuotasLineAmount($installments->where('cardId', $card->IdCard), $period->Half);
+            $slot = $period->monthSlot();
+            foreach ($cards[$period->FkSpace] ??= $this->periodQueryRepository->listCards($period->FkSpace) as $card) {
+                $amount = InstallmentCalculator::cuotasLineAmount($installments->where('cardId', $card->IdCard), $slot['partsInMonth'], $slot['indexInMonth']);
                 $line = $this->lineQueryRepository->findInstallmentsLine($period->IdPeriod, $card->IdCard);
 
                 if ($line === null) {
@@ -81,8 +82,8 @@ class CuotasSyncService implements CuotasSyncServiceContract
     }
 
     /**
-     * The open periods to sync. Installments reflect the state as of the latest I quincena; older open periods keep
-     * the amounts of their own month.
+     * The open periods to sync. Installments reflect the state as of the latest month with a period in each space
+     * (they advance on its first period); older open periods keep the amounts of their own month.
      *
      * @param  int|null  $periodId  A single period, or null for the all-open scope.
      * @return iterable<PeriodModel> The open periods.
@@ -96,9 +97,9 @@ class CuotasSyncService implements CuotasSyncServiceContract
         }
 
         $periods = $this->periodQueryRepository->listChronological();
-        $monthIndex = fn ($p) => $p->Year * 12 + $p->Month;
-        $from = $periods->where('Half', 1)->map($monthIndex)->max() ?? 0;
+        $month = fn (PeriodModel $p) => substr($p->StartDate, 0, 7);
+        $from = $periods->groupBy('FkSpace')->map(fn ($spacePeriods) => $spacePeriods->map($month)->max());
 
-        return $periods->where('Closed', false)->filter(fn ($p) => $monthIndex($p) >= $from);
+        return $periods->where('Closed', false)->filter(fn (PeriodModel $p) => $month($p) >= $from[$p->FkSpace]);
     }
 }

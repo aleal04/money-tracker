@@ -3,6 +3,7 @@
 namespace App\Contracts\Controllers\Dashboard;
 
 use Inertia\Response;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 interface DashboardControllerContract
@@ -15,9 +16,10 @@ interface DashboardControllerContract
     public function index(): Response;
 
     /**
-     * The home page data as JSON.
+     * The home page data as JSON for the space (`?space=`, primary by default).
      *
+     * @param  Request  $request  The request with the optional space.
      * @return JsonResponse The latest period detail, the cards and the template count.
      */
-    public function data(): JsonResponse;
+    public function data(Request $request): JsonResponse;
 }

@@ -2,7 +2,7 @@
 /*                   LOGIN DE LA APLICACION                */
 /* ------------------------------------------------------- */
 /*
- * Orden general de los scripts: database -> tables -> indexes -> logins.
+ * Orden general de los scripts: database -> tables -> indexes -> inserts -> logins.
  * Orden de esta carpeta:
  *   - 1. Application - Login.sql
  *
