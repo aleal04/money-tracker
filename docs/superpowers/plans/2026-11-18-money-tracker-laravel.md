@@ -11,6 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-11-18-money-tracker-laravel-design.md` (business rules: `docs/superpowers/specs/2026-11-17-money-tracker-design.md` §5–§7 + Laravel spec §6).
 
 **Reference implementations (read, port, don't copy blindly):**
+
 - Business logic + tests (NestJS, branch `feat/v1`): `git show feat/v1:api/src/<path>` and `git show feat/v1:api/test/<path>`. Key files: `api/src/shared/domain/money.ts`, `period-key.ts`, `api/src/installments/domain/installment.ts`, `api/src/periods/domain/summary.ts`, `api/src/templates/domain/template.ts`, `api/src/periods/application/{create-period,sync-cuotas-lines,close-period,reopen-period,line-commands,period-queries}.use-case.ts`, `api/src/installments/application/*.use-case.ts`, and the tests under `api/test/{unit,integration,e2e}`.
 - Frontend design (branch `feat/v1`): `web/src/{main.css,theme.ts,format.ts,components/*.vue,views/*.vue}` — port look & behavior to Inertia pages + SCSS.
 - Architecture conventions: `/Users/andreyleal/Documents/Apps/ssi` (read-only): `CLAUDE.md`, `.ai/rules/`, `app/Helpers/ReturnResponse.php`, `app/Repositories/Concerns/RunsTransactionStepsTrait.php`, `app/Repositories/BaseQueryRepository.php`, any domain e.g. Reprimand (controller/contract/request/DTO/service/repositories/model/routes/page/composable/tests), `resources/js/{app.js,Layouts,setup}`, `pint.json`, `biome.json`, `.githooks/`.
@@ -55,6 +56,7 @@
 **Files:** `app/Helpers/MoneyHelper.php` (final, static), `app/Helpers/PeriodKeyHelper.php`, `app/Services/Installment/InstallmentCalculator.php`, `app/Services/Period/PeriodSummaryCalculator.php`, `app/Services/Template/TemplateExpander.php`, `app/Constant/{CategoryConstant,LineSourceConstant,TemplateFrequencyConstant,InstallmentTypeConstant,InstallmentStatusConstant}.php`; tests `tests/Unit/{MoneyHelperTest,PeriodKeyHelperTest,InstallmentCalculatorTest,PeriodSummaryCalculatorTest,TemplateExpanderTest}.php`.
 
 **Interfaces (port of feat/v1 domain files, same semantics):**
+
 - `MoneyHelper::toCents(string|int|float|null): ?int` (accepts negatives), `fromCents(int): string` ("10865.00"), `parseAmount(string): ?int` (non-negative, es-CR rules), `splitMonthly(int $cents, int $half): int`, `format(int $cents): string` ("₡10.865,00").
 - `PeriodKeyHelper::label(int $y, int $m, int $h): string`, `next(int $y, int $m, int $h): array{year:int,month:int,half:int}`, `monthKey(int $y, int $m): string`, `prevMonthKey(int $y, int $m): string`.
 - `InstallmentCalculator::cuota(array|object $i): int`, `saldoFaltanteCalculado(...)`, `saldoFaltante(...): array{value:int,calculated:int,diff:?int}`, `status(...): string`, `advance(int $paid, int $total, string $last, string $target): array{paid:int,lastAdvanced:string}`, `cuotasLineAmount(iterable $installments, int $half): int`. Input shape: `type, totalInstallments, paidInstallments, initialBalance, installmentAmount, balanceOverride` (céntimos).

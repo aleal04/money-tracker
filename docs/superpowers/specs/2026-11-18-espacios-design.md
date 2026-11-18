@@ -20,7 +20,7 @@ Hoy la app administra un solo dinero (el salario) en quincenas fijas. El usuario
 1. **Saldo anterior calculado**, no guardado: corregir un periodo viejo ajusta todo lo posterior.
 2. **Saldo inicial** por espacio (lo que la cuenta ya tiene hoy); por defecto ₡0. **Meta de ahorro: fuera de alcance** (v2).
 3. **Salario también muestra saldo anterior/restante** (todos los espacios funcionan igual). No hay doble conteo con el arrastre: lo arrastrado deja de contar como gastado en el periodo cerrado y cuenta en el siguiente.
-4. *(Decidido por el usuario)* **El destino de la transferencia es el periodo del espacio destino que contiene la fecha de inicio del periodo de origen** (una línea de noviembre entra a noviembre aunque se marque pagada en diciembre); si no existe, se crea según la frecuencia del destino.
+4. _(Decidido por el usuario)_ **El destino de la transferencia es el periodo del espacio destino que contiene la fecha de inicio del periodo de origen** (una línea de noviembre entra a noviembre aunque se marque pagada en diciembre); si no existe, se crea según la frecuencia del destino.
 5. La línea creada en el destino **no se edita ahí**: se cambia desde la línea origen (pagar/despagar, monto, borrar se propagan).
 6. **Tarjetas pertenecen a un espacio** (por defecto el principal) y su línea de cuotas se genera en los periodos de ese espacio.
 7. Etiquetas de periodo según frecuencia: quincenal "I Quincena Octubre 2026", mensual "Octubre 2026", semanal "Semana 12–18 nov 2026", personalizada "12 nov – 26 nov 2026" (se agrega el año, pendiente desde la revisión anterior).
@@ -55,6 +55,7 @@ Hoy la app administra un solo dinero (el salario) en quincenas fijas. El usuario
 ## 7. Saldos
 
 Para un periodo P de un espacio E (orden por StartDate):
+
 - **Saldo anterior** = Restante del periodo anterior de E; para el primero = InitialBalance de E.
 - **Entró** = Σ ingresos (real ?? aproximado), incluidas las transferencias recibidas.
 - **Gastado** = Σ egresos no arrastrados (real ?? aproximado), incluidas las transferencias enviadas.
@@ -68,7 +69,7 @@ Para un periodo P de un espacio E (orden por StartDate):
 - No se permite transferir a sí mismo. Todo en una sola transacción.
 - Si el periodo destino está cerrado, la línea igual se crea/actualiza (como agregar a mano en un periodo cerrado) — su restante cambia y se propaga.
 
-- *(Decidido por el usuario)* **Transferencia sin pagar al cerrar**: no se suma al arrastre general; pasa al siguiente periodo del mismo espacio como **su propia línea** ("↩ <nombre>"), conservando FkTargetSpace, y se marca la original como arrastrada. Al pagar la nueva, llega al destino según la regla anterior (periodo del destino que contiene el StartDate de **su** periodo). Reabrir deshace también estas líneas mientras no estén pagadas (mismas reglas que el arrastre: si ya se pagó o se volvió a arrastrar, no se puede reabrir).
+- _(Decidido por el usuario)_ **Transferencia sin pagar al cerrar**: no se suma al arrastre general; pasa al siguiente periodo del mismo espacio como **su propia línea** ("↩ <nombre>"), conservando FkTargetSpace, y se marca la original como arrastrada. Al pagar la nueva, llega al destino según la regla anterior (periodo del destino que contiene el StartDate de **su** periodo). Reabrir deshace también estas líneas mientras no estén pagadas (mismas reglas que el arrastre: si ya se pagó o se volvió a arrastrar, no se puede reabrir).
 
 ## 8b. Aclaraciones (revisión del diseño)
 

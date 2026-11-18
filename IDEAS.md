@@ -8,6 +8,7 @@ Moneda principal: CRC (₡).
 ## 1. Cómo funciona hoy (Excel)
 
 ### Hoja de quincena
+
 - Periodo: **quincena** (ej. "I Quincena Octubre").
 - Resumen: **Ingreso total**, **Egreso total**, **Disponible = Ingreso − Egreso**.
 - 4 bloques, cada línea con `Nombre | Aproximado | Real | Pagado (SI/NO)`:
@@ -17,6 +18,7 @@ Moneda principal: CRC (₡).
   - **Deudas fijas**: préstamos y pagos de tarjeta (Banco Popular, TC Crédito BAC…)
 
 ### Hoja de cuotas de tarjeta
+
 `Comercio | Artículo | Total cuotas | Cuotas actuales | Forma pago | Saldo inicial | Monto cuota | Saldo faltante`
 
 - **Tasa 0**: `cuota = saldo inicial / total cuotas`, `faltante = saldo inicial − cuotas pagadas × cuota`.
@@ -28,6 +30,7 @@ Moneda principal: CRC (₡).
 - En la app: estado **automático** (activa / por terminar si quedan ≤ N cuotas / terminada) + una marca **manual "cancelar pronto"**.
 
 ### Cómo se conecta con la quincena
+
 - La **suma de "Monto cuota"** de las compras activas = una línea **TC Crédito BAC** en **Deudas fijas**.
 - La otra línea TC es **consumo extra arrastrado** de quincenas pasadas (gastos con tarjeta que no eran cuotas y se pagan después).
 - En la app:
@@ -36,9 +39,10 @@ Moneda principal: CRC (₡).
   - **Arrastre**: gastos con tarjeta de una quincena quedan como pendiente y aparecen como deuda en la(s) siguiente(s), hasta pagarse.
 
 #### Inconsistencias encontradas en el Excel actual
+
 - ExtremeTech (PC Gaming): 14 cuotas restantes × 25.465 = 356.510, pero la hoja dice 294.382.
 - La vete (Maya): 15 × 8.350,48 = 125.257, pero la hoja dice 101.420.
-→ La app debe calcular estos valores sola (o guardar el saldo real del estado de cuenta si difiere).
+  → La app debe calcular estos valores sola (o guardar el saldo real del estado de cuenta si difiere).
 
 ---
 

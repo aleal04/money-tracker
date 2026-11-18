@@ -46,6 +46,7 @@ Route (routes/<dominio>.php) → XxxController (implements XxxControllerContract
 ## 5. Base de datos (MySQL 8.4 + migraciones)
 
 Mismas tablas que §5 del diseño original (`periods`, `lines`, `templates`, `cards`, `installments`), snake_case (convención Laravel; MySQL, no el PascalCase de SQL Server de ssi).
+
 - Unicidad de la línea de cuotas por (quincena, tarjeta): MySQL no tiene índices parciales → columna generada `cuotas_card_id` (= `card_id` si `source='cuotas'`, si no `NULL`) con `UNIQUE(period_id, cuotas_card_id)`.
 - "Insertar si no existe" para quincenas: `UNIQUE(year, month, half)` + `insertOrIgnore`/`firstOrCreate` dentro de transacción con lock.
 - Tests en sqlite en memoria: las migraciones deben correr también en sqlite (la columna generada se declara con `storedAs`/`virtualAs` compatible, o la regla se valida también en el repositorio).

@@ -65,21 +65,25 @@ README.md                     run locally + deploy (Neon + Vercel)
 ### Task 1: Scaffold project and test runner
 
 **Files:**
+
 - Create: Next.js app at repo root (via create-next-app), `.env.example`, `vitest.config.ts`, `tests/smoke.test.ts`
 - Uses (already exists, do NOT recreate): Docker container `postgres` (PostgreSQL 18, `localhost:5432`, user `postgres`) with databases `money_tracker` and `money_tracker_test`. `.env.local` is written by the user (contains their password); never print or commit it.
 - Keep: `IDEAS.md`, `docs/`
 
 **Interfaces:**
+
 - Produces: `npm test` (vitest run), `npm run dev`.
 
 - [ ] **Step 1:** `git init` and create the app in place: `npx create-next-app@latest . --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm` (answer yes to keep existing files). Confirm `IDEAS.md` and `docs/` still exist.
 - [ ] **Step 2:** `.env.example` (placeholders only):
+
   ```
   DATABASE_URL=postgres://postgres:CONTRASEÑA@localhost:5432/money_tracker
   TEST_DATABASE_URL=postgres://postgres:CONTRASEÑA@localhost:5432/money_tracker_test
   APP_PASSWORD=cambiar
   SESSION_SECRET=una-cadena-larga-aleatoria
   ```
+
   Ask the user to create `.env.local` from it with their real password (URL-encode special characters, e.g. `%` → `%25`, `$` → `%24`). Wait until it exists.
 - [ ] **Step 3:** Confirm `.env.local` is listed in `.gitignore` (create-next-app ignores `.env*`).
 - [ ] **Step 4:** `npm i drizzle-orm pg dotenv && npm i -D drizzle-kit @types/pg vitest`. `vitest.config.ts`: node environment, alias `@` → `src`, `setupFiles` loads `dotenv/config` with path `.env.local`, `fileParallelism: false` (integration tests share one DB). Add scripts `"test": "vitest run"`, `"db:generate": "drizzle-kit generate"`, `"db:migrate": "drizzle-kit migrate"`.
@@ -91,14 +95,17 @@ README.md                     run locally + deploy (Neon + Vercel)
 ### Task 2: Database schema and migrations
 
 **Files:**
+
 - Create: `src/db/schema.ts`, `src/db/index.ts`, `drizzle.config.ts`, `drizzle/` (generated), `tests/helpers/db.ts`, `tests/server/schema.test.ts`
 
 **Interfaces:**
+
 - Produces (from `src/db/schema.ts`): tables `periods`, `lines`, `templates`, `cards`, `installments`; enums `categoryEnum`, `sourceEnum`, `frequencyEnum`, `installmentTypeEnum`; types `Period`, `Line`, `Template`, `Card`, `Installment` (`$inferSelect`).
 - Produces (from `src/db/index.ts`): `getDb(url = process.env.DATABASE_URL): NodePgDatabase<typeof schema>` (cached per URL), `type Db`.
 - Produces (from `tests/helpers/db.ts`): `testDb(): Db` (uses `TEST_DATABASE_URL`, runs migrations once), `resetDb(db): Promise<void>` (truncates all tables `RESTART IDENTITY CASCADE`).
 
 Columns (spec §5; money = `numeric(14,2)`):
+
 - `periods`: `id serial pk, year int, month int (1–12), half int (1|2), closed boolean default false, created_at timestamptz default now()`; **unique (year, month, half)**.
 - `lines`: `id serial pk, period_id → periods (cascade), category, name text, estimated numeric not null default 0, actual numeric null, paid boolean default false, paid_at timestamptz null, source default 'manual', template_id → templates (set null) null, card_id → cards (set null) null, carried_to_line_id → lines (set null) null, sort int default 0`. Index on `period_id`, on `carried_to_line_id`. Partial unique index `(period_id, card_id) where source = 'cuotas'`.
 - `templates`: `id, name, category, estimated numeric, frequency, half int null, active boolean default true`.
@@ -116,13 +123,16 @@ Columns (spec §5; money = `numeric(14,2)`):
 ### Task 3: Money and period helpers (pure)
 
 **Files:**
+
 - Create: `src/lib/money.ts`, `src/lib/periods.ts`, `tests/lib/money.test.ts`, `tests/lib/periods.test.ts`
 
 **Interfaces:**
+
 - Produces (`money.ts`): `toCents(v: string | number | null): number | null`, `fromCents(c: number): string` (e.g. `"10865.00"`), `formatCRC(c: number): string`, `parseAmount(input: string): number | null` (returns céntimos), `splitMonthly(cents: number, half: 1 | 2): number`.
 - Produces (`periods.ts`): `type PeriodKey = { year: number; month: number; half: 1 | 2 }`, `periodLabel(p: PeriodKey): string`, `nextPeriod(p: PeriodKey): PeriodKey`, `monthKey(year: number, month: number): string` (`'2026-10'`), `prevMonthKey(year: number, month: number): string`, `comparePeriods(a, b): number`.
 
 - [ ] **Step 1: Write failing tests:**
+
   ```ts
   // money.test.ts
   expect(toCents('10865.00')).toBe(1086500)
@@ -154,11 +164,14 @@ Columns (spec §5; money = `numeric(14,2)`):
 ### Task 4: Installment calculations (pure)
 
 **Files:**
+
 - Create: `src/lib/installments.ts`, `tests/lib/installments.test.ts`
 
 **Interfaces:**
+
 - Consumes: céntimos convention from Task 3.
 - Produces:
+
   ```ts
   type InstallmentInput = { type: 'tasa0' | 'minicuotas'; totalInstallments: number; paidInstallments: number;
     initialBalance: number; installmentAmount: number | null; balanceOverride: number | null } // céntimos
@@ -189,11 +202,14 @@ Columns (spec §5; money = `numeric(14,2)`):
 ### Task 5: Quincena math (pure): summary, templates, cuotas line
 
 **Files:**
+
 - Create: `src/lib/finance.ts`, `tests/lib/finance.test.ts`
 
 **Interfaces:**
+
 - Consumes: `splitMonthly` (Task 3), `cuota`, `InstallmentInput` (Task 4).
 - Produces:
+
   ```ts
   type Category = 'ingreso' | 'servicio' | 'gasto' | 'ahorro' | 'deuda_fija'
   type LineLike = { category: Category; estimated: number; actual: number | null; paid: boolean; carried: boolean } // carried = carried_to_line_id != null
@@ -223,17 +239,21 @@ Columns (spec §5; money = `numeric(14,2)`):
 ### Task 6: Create periods (DB): templates, installment advance, cuotas lines
 
 **Files:**
+
 - Create: `src/server/periods.ts`, `tests/server/periods-create.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Db`, schema (Task 2); `nextPeriod`, `prevMonthKey`, `PeriodKey` (Task 3); `advanceInstallment`, `InstallmentInput` (Task 4); `expandTemplates`, `cuotasLineAmount` (Task 5).
 - Produces:
+
   ```ts
   createPeriod(db: Db, key: PeriodKey): Promise<Period>      // idempotent: returns existing if (year,month,half) exists
   createNextPeriod(db: Db): Promise<Period>                   // next after the latest period; throws 'NO_PERIODS' if none
   syncCuotasLines(db: Db, periodId?: number): Promise<void>   // all open periods if no id
   toInstallmentInput(row: Installment): InstallmentInput      // DB row → céntimos
   ```
+
   Cuotas line: `category 'deuda_fija'`, `source 'cuotas'`, `name = 'Cuotas ' + card.name`, `card_id`, `estimated = actual = cuotasLineAmount(card's installments, half)`.
 
 `createPeriod` runs in one transaction: insert period (on conflict do nothing → return existing without re-adding lines); if `half === 1`, advance every installment with `advanceInstallment(paid, total, last, prevMonthKey(year, month))`; insert lines from `expandTemplates` (source `plantilla`, `template_id` set); then `syncCuotasLines(tx, period.id)`.
@@ -258,12 +278,15 @@ Columns (spec §5; money = `numeric(14,2)`):
 ### Task 7: Close / reopen period with arrastre (DB)
 
 **Files:**
+
 - Modify: `src/server/periods.ts`
 - Create: `tests/server/periods-close.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 6 functions; `periodLabel`, `nextPeriod`; `lineValue`.
 - Produces:
+
   ```ts
   closePreview(db: Db, periodId: number): Promise<{ lines: Line[]; total: number }>  // unpaid, uncarried egreso lines
   closePeriod(db: Db, periodId: number): Promise<{ arrastreLineId: number | null }>
@@ -294,10 +317,13 @@ Columns (spec §5; money = `numeric(14,2)`):
 ### Task 8: Password login and route protection
 
 **Files:**
+
 - Create: `src/server/auth.ts`, `src/proxy.ts`, `src/app/login/page.tsx`, `tests/server/auth.test.ts`
 
 **Interfaces:**
+
 - Produces:
+
   ```ts
   SESSION_COOKIE = 'mt_session'
   signSession(secret: string, now?: number): string          // `${expiresAtMs}.${hmacSha256Hex(expiresAtMs)}`, 90 days
@@ -306,6 +332,7 @@ Columns (spec §5; money = `numeric(14,2)`):
   logoutAction(): Promise<void>
   requireSession(): Promise<void>   // throws/redirects to /login; call at the top of every Server Action
   ```
+
   Cookie: httpOnly, `secure` in production, `sameSite 'lax'`, `maxAge` 90 days. Password compare with `crypto.timingSafeEqual` on equal-length SHA-256 digests.
 
 - [ ] **Step 1: Write failing tests:** valid token verifies; tampered signature → false; expired (`now` past expiry) → false; `undefined` → false; token signed with another secret → false.
@@ -319,14 +346,17 @@ Columns (spec §5; money = `numeric(14,2)`):
 ### Task 9: Quincena screen
 
 **Files:**
+
 - Create: `src/app/page.tsx`, `src/app/q/[year]/[month]/[half]/page.tsx`, `src/server/actions.ts` (line + period actions), `src/components/Nav.tsx`, `SummaryCards.tsx`, `CategoryBlock.tsx`, `LineForm.tsx`, `ArrastreDetail.tsx`, `ClosePeriodDialog.tsx`
 - Modify: `src/app/layout.tsx` (lang `es`, Nav: Quincena · Cuotas · Plantillas · Salir)
 
 **Interfaces:**
+
 - Consumes: `createPeriod`, `createNextPeriod`, `closePreview`, `closePeriod`, `reopenPeriod`, `getArrastreDetail`, `syncCuotasLines` (Tasks 6–7); `summarize`, `lineValue` (Task 5); `formatCRC`, `parseAmount`, `toCents`, `fromCents` (Task 3); `periodLabel`, `nextPeriod` (Task 3); `requireSession` (Task 8).
 - Produces (Server Actions in `actions.ts`, each starts with `await requireSession()` and ends with `revalidatePath`): `addLine(form)`, `updateLine(form)`, `deleteLine(form)`, `togglePaid(form)` (sets/clears `paid_at`), `createFirstPeriodAction(form)` (year, month, half), `createNextPeriodAction()`, `closePeriodAction(form)`, `reopenPeriodAction(form)` (returns `{ error: 'No se puede reabrir: el arrastre ya está pagado' }` on `ARRASTRE_PAGADO`).
 
 Behavior (spec §7 sketch):
+
 - `/` → redirect to latest period's URL; if none, form "Crear primera quincena" (año, mes, I/II).
 - Header: period label, ◀ ▶ to adjacent existing periods, badge "Cerrada" if closed.
 - Summary cards: Ingreso, Egreso, Disponible (red if negative), Falta por pagar.
@@ -346,14 +376,17 @@ Behavior (spec §7 sketch):
 ### Task 10: Cuotas screen and cards
 
 **Files:**
+
 - Create: `src/app/cuotas/page.tsx`, `src/components/InstallmentForm.tsx`
 - Modify: `src/server/actions.ts`
 
 **Interfaces:**
+
 - Consumes: `cuota`, `saldoFaltante`, `installmentStatus`, `toInstallmentInput` (Tasks 4, 6); `syncCuotasLines` (Task 6).
 - Produces actions: `addCard(form)`, `addInstallment(form)`, `updateInstallment(form)`, `deleteInstallment(form)`, `toggleCancelSoon(form)`. Every installment mutation calls `syncCuotasLines(db)` before revalidating.
 
 Behavior:
+
 - Per card: rows grouped Activas (blue) / Por terminar (yellow) / Terminadas (green, collapsed); cancel_soon rows also tinted yellow with a "Cancelar pronto" tag. Columns: Comercio, Artículo, Cuotas `paid/total`, Forma pago, Saldo inicial, Cuota, Saldo faltante (with "Δ vs calculado" when override set).
 - Footer per card: Σ cuota mensual of non-finished, Σ saldo faltante, and "por quincena" (= monthly split).
 - Form: comercio, artículo, total cuotas, "Cuotas pagadas (hasta el mes pasado)", forma de pago (Tasa 0 / Minicuotas), saldo inicial, monto cuota (required only for Minicuotas), saldo real del estado de cuenta (optional). New installments get `last_advanced_month = prevMonthKey(current year, current month)`. Validation: total ≥ 1, 0 ≤ paid ≤ total, amounts parse.
@@ -368,10 +401,12 @@ Behavior:
 ### Task 11: Plantillas screen
 
 **Files:**
+
 - Create: `src/app/plantillas/page.tsx`, `src/components/TemplateForm.tsx`
 - Modify: `src/server/actions.ts`
 
 **Interfaces:**
+
 - Produces actions: `addTemplate(form)`, `updateTemplate(form)`, `toggleTemplate(form)`, `deleteTemplate(form)`.
 
 Behavior: list by category; columns Nombre, Monto, Frecuencia ("Cada quincena" / "Mensual ÷ 2" / "Mensual en I|II quincena"), Activa. Form validates `half` required only for `mensual_en_quincena`. Note under title: "Se aplican al crear una quincena nueva."
@@ -386,6 +421,7 @@ Behavior: list by category; columns Nombre, Monto, Frecuencia ("Cada quincena" /
 ### Task 12: PWA manifest, README, deploy
 
 **Files:**
+
 - Create: `src/app/manifest.ts`, `public/icon-192.png`, `public/icon-512.png`, `README.md`
 
 - [ ] **Step 1:** `manifest.ts`: name "Money Tracker", short_name "Finanzas", `start_url '/'`, `display 'standalone'`, theme/background colors, the two icons (simple generated PNGs with "₡").

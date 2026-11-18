@@ -13,6 +13,7 @@ Usuario: una sola persona (el dueño). Moneda: CRC (₡).
 ## 2. Objetivos, no-objetivos, anti-objetivos
 
 **Objetivos (v1)**
+
 1. Quincena con Ingresos y 4 categorías (Servicios, Gastos, Ahorros, Deudas fijas); cada línea con aproximado, real y pagado.
 2. Resumen: ingreso total, egreso total, disponible, **falta por pagar**.
 3. Crear la siguiente quincena en un clic a partir de **plantillas recurrentes**.
@@ -24,16 +25,17 @@ Usuario: una sola persona (el dueño). Moneda: CRC (₡).
 **No-objetivos (v1)** — quedan para v2 (ver `IDEAS.md` §3): simulador de cancelación anticipada, préstamos con saldo y fecha de fin, ahorros con meta, recordatorios, gráficos/historial avanzado, importar Excel, USD, conexión con bancos, multiusuario.
 
 **Anti-objetivos** (fracaso aunque funcione):
+
 - Que registrar algo sea más lento que en el Excel.
 - Que los totales no cuadren con lo que el usuario sabe que pagó / con el estado de cuenta.
 
 ## 3. Enfoques considerados
 
-| Enfoque | Trade-off |
-|---|---|
-| **A. App web en la nube + login simple** ✅ elegido | Acceso desde cualquier lugar y celular; un poco más de configuración inicial. |
-| B. App local en la Mac | Simplísima y privada, pero no sirve para anotar gastos fuera de casa. |
-| C. Datos solo en el navegador | Sin servidor, pero no sincroniza entre dispositivos y se pierden datos fácilmente. |
+| Enfoque                                             | Trade-off                                                                          |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **A. App web en la nube + login simple** ✅ elegido | Acceso desde cualquier lugar y celular; un poco más de configuración inicial.      |
+| B. App local en la Mac                              | Simplísima y privada, pero no sirve para anotar gastos fuera de casa.              |
+| C. Datos solo en el navegador                       | Sin servidor, pero no sincroniza entre dispositivos y se pierden datos fácilmente. |
 
 Elegido A por el usuario: registrar gastos desde el celular es la mejora clave frente al Excel.
 
@@ -101,6 +103,7 @@ Viven en un módulo puro (`lib/finance.ts`) con pruebas unitarias.
 4. **Plantillas**: CRUD de líneas recurrentes con su frecuencia.
 
 Boceto de la quincena (celular):
+
 ```
 I Quincena Noviembre        [◀] [▶]
 Ingreso  557.632   Egreso   493.096
@@ -129,11 +132,13 @@ Disponible 64.536  Falta pagar 30.900
 ## 9. Decisiones
 
 Del usuario:
+
 - Todo gasto se anota en la quincena donde ocurre, con Pagado SI/NO.
 - Al cerrar la quincena, **lo no pagado pasa como arrastre** a la siguiente y se paga completo ahí.
 - Pagos mensuales (como la tarjeta) se dividen entre las 2 quincenas.
 
 De Claude (corregibles):
+
 - (Usuario) Lo arrastrado pasa como **una sola línea con el total**, con el detalle desplegable.
 - Esa línea va en **Deudas fijas**, como el "TC Crédito BAC" de arrastre en el Excel. (Claude.)
 - Lo arrastrado deja de contar en el egreso de la quincena cerrada (evita contar doble).
