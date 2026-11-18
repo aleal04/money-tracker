@@ -28,18 +28,21 @@ export function useTemplateIndex() {
 	const error = ref("");
 	const editing = ref<number | "new" | null>(null);
 
+	/** Bumped per load: a response from an older load (quick space switch) is dropped. */
+	let latest = 0;
 	async function load() {
+		const request = ++latest;
 		try {
 			// Drop a stale stored space id before the first request.
 			await ensureSpaces();
-			templates.value = (
-				await axios.get<Template[]>("/templates/get-template-list", {
-					params: spaceParams(),
-				})
-			).data;
+			const res = await axios.get<Template[]>("/templates/get-template-list", {
+				params: spaceParams(),
+			});
+			if (request !== latest) return;
+			templates.value = res.data;
 			error.value = "";
 		} catch (e) {
-			error.value = errorMessage(e);
+			if (request === latest) error.value = errorMessage(e);
 		}
 	}
 	watch(selectedId, load);

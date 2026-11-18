@@ -140,3 +140,27 @@ describe("template toggle failure", () => {
 		expect(idx.error.value).not.toBe("");
 	});
 });
+
+describe("template list after a quick space switch", () => {
+	it("keeps the newest response when an older one arrives late", async () => {
+		const pending: ((v: { data: unknown }) => void)[] = [];
+		vi.spyOn(axios, "get").mockImplementation((url: string) =>
+			url === "/spaces/get-space-list"
+				? Promise.resolve({ data: [] })
+				: new Promise((resolve) => pending.push(resolve)),
+		);
+		const { useTemplateIndex } = await import(
+			"@/Composables/Template/useTemplateIndex"
+		);
+		const idx = useTemplateIndex();
+		await flushPromises();
+		idx.load();
+		await flushPromises();
+		expect(pending).toHaveLength(2);
+		pending[1]({ data: [tpl({ id: 2 })] });
+		await flushPromises();
+		pending[0]({ data: [tpl({ id: 1 })] });
+		await flushPromises();
+		expect(idx.templates.value.map((t) => t.id)).toEqual([2]);
+	});
+});

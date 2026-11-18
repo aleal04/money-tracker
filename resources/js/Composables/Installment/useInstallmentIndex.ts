@@ -33,18 +33,21 @@ export function useInstallmentIndex() {
 	const cardName = ref("");
 	const cardError = ref("");
 
+	/** Bumped per load: a response from an older load (quick space switch) is dropped. */
+	let latest = 0;
 	async function load() {
+		const request = ++latest;
 		try {
 			// Drop a stale stored space id before the first request.
 			await ensureSpaces();
-			cards.value = (
-				await axios.get<CardView[]>("/installments/get-card-list", {
-					params: spaceParams(),
-				})
-			).data;
+			const res = await axios.get<CardView[]>("/installments/get-card-list", {
+				params: spaceParams(),
+			});
+			if (request !== latest) return;
+			cards.value = res.data;
 			error.value = "";
 		} catch (e) {
-			error.value = errorMessage(e);
+			if (request === latest) error.value = errorMessage(e);
 		}
 	}
 	watch(selectedId, load);

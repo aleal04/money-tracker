@@ -37,18 +37,21 @@ export function useDashboard() {
 	const busy = ref(false);
 	const creating = ref(false);
 
+	/** Bumped per load: a response from an older load (quick space switch) is dropped. */
+	let latest = 0;
 	async function load() {
+		const request = ++latest;
 		try {
 			// Drop a stale stored space id before the first request.
 			await ensureSpaces();
-			data.value = (
-				await axios.get<DashboardData>("/dashboard/data", {
-					params: spaceParams(),
-				})
-			).data;
+			const res = await axios.get<DashboardData>("/dashboard/data", {
+				params: spaceParams(),
+			});
+			if (request !== latest) return;
+			data.value = res.data;
 			error.value = "";
 		} catch (e) {
-			error.value = errorMessage(e);
+			if (request === latest) error.value = errorMessage(e);
 		}
 	}
 	const rows = computed(() => spaceRows(data.value?.spaces ?? []));
