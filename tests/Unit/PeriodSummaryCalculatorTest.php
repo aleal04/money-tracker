@@ -33,6 +33,9 @@ class PeriodSummaryCalculatorTest extends TestCase
         ];
     }
 
+    /**
+     * Excel i quincena octubre.
+     */
     public function test_excel_i_quincena_octubre(): void
     {
         $s = S::summarize($this->octubre());
@@ -43,6 +46,9 @@ class PeriodSummaryCalculatorTest extends TestCase
         $this->assertSame(14047100, $s['byCategory']['servicio']['actual']);
     }
 
+    /**
+     * Carried lines excluded.
+     */
     public function test_carried_lines_excluded(): void
     {
         $s = S::summarize($this->octubre(true));
@@ -50,6 +56,9 @@ class PeriodSummaryCalculatorTest extends TestCase
         $this->assertSame(0, $s['faltaPorPagar']);
     }
 
+    /**
+     * Category totals exclude carried and add up to egreso.
+     */
     public function test_category_totals_exclude_carried_and_add_up_to_egreso(): void
     {
         $s = S::summarize($this->octubre(true));
@@ -61,6 +70,9 @@ class PeriodSummaryCalculatorTest extends TestCase
         $this->assertSame($s['egreso'], $sum);
     }
 
+    /**
+     * Ingreso never in falta por pagar and actual overrides.
+     */
     public function test_ingreso_never_in_falta_por_pagar_and_actual_overrides(): void
     {
         $s = S::summarize([$this->l('ingreso', 100, false), ['actual' => 4000] + $this->l('gasto', 10, false)]);

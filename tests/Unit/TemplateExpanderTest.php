@@ -18,6 +18,9 @@ class TemplateExpanderTest extends TestCase
         return $o + ['id' => 1, 'name' => 't', 'category' => 'gasto', 'estimated' => 1000000, 'frequency' => 'quincenal', 'half' => null, 'active' => true];
     }
 
+    /**
+     * Quincenal in both halves.
+     */
     public function test_quincenal_in_both_halves(): void
     {
         $this->assertSame(1000000, E::expand([$this->t()], 1)[0]['estimated']);
@@ -25,6 +28,9 @@ class TemplateExpanderTest extends TestCase
         $this->assertSame(['templateId' => 1, 'name' => 't', 'category' => 'gasto', 'estimated' => 1000000], E::expand([(object) $this->t()], 1)[0]);
     }
 
+    /**
+     * Mensual dividido splits.
+     */
     public function test_mensual_dividido_splits(): void
     {
         $t = $this->t(['frequency' => 'mensual_dividido', 'estimated' => 2335]);
@@ -32,13 +38,21 @@ class TemplateExpanderTest extends TestCase
         $this->assertSame(1167, E::expand([$t], 2)[0]['estimated']);
     }
 
+    /**
+     * Mensual en quincena only in its half.
+     */
     public function test_mensual_en_quincena_only_in_its_half(): void
     {
         $t = $this->t(['frequency' => 'mensual_en_quincena', 'half' => 2]);
         $this->assertSame([], E::expand([$t], 1));
         $this->assertCount(1, E::expand([$t], 2));
+        $this->assertCount(1, E::expand([['half' => '2'] + $t], 2));
+        $this->assertSame([], E::expand([['half' => '1'] + $t], 2));
     }
 
+    /**
+     * Inactive absent.
+     */
     public function test_inactive_absent(): void
     {
         $this->assertSame([], E::expand([$this->t(['active' => false])], 1));

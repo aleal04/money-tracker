@@ -18,6 +18,9 @@ class InstallmentCalculatorTest extends TestCase
         return $o + ['type' => 'tasa0', 'totalInstallments' => 24, 'paidInstallments' => 0, 'initialBalance' => 0, 'installmentAmount' => null, 'balanceOverride' => null];
     }
 
+    /**
+     * Tasa0 reloj.
+     */
     public function test_tasa0_reloj(): void
     {
         $i = $this->mk(['initialBalance' => 26502262, 'paidInstallments' => 12]);
@@ -25,6 +28,9 @@ class InstallmentCalculatorTest extends TestCase
         $this->assertSame(13251131, C::saldoFaltanteCalculado($i));
     }
 
+    /**
+     * Tasa0 iphone.
+     */
     public function test_tasa0_iphone(): void
     {
         $i = $this->mk(['initialBalance' => 76918464, 'paidInstallments' => 22]);
@@ -32,12 +38,18 @@ class InstallmentCalculatorTest extends TestCase
         $this->assertSame(6409872, C::saldoFaltanteCalculado($i));
     }
 
+    /**
+     * Minicuotas and object input.
+     */
     public function test_minicuotas_and_object_input(): void
     {
         $this->assertSame(59266620, C::saldoFaltanteCalculado($this->mk(['type' => 'minicuotas', 'installmentAmount' => 2822220, 'paidInstallments' => 3])));
         $this->assertSame(14277840, C::saldoFaltanteCalculado((object) $this->mk(['type' => 'minicuotas', 'installmentAmount' => 594910])));
     }
 
+    /**
+     * Override wins.
+     */
     public function test_override_wins(): void
     {
         $i = $this->mk(['type' => 'minicuotas', 'installmentAmount' => 2546500, 'paidInstallments' => 10, 'balanceOverride' => 29438200]);
@@ -45,11 +57,17 @@ class InstallmentCalculatorTest extends TestCase
         $this->assertNull(C::saldoFaltante(['balanceOverride' => null] + $i)['diff']);
     }
 
+    /**
+     * Never negative.
+     */
     public function test_never_negative(): void
     {
         $this->assertSame(0, C::saldoFaltanteCalculado($this->mk(['initialBalance' => 1000, 'paidInstallments' => 30])));
     }
 
+    /**
+     * Status.
+     */
     public function test_status(): void
     {
         $s = fn (int $total, int $paid) => C::status($this->mk(['totalInstallments' => $total, 'paidInstallments' => $paid]));
@@ -60,6 +78,9 @@ class InstallmentCalculatorTest extends TestCase
         $this->assertSame('activa', $s(24, 20));
     }
 
+    /**
+     * Advance.
+     */
     public function test_advance(): void
     {
         $this->assertSame(['paid' => 13, 'lastAdvanced' => '2026-10'], C::advance(12, 24, '2026-09', '2026-10'));
@@ -70,6 +91,9 @@ class InstallmentCalculatorTest extends TestCase
         $this->assertSame(7, C::advance(5, 12, '2026-11', '2027-01')['paid']);
     }
 
+    /**
+     * Cuotas line amount skips finished and splits.
+     */
     public function test_cuotas_line_amount_skips_finished_and_splits(): void
     {
         $list = [

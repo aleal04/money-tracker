@@ -25,7 +25,7 @@ final class TemplateExpander
             if (! $t->active) {
                 continue;
             }
-            if ($t->frequency === TemplateFrequencyConstant::MENSUAL_EN_QUINCENA && $t->half !== $half) {
+            if ($t->frequency === TemplateFrequencyConstant::MENSUAL_EN_QUINCENA && (int) $t->half !== $half) {
                 continue;
             }
             $est = $t->frequency === TemplateFrequencyConstant::MENSUAL_DIVIDIDO ? MoneyHelper::splitMonthly($t->estimated, $half) : $t->estimated;

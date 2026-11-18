@@ -14,7 +14,7 @@ class MoneyHelperTest extends TestCase
     {
         $this->assertSame(1086500, MoneyHelper::toCents('10865.00'));
         $this->assertNull(MoneyHelper::toCents(null));
-        $this->assertSame(1250, MoneyHelper::toCents(12.5));
+        $this->assertSame(1200, MoneyHelper::toCents(12));
         $this->assertSame('10865.00', MoneyHelper::fromCents(1086500));
         $this->assertSame('0.05', MoneyHelper::fromCents(5));
     }
@@ -26,6 +26,8 @@ class MoneyHelperTest extends TestCase
     {
         $this->assertSame(1168, MoneyHelper::splitMonthly(2335, 1));
         $this->assertSame(1167, MoneyHelper::splitMonthly(2335, 2));
+        $this->assertSame(-1167, MoneyHelper::splitMonthly(-2335, 1));
+        $this->assertSame(-1168, MoneyHelper::splitMonthly(-2335, 2));
         $this->assertSame(10001300, MoneyHelper::splitMonthly(10001300, 1) + MoneyHelper::splitMonthly(10001300, 2));
     }
 
@@ -43,6 +45,7 @@ class MoneyHelperTest extends TestCase
         $this->assertNull(MoneyHelper::parseAmount('abc'));
         $this->assertNull(MoneyHelper::parseAmount(''));
         $this->assertNull(MoneyHelper::parseAmount('1.2.3'));
+        $this->assertNull(MoneyHelper::parseAmount("\xB1"));
     }
 
     /**
@@ -62,7 +65,7 @@ class MoneyHelperTest extends TestCase
     public function test_negative_money(): void
     {
         $this->assertSame(-500, MoneyHelper::toCents('-5.00'));
-        $this->assertSame(-1234, MoneyHelper::toCents(-12.34));
+        $this->assertSame(-1234, MoneyHelper::toCents('-12.34'));
         $this->assertSame('-0.05', MoneyHelper::fromCents(MoneyHelper::toCents('-0.05')));
         $this->assertNull(MoneyHelper::parseAmount('-5'));
     }

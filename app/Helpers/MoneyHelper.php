@@ -22,9 +22,9 @@ final class MoneyHelper
     }
 
     /**
-     * Convert a decimal string or number (major units) to cents; null stays null, invalid gives null.
+     * Convert a decimal string or integer (major units) to cents; null stays null, invalid gives null.
      */
-    public static function toCents(string|int|float|null $v): ?int
+    public static function toCents(string|int|null $v): ?int
     {
         if ($v === null) {
             return null;
@@ -59,7 +59,7 @@ final class MoneyHelper
      */
     public static function parseAmount(string $input): ?int
     {
-        $s = preg_replace('/₡|\s/u', '', $input);
+        $s = preg_replace('/₡|\s/u', '', $input) ?? '';
         if (str_contains($s, ',')) {
             $s = str_replace(',', '.', str_replace('.', '', $s));
         } elseif (preg_match('/^\d{1,3}(\.\d{3})+$/', $s)) {
@@ -74,6 +74,6 @@ final class MoneyHelper
      */
     public static function splitMonthly(int $cents, int $half): int
     {
-        return (int) ($half === 1 ? ceil($cents / 2) : floor($cents / 2));
+        return $half === 1 ? $cents - ($cents >> 1) : $cents >> 1;
     }
 }
