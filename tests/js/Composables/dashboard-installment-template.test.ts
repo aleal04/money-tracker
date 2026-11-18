@@ -127,18 +127,27 @@ describe("templates", () => {
 });
 
 describe("template toggle failure", () => {
-	it("reloads the list and shows the error", async () => {
-		const stored = [{ id: 1, name: "A", active: true }];
-		const get = vi.spyOn(axios, "get").mockResolvedValue({ data: stored });
+	it("reverts the flag and shows the error", async () => {
+		const stored = [
+			{
+				id: 1,
+				name: "A",
+				category: "servicio",
+				estimated: 100,
+				frequency: "quincenal",
+				half: null,
+				active: true,
+			},
+		];
+		vi.spyOn(axios, "get").mockResolvedValue({ data: stored });
 		vi.spyOn(axios, "put").mockRejectedValue(new Error("boom"));
 		const { useTemplateIndex } = await import(
 			"@/Composables/Template/useTemplateIndex"
 		);
 		const idx = useTemplateIndex();
 		await flushPromises();
-		get.mockClear();
-		await idx.toggle(stored[0] as Template);
-		expect(get).toHaveBeenCalledTimes(1);
+		await idx.toggle(idx.templates.value[0]);
+		expect(idx.templates.value[0].active).toBe(true);
 		expect(idx.error.value).not.toBe("");
 	});
 });

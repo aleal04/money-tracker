@@ -43,13 +43,13 @@ export function useTemplateIndex() {
 	}
 
 	const groups = computed(() => groupByCategory(templates.value));
+	/** Optimistic: flip now so the checkbox binding changes, flip back (and show the error) if the PUT fails. */
 	async function toggle(t: Template) {
+		t.active = !t.active;
 		try {
-			await axios.put(`/templates/${t.id}/update`, { active: !t.active });
-			await load();
+			await axios.put(`/templates/${t.id}/update`, { active: t.active });
 		} catch (e) {
-			// Reload so the checkbox goes back to the stored value, then show the error.
-			await load();
+			t.active = !t.active;
 			error.value = errorMessage(e);
 		}
 	}
