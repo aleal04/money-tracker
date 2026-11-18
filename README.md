@@ -25,6 +25,16 @@ docker exec -i mysql mysql -uroot -p < "inserts/1. Money Tracker - Inserts.sql" 
 docker exec -i mysql mysql -uroot -p < "logins/1. Application - Login.sql"
 ```
 
+## Espacios
+
+Un espacio es una "bolsa" de dinero (Salario, Ahorro, Servicios digitales...) con sus propios periodos. Hay uno principal ("Salario", quincenal) y se administran en el menú Espacios.
+
+- **Frecuencia**: semanal, quincenal, mensual o personalizada (N días). Propone las fechas del siguiente periodo; se pueden ajustar sin traslapes.
+- **Saldo**: Saldo anterior + Entró − Gastado = Restante. El restante (positivo o negativo) pasa como saldo anterior al siguiente periodo; el primero parte del saldo inicial del espacio.
+- **Transferencias**: en una línea de gasto, "Enviar a espacio" crea, al pagarla, un ingreso "Desde <espacio>" en el destino, en el periodo que contiene la fecha de inicio del periodo de origen (se crea si falta). Despagar, cambiar el monto o borrar la línea origen se propaga; la línea destino no se edita.
+- **Cerrar periodo**: una transferencia sin pagar no entra al arrastre general; pasa al siguiente periodo como su propia línea "↩ nombre". Reabrir la deshace mientras no esté pagada.
+- **Borrar**: un espacio solo se borra si está vacío (sin periodos, tarjetas, plantillas ni transferencias que lo apunten); el principal no se puede borrar, pero se puede cambiar cuál es.
+
 ## Instalación
 
 ```bash
