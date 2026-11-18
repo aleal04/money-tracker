@@ -1,0 +1,43 @@
+@use "../../../ui/tokens" as *;
+
+.line-form {
+	&__paid {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 44px;
+		font-size: 14px;
+
+		input {
+			width: 20px;
+			height: 20px;
+			accent-color: var(--teal);
+		}
+	}
+
+	&__actions {
+		display: flex;
+		gap: 8px;
+
+		.btn {
+			flex: 1;
+		}
+	}
+
+	&__confirm {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 14px;
+
+		span {
+			flex: 1;
+		}
+	}
+
+	@media (min-width: $bp-md) {
+		&__wide {
+			grid-column: 1 / -1;
+		}
+	}
+}

@@ -1,0 +1,76 @@
+@use "../../../ui/tokens" as *;
+
+.close-dialog {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	background: rgb(31 35 40 / 40%);
+
+	&__panel {
+		display: grid;
+		gap: 12px;
+		width: 100%;
+		max-width: 448px;
+		padding: 24px 24px max(24px, env(safe-area-inset-bottom));
+		border-radius: var(--radius-card) var(--radius-card) 0 0;
+		background: var(--surface);
+		box-shadow: var(--shadow-card);
+	}
+
+	&__title {
+		margin: 0;
+		color: var(--teal);
+		font-size: 18px;
+		font-weight: 600;
+	}
+
+	&__hint {
+		margin: 0;
+		color: var(--muted);
+		font-size: 14px;
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0;
+		font-size: 14px;
+		list-style: none;
+	}
+
+	&__row {
+		display: flex;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 8px 0;
+		border-bottom: 1px solid var(--line);
+
+		&--empty {
+			color: var(--muted);
+		}
+
+		&--total {
+			border: 0;
+			font-weight: 600;
+		}
+	}
+
+	&__actions {
+		display: flex;
+		gap: 8px;
+
+		.btn {
+			flex: 1;
+		}
+	}
+
+	@media (min-width: $bp-md) {
+		align-items: center;
+
+		&__panel {
+			border-radius: var(--radius-card);
+		}
+	}
+}

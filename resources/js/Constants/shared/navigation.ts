@@ -5,7 +5,14 @@ export type IconName =
 	| "templates"
 	| "user"
 	| "moon"
-	| "theme";
+	| "theme"
+	| "left"
+	| "right"
+	| "lock"
+	| "unlock"
+	| "plus"
+	| "check"
+	| "edit";
 
 export interface NavLink {
 	href: string;

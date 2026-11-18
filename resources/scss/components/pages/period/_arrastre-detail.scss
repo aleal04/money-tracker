@@ -1,0 +1,21 @@
+.arrastre-detail {
+	margin: 4px 0 0;
+	padding: 0 0 0 12px;
+	border-left: 2px solid var(--line);
+	color: var(--muted);
+	font-size: 14px;
+	list-style: none;
+
+	&__summary {
+		min-height: 44px;
+		padding: 8px 0;
+		cursor: pointer;
+	}
+
+	&__row {
+		display: flex;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 4px 0;
+	}
+}

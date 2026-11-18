@@ -1,0 +1,10 @@
+@use "../../../ui/tokens" as *;
+
+.create-period__actions {
+	display: flex;
+	gap: 8px;
+
+	@media (min-width: $bp-md) {
+		grid-column: 1 / -1;
+	}
+}

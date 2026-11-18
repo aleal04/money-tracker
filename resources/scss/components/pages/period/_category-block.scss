@@ -1,0 +1,202 @@
+@use "../../../ui/tokens" as *;
+
+.category-block {
+	padding: 16px;
+
+	&__title {
+		margin: 0 0 8px;
+		color: var(--teal);
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		border-bottom: 1px solid var(--line);
+
+		&:last-child {
+			border: 0;
+		}
+	}
+
+	// Narrow: [paid] name+amount [edit]; the table columns appear from lg.
+	&__row {
+		display: grid;
+		grid-template-columns: 44px minmax(0, 1fr) 44px;
+		align-items: center;
+		column-gap: 8px;
+		min-height: 52px;
+		margin: 4px 0;
+		padding: 0 4px;
+		border-radius: 12px;
+		font-size: 14px;
+
+		&--pending {
+			background: color-mix(in srgb, var(--yellow-soft) 60%, transparent);
+		}
+
+		&--carried {
+			color: var(--muted);
+		}
+	}
+
+	&__head {
+		display: none;
+		margin: 0;
+		padding-bottom: 8px;
+		border-bottom: 1px solid var(--line);
+	}
+
+	&__col {
+		display: none;
+	}
+
+	&__check {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.4;
+			cursor: default;
+		}
+	}
+
+	&__box {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		border: 2px solid color-mix(in srgb, var(--muted) 60%, transparent);
+		border-radius: 6px;
+		background: var(--surface);
+		font-size: 12px;
+
+		&--on {
+			border-color: var(--teal);
+			background: var(--teal);
+			color: #fff;
+		}
+	}
+
+	&__main {
+		min-width: 0;
+	}
+
+	&__name {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		column-gap: 8px;
+	}
+
+	&__label {
+		overflow: hidden;
+		font-weight: 500;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__note {
+		color: var(--muted);
+		font-size: 12px;
+	}
+
+	&__auto {
+		background: var(--teal-soft);
+		color: var(--teal);
+	}
+
+	&__amount {
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__amount-narrow {
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__actions {
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	&__detail {
+		padding: 0 0 8px 52px;
+
+		summary {
+			min-height: 44px;
+			padding: 12px 0;
+			color: var(--teal);
+			font-size: 14px;
+			cursor: pointer;
+		}
+	}
+
+	&__foot {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		margin-top: 12px;
+		padding: 4px 12px;
+		border-radius: 12px;
+		background: var(--pill);
+		color: var(--muted);
+		font-size: 12px;
+
+		strong {
+			color: var(--ink);
+		}
+	}
+
+	&__totals {
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__add {
+		min-height: 44px;
+		padding: 0 8px;
+		background: transparent;
+		color: var(--teal);
+	}
+
+	@media (min-width: $bp-md) {
+		padding: 24px;
+	}
+
+	@media (min-width: 1024px) {
+		&__head,
+		&__row {
+			grid-template-columns: 44px minmax(0, 1fr) 136px 136px 120px 56px;
+		}
+
+		&__head {
+			display: grid;
+			column-gap: 8px;
+			padding: 0 4px 8px;
+		}
+
+		&__col {
+			display: block;
+		}
+
+		&__amount-narrow {
+			display: none;
+		}
+	}
+}

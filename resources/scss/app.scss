@@ -5,3 +5,11 @@
 @use "components/ui/app-sidebar";
 @use "components/ui/app-topbar";
 @use "components/ui/logo";
+@use "pages/period/index";
+@use "pages/period/show";
+@use "components/pages/period/summary-cards";
+@use "components/pages/period/category-block";
+@use "components/pages/period/line-form";
+@use "components/pages/period/arrastre-detail";
+@use "components/pages/period/close-period-dialog";
+@use "components/pages/period/create-period-form";

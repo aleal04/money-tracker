@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { faCalendar, faCreditCard, faMoon, faUser } from "@fortawesome/free-regular-svg-icons";
-import { faCircleHalfStroke, faHouse, faLayerGroup } from "@fortawesome/free-solid-svg-icons";
+import {
+	faCheck,
+	faChevronLeft,
+	faChevronRight,
+	faCircleHalfStroke,
+	faHouse,
+	faLayerGroup,
+	faLock,
+	faLockOpen,
+	faPen,
+	faPlus,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import type { IconName } from "@/Constants/shared/navigation";
 
@@ -13,6 +24,13 @@ const ICONS = {
 	user: faUser,
 	moon: faMoon,
 	theme: faCircleHalfStroke,
+	left: faChevronLeft,
+	right: faChevronRight,
+	lock: faLock,
+	unlock: faLockOpen,
+	plus: faPlus,
+	check: faCheck,
+	edit: faPen,
 } as const;
 
 defineProps<{ name: IconName }>();
