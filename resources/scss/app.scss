@@ -13,3 +13,10 @@
 @use "components/pages/period/arrastre-detail";
 @use "components/pages/period/close-period-dialog";
 @use "components/pages/period/create-period-form";
+@use "pages/dashboard/index" as dashboard-index;
+@use "pages/installment/index" as installment-index;
+@use "pages/template/index" as template-index;
+@use "components/pages/dashboard/pending-panel";
+@use "components/pages/dashboard/cards-panel";
+@use "components/pages/dashboard/welcome-steps";
+@use "components/pages/installment/card-section";

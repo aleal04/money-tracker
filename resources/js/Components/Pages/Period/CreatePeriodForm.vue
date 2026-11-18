@@ -5,6 +5,7 @@ import { ref } from "vue";
 import { MONTHS } from "@/Constants/Pages/Period/categories";
 import { fieldErrors } from "@/Composables/shared/http";
 
+defineProps<{ cancellable?: boolean }>();
 defineEmits<{ cancel: [] }>();
 const now = new Date();
 const year = ref(now.getFullYear());
@@ -53,6 +54,7 @@ async function create() {
 		<p v-if="errors.form" role="alert" class="alert">{{ errors.form }}</p>
 		<div class="create-period__actions">
 			<button :disabled="busy" class="btn btn-primary">Crear quincena</button>
+			<button v-if="cancellable" type="button" :disabled="busy" class="btn btn-ghost" @click="$emit('cancel')">Cancelar</button>
 		</div>
 	</form>
 </template>

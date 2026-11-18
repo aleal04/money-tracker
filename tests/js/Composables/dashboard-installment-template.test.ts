@@ -1,0 +1,125 @@
+import { describe, expect, it } from "vitest";
+import {
+	finishingLabel,
+	greeting,
+	pendingLines,
+} from "@/Composables/Dashboard/useDashboard";
+import {
+	ofStatus,
+	signed,
+} from "@/Composables/Installment/useInstallmentIndex";
+import {
+	freqLabel,
+	groupByCategory,
+} from "@/Composables/Template/useTemplateIndex";
+import { fromChoice, toChoice } from "@/Composables/Template/useTemplateForm";
+import { toInt } from "@/Composables/Installment/useInstallmentForm";
+import { formatCRC } from "@/Composables/shared/format";
+import type {
+	CardView,
+	Installment,
+} from "@/Types/Pages/Installment/Installment";
+import type { Line } from "@/Types/Pages/Period/Period";
+import type { Template } from "@/Types/Pages/Template/Template";
+
+const inst = (p: Partial<Installment>) =>
+	({
+		item: "X",
+		totalInstallments: 12,
+		paidInstallments: 10,
+		status: "activa",
+		...p,
+	}) as Installment;
+const card = (installments: Installment[]) =>
+	({ id: 1, name: "TC", installments }) as CardView;
+const line = (p: Partial<Line>) =>
+	({ id: 1, category: "servicio", paid: false, carried: false, ...p }) as Line;
+const tpl = (p: Partial<Template>) =>
+	({
+		category: "servicio",
+		frequency: "quincenal",
+		half: null,
+		...p,
+	}) as Template;
+
+describe("dashboard", () => {
+	it("greets by hour", () => {
+		expect([greeting(8), greeting(12), greeting(18), greeting(19)]).toEqual([
+			"Buenos días",
+			"Buenas tardes",
+			"Buenas tardes",
+			"Buenas noches",
+		]);
+	});
+	it("pending skips income, paid and carried lines", () => {
+		const lines = [
+			line({ id: 1 }),
+			line({ id: 2, category: "ingreso" }),
+			line({ id: 3, paid: true }),
+			line({ id: 4, carried: true }),
+		];
+		expect(pendingLines(lines).map((l) => l.id)).toEqual([1]);
+	});
+	it("labels finishing installments with remaining cuotas", () => {
+		const c = card([
+			inst({
+				item: "Reloj",
+				status: "por_terminar",
+				totalInstallments: 24,
+				paidInstallments: 22,
+			}),
+			inst({ item: "Otro" }),
+		]);
+		expect(finishingLabel(c)).toBe("Reloj (2)");
+	});
+});
+
+describe("installments", () => {
+	it("groups by status", () => {
+		const c = card([inst({ id: 1 }), inst({ id: 2, status: "terminada" })]);
+		expect(ofStatus(c, "terminada").map((i) => i.id)).toEqual([2]);
+	});
+	it("signs the saldo diff", () => {
+		expect(signed(100, formatCRC)).toBe("+₡1,00");
+		expect(signed(-100, formatCRC)).toBe("-₡1,00");
+	});
+	it("empty count is NaN so the API flags the field", () => {
+		expect(toInt(" ")).toBeNaN();
+		expect(toInt("12")).toBe(12);
+	});
+});
+
+describe("templates", () => {
+	it("labels frequency", () => {
+		expect(freqLabel(tpl({}))).toBe("Cada quincena");
+		expect(freqLabel(tpl({ frequency: "mensual_dividido" }))).toBe(
+			"Mensual ÷ 2",
+		);
+		expect(freqLabel(tpl({ frequency: "mensual_en_quincena", half: 1 }))).toBe(
+			"Mensual en I quincena",
+		);
+		expect(freqLabel(tpl({ frequency: "mensual_en_quincena", half: 2 }))).toBe(
+			"Mensual en II quincena",
+		);
+	});
+	it("round-trips the frequency dropdown", () => {
+		expect(toChoice(tpl({ frequency: "mensual_en_quincena", half: 2 }))).toBe(
+			"mensual_en_quincena_2",
+		);
+		expect(fromChoice("mensual_en_quincena_1")).toEqual({
+			frequency: "mensual_en_quincena",
+			half: 1,
+		});
+		expect(fromChoice("quincenal")).toEqual({
+			frequency: "quincenal",
+			half: null,
+		});
+	});
+	it("groups by category, skipping empty ones", () => {
+		const g = groupByCategory([
+			tpl({ id: 1 }),
+			tpl({ id: 2, category: "ahorro" }),
+		]);
+		expect(g.map((x) => x.key)).toEqual(["servicio", "ahorro"]);
+	});
+});

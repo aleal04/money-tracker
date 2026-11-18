@@ -1,0 +1,61 @@
+@use "../../../ui/tokens" as *;
+
+.cards-panel {
+	padding: 16px;
+
+	&__title {
+		margin: 0 0 8px;
+		color: var(--teal);
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	&__empty {
+		padding: 16px 0;
+		color: var(--muted);
+		font-size: 14px;
+	}
+
+	&__item {
+		padding: 12px 0;
+		border-bottom: 1px solid var(--line);
+
+		&:last-of-type {
+			border: 0;
+		}
+	}
+
+	&__name {
+		margin: 0;
+		font-weight: 500;
+	}
+
+	&__cols {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 8px;
+		margin-top: 4px;
+		font-size: 14px;
+	}
+
+	&__value {
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__finishing {
+		margin: 8px 0 0;
+		font-size: 14px;
+	}
+
+	&__pill {
+		background: color-mix(in srgb, var(--yellow-soft) 60%, transparent);
+	}
+
+	&__link {
+		margin-top: 12px;
+	}
+
+	@media (min-width: $bp-md) {
+		padding: 24px;
+	}
+}

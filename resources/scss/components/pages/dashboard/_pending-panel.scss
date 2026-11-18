@@ -1,0 +1,95 @@
+@use "../../../ui/tokens" as *;
+
+.pending-panel {
+	padding: 16px;
+
+	&__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 8px;
+	}
+
+	&__title {
+		margin: 0;
+		color: var(--teal);
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	&__empty {
+		padding: 16px 0;
+		color: var(--muted);
+		font-size: 14px;
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		min-height: 52px;
+		padding: 8px 0;
+		border-bottom: 1px solid var(--line);
+
+		&:last-child {
+			border: 0;
+		}
+	}
+
+	&__check {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border: 0;
+		border-radius: 12px;
+		background: transparent;
+		cursor: pointer;
+
+		&:hover {
+			background: var(--pill);
+		}
+
+		&:disabled {
+			opacity: 0.4;
+			cursor: default;
+		}
+	}
+
+	&__box {
+		width: 20px;
+		height: 20px;
+		border: 2px solid color-mix(in srgb, var(--muted) 60%, transparent);
+		border-radius: 6px;
+	}
+
+	&__name {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		font-size: 14px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__amount {
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	&__link {
+		margin-top: 12px;
+	}
+
+	@media (min-width: $bp-md) {
+		padding: 24px;
+	}
+}

@@ -1,0 +1,169 @@
+@use "../../../ui/tokens" as *;
+
+.card-section {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px;
+
+	&__title {
+		margin: 0;
+		color: var(--teal);
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	&__group {
+		padding-left: 12px;
+		border-left: 4px solid var(--status-active);
+
+		&--por_terminar {
+			border-color: var(--status-soon);
+		}
+
+		&--terminada {
+			border-color: var(--status-done);
+		}
+	}
+
+	&__group-head {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 44px;
+		margin: 0;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	&__group--terminada &__group-head {
+		cursor: pointer;
+	}
+
+	&__pill {
+		background: color-mix(in srgb, var(--status-active) 15%, transparent);
+		color: var(--ink);
+	}
+
+	&__group--por_terminar &__pill {
+		background: color-mix(in srgb, var(--status-soon) 25%, transparent);
+	}
+
+	&__group--terminada &__pill {
+		background: color-mix(in srgb, var(--status-done) 15%, transparent);
+	}
+
+	&__count,
+	&__meta {
+		color: var(--muted);
+		font-size: 12px;
+	}
+
+	&__meta {
+		display: block;
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		margin: 4px 0;
+		padding: 8px;
+		border-top: 1px solid var(--line);
+		border-radius: 12px;
+
+		&:first-child {
+			border-top: 0;
+		}
+
+		&--soon {
+			background: color-mix(in srgb, var(--yellow-soft) 60%, transparent);
+			box-shadow: var(--shadow-card);
+		}
+	}
+
+	&__top {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+	}
+
+	&__info {
+		flex: 1;
+		min-width: 0;
+		padding: 4px 0;
+	}
+
+	&__name {
+		font-weight: 500;
+	}
+
+	&__tag {
+		margin-left: 8px;
+		background: var(--yellow);
+		color: var(--on-accent);
+	}
+
+	&__body {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 8px 24px;
+	}
+
+	&__cols {
+		display: grid;
+		flex: 1;
+		grid-template-columns: 1fr 1fr;
+		gap: 8px 12px;
+		margin: 0;
+		font-size: 14px;
+
+		dd {
+			margin: 0;
+			font-variant-numeric: tabular-nums;
+		}
+	}
+
+	&__strong {
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__soon-btn {
+		font-size: 12px;
+	}
+
+	&__foot {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 24px;
+		padding: 8px 12px;
+		border-radius: 12px;
+		background: var(--pill);
+		font-size: 14px;
+
+		span {
+			font-variant-numeric: tabular-nums;
+		}
+	}
+
+	&__add {
+		margin-left: auto;
+		padding: 0 8px;
+		background: transparent;
+		color: var(--teal);
+	}
+
+	@media (min-width: $bp-md) {
+		padding: 24px;
+
+		&__cols {
+			grid-template-columns: repeat(4, 1fr);
+		}
+	}
+}

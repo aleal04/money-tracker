@@ -1,9 +1,28 @@
-import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import axios from "axios";
+import { flushPromises, mount } from "@vue/test-utils";
+import { describe, expect, it, vi } from "vitest";
 import Index from "@/Pages/Dashboard/Index.vue";
 
+vi.mock("@inertiajs/vue3", () => ({
+	Head: { render: () => null },
+	Link: {
+		render() {
+			return null;
+		},
+	},
+	router: { visit: vi.fn() },
+}));
+
 describe("Dashboard/Index", () => {
-	it("renders the title", () => {
-		expect(mount(Index).text()).toBe("Inicio");
+	it("shows the welcome steps on an empty database", async () => {
+		vi.spyOn(axios, "get").mockResolvedValue({
+			data: { current: null, cards: [], templateCount: 0 },
+		});
+		const wrapper = mount(Index, {
+			global: { stubs: { Head: true, Link: true } },
+		});
+		await flushPromises();
+		expect(wrapper.text()).toContain("Bienvenido a Finanzas");
+		expect(wrapper.text()).toContain("Nueva quincena");
 	});
 });

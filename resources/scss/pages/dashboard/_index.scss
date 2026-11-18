@@ -1,0 +1,63 @@
+@use "../../ui/tokens" as *;
+
+.dashboard-index {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-width: 0;
+
+	&__header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px;
+		padding: 16px;
+	}
+
+	&__heading {
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__title {
+		margin: 0;
+		color: var(--teal);
+		font-size: 22px;
+		font-weight: 600;
+	}
+
+	&__sub {
+		margin: 0;
+		color: var(--muted);
+		font-size: 14px;
+	}
+
+	&__create {
+		padding: 16px;
+	}
+
+	&__create-title {
+		margin: 0;
+		color: var(--teal);
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	&__grid {
+		display: grid;
+		gap: 16px;
+	}
+
+	@media (min-width: $bp-md) {
+		&__header,
+		&__create {
+			padding: 24px;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		&__grid {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+}
