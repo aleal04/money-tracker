@@ -3,3 +3,11 @@
 .superpowers/
 .DS_Store
 node_modules/
+
+/api/
+/web/
+/public/build
+/public/hot
+/vendor
+/.phpunit.cache
+/storage/*.key

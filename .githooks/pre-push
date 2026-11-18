@@ -1,0 +1,20 @@
+#!/bin/sh
+# Run the backend and frontend tests before every push; a failing test cancels the push.
+# Skip it in an emergency with: git push --no-verify
+
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+echo "pre-push: running the PHPUnit tests..."
+php artisan config:clear --ansi >/dev/null
+if ! php artisan test --compact; then
+    echo "pre-push: the PHPUnit tests failed, the push was cancelled."
+    exit 1
+fi
+
+echo "pre-push: running the Vitest tests..."
+if ! pnpm test; then
+    echo "pre-push: the Vitest tests failed, the push was cancelled."
+    exit 1
+fi
+
+echo "pre-push: all the tests passed."

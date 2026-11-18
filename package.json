@@ -1,0 +1,38 @@
+{
+	"$schema": "https://www.schemastore.org/package.json",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "vite build",
+		"dev": "vite",
+		"typecheck": "vue-tsc --noEmit",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"test": "vitest run",
+		"test:watch": "vitest"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.6.7",
+		"@types/node": "^26.6.6",
+		"@vitejs/plugin-vue": "^6.0.11",
+		"@vue/test-utils": "^2.6.0",
+		"@vue/tsconfig": "^0.9.1",
+		"happy-dom": "^21.0.4",
+		"laravel-vite-plugin": "^2.1.0",
+		"sass": "^1.108.2",
+		"typescript": "^6.0.3",
+		"vite": "^7.3.8",
+		"vitest": "^5.1.0",
+		"vue-tsc": "^3.3.14"
+	},
+	"dependencies": {
+		"@fortawesome/fontawesome-svg-core": "^7.3.1",
+		"@fortawesome/free-regular-svg-icons": "^7.3.1",
+		"@fortawesome/free-solid-svg-icons": "^7.3.1",
+		"@fortawesome/vue-fontawesome": "^3.3.3",
+		"@inertiajs/vite": "^3.11.0",
+		"@inertiajs/vue3": "^3.11.0",
+		"axios": "^1.21.1",
+		"vue": "^3.5.45"
+	}
+}
