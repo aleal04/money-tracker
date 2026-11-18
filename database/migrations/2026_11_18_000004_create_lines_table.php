@@ -29,7 +29,7 @@ return new class extends Migration
             // MySQL has no partial indexes: NULL for non-installments lines is ignored by UNIQUE.
             $table->unsignedBigInteger('cuotas_card_id')
                 ->nullable()
-                ->storedAs("CASE WHEN source = '".LineSourceConstant::INSTALLMENTS."' THEN card_id ELSE NULL END");
+                ->virtualAs("CASE WHEN source = '".LineSourceConstant::INSTALLMENTS."' THEN card_id ELSE NULL END");
             $table->timestamps();
 
             $table->unique(['period_id', 'cuotas_card_id']);

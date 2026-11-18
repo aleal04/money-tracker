@@ -15,7 +15,7 @@ class PeriodModel extends Model
     protected $table = 'periods';
 
     /**
-     * The attributes that are mass assignable (money columns stay decimal strings).
+     * The attributes that are mass assignable .
      *
      * @var list<string>
      */
