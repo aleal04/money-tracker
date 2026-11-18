@@ -7,5 +7,6 @@ Route::get('/', [DashboardController::class, 'index'])->name('home');
 
 require __DIR__.'/periods.php';
 require __DIR__.'/installments.php';
+require __DIR__.'/templates.php';
 
 Route::fallback(fn () => abort(404));
