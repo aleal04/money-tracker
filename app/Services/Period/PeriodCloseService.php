@@ -69,7 +69,7 @@ class PeriodCloseService implements PeriodCloseServiceContract
                 return createValidationSuccessResponse('Quincena cerrada.', ['arrastreLineId' => null]);
             }
 
-            $unpaid = $this->unpaidEgresos($periodId);
+            $unpaid = $this->unpaidEgresos($periodId, true); // lock after the period row, so line writes serialise with the close
             $nextKey = PeriodKeyHelper::next($period->year, $period->month, $period->half);
             if ($unpaid->isNotEmpty() && $this->periodQueryRepository->findByKey($nextKey)?->closed) {
                 $stop($result = createValidationErrorResponse('La quincena siguiente está cerrada; reabrila primero', ['statusCode' => 409]));
@@ -115,7 +115,7 @@ class PeriodCloseService implements PeriodCloseServiceContract
                 return $result;
             }
 
-            $carriedTo = $this->lineQueryRepository->listByPeriod($periodId)->firstWhere(fn (LineModel $l) => $l->carried_to_line_id !== null)?->carried_to_line_id;
+            $carriedTo = $this->lineQueryRepository->listByPeriod($periodId, true)->firstWhere(fn (LineModel $l) => $l->carried_to_line_id !== null)?->carried_to_line_id;
             if ($carriedTo !== null) {
                 $arrastre = $this->lineQueryRepository->find($carriedTo, true);
                 $conflict = match (true) {
@@ -143,11 +143,12 @@ class PeriodCloseService implements PeriodCloseServiceContract
      * Unpaid egreso lines that are not carried yet.
      *
      * @param  int  $periodId  The period identifier.
+     * @param  bool  $lock  Whether to lock the lines (FOR UPDATE).
      * @return Collection<int, LineModel> The lines.
      */
-    private function unpaidEgresos(int $periodId): Collection
+    private function unpaidEgresos(int $periodId, bool $lock = false): Collection
     {
-        return $this->lineQueryRepository->listByPeriod($periodId)
+        return $this->lineQueryRepository->listByPeriod($periodId, $lock)
             ->filter(fn (LineModel $l) => $l->category !== CategoryConstant::INGRESO && ! $l->paid && $l->carried_to_line_id === null)
             ->values();
     }
@@ -160,6 +161,6 @@ class PeriodCloseService implements PeriodCloseServiceContract
      */
     private function total(Collection $lines): int
     {
-        return $lines->sum(fn (LineModel $l) => (int) MoneyHelper::toCents($l->actual ?? $l->estimated));
+        return $lines->sum(fn (LineModel $l) => MoneyHelper::requireCents($l->actual ?? $l->estimated));
     }
 }

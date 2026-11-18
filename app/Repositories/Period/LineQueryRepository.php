@@ -27,11 +27,14 @@ class LineQueryRepository extends BaseQueryRepository
      * The lines of a period in display order.
      *
      * @param  int  $periodId  The period identifier.
+     * @param  bool  $lock  Whether to lock the rows (FOR UPDATE).
      * @return Collection<int, LineModel> The lines.
      */
-    public function listByPeriod(int $periodId): Collection
+    public function listByPeriod(int $periodId, bool $lock = false): Collection
     {
-        return LineModel::query()->where('period_id', $periodId)->orderBy('sort')->orderBy('id')->get();
+        $query = LineModel::query()->where('period_id', $periodId)->orderBy('sort')->orderBy('id');
+
+        return ($lock ? $query->lockForUpdate() : $query)->get();
     }
 
     /**

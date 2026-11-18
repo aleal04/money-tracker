@@ -4,6 +4,7 @@ namespace Tests\Feature\Period;
 
 use App\Models\Period\LineModel;
 use Illuminate\Support\Collection;
+use App\Repositories\Period\LineQueryRepository;
 
 class ClosePeriodTest extends PeriodTestCase
 {
@@ -225,5 +226,26 @@ class ClosePeriodTest extends PeriodTestCase
         $this->deleteJson("/lines/{$arrastreId}/delete")->assertConflict()->assertJson(['message' => 'Para quitar el arrastre, reabrí la quincena anterior']);
         $this->assertCount(1, $this->getJson("/lines/{$arrastreId}/arrastre-detail")->json());
         $this->getJson("/periods/{$p['id']}/data")->assertJsonPath('nextId', $this->period(10, 2)->id);
+    }
+
+    public function test_close_and_reopen_read_the_period_lines_with_a_lock(): void
+    {
+        // FOR UPDATE is a no-op on sqlite, so assert the close path asks for the locking read instead of the blocking.
+        $p = $this->october();
+        $this->addLine($p['id'], ['name' => 'X', 'estimated' => '5.000']);
+
+        $calls = [];
+        $spy = $this->partialMock(LineQueryRepository::class, function ($mock) use (&$calls) {
+            $mock->shouldReceive('listByPeriod')->andReturnUsing(function (int $id, bool $lock = false) use (&$calls) {
+                $calls[] = $lock;
+
+                return LineModel::query()->where('period_id', $id)->orderBy('sort')->orderBy('id')->get();
+            });
+        });
+
+        $this->postJson("/periods/{$p['id']}/close")->assertCreated();
+        $this->postJson("/periods/{$p['id']}/reopen")->assertOk();
+
+        $this->assertSame([true, true], $calls);
     }
 }

@@ -34,6 +34,14 @@ final class MoneyHelper
     }
 
     /**
+     * Like toCents but throws on null or an invalid value, so bad data fails loudly.
+     */
+    public static function requireCents(string|int|null $v): int
+    {
+        return self::toCents($v) ?? throw new \InvalidArgumentException('Monto inválido: '.var_export($v, true));
+    }
+
+    /**
      * Convert cents to a plain decimal string, e.g. 1086500 -> "10865.00".
      */
     public static function fromCents(int $c): string
