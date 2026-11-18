@@ -9,6 +9,9 @@ describe("formatCRC", () => {
 		expect(formatCRC(0)).toBe("₡0,00");
 		expect(formatCRC(-3090000)).toBe("-₡30.900,00");
 		expect(formatCRC(10000000000)).toBe("₡100.000.000,00");
+		expect(formatCRC(-5)).toBe("-₡0,05");
+		expect(formatCRC(100000)).toBe("₡1.000,00");
+		expect(formatCRC(99999)).toBe("₡999,99");
 	});
 });
 

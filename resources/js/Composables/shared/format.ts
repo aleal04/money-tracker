@@ -1,22 +1,9 @@
-// useGrouping true = 'always': group even 4-digit amounts (₡5.900,00).
-const crc = new Intl.NumberFormat("es-CR", {
-	style: "currency",
-	currency: "CRC",
-	useGrouping: true,
-});
-
-/** Cents to colones, "₡10.865,00". CLDR groups with a space; the spec wants ".", so spacing literals are dropped. */
-export const formatCRC = (cents: number): string =>
-	crc
-		.formatToParts(cents / 100)
-		.map((p) =>
-			p.type === "group"
-				? "."
-				: p.type === "literal" && !p.value.trim()
-					? ""
-					: p.value,
-		)
-		.join("");
+/** Cents to colones, "₡10.865,00" / "-₡30.900,00"; same output as the backend MoneyHelper::format, with no ICU dependency. */
+export function formatCRC(cents: number): string {
+	const abs = Math.abs(Math.round(cents));
+	const int = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+$)/g, ".");
+	return `${cents < 0 ? "-" : ""}₡${int},${String(abs % 100).padStart(2, "0")}`;
+}
 
 /** Signed difference label, or null when there is no actual or no difference. */
 export function diffLabel(
