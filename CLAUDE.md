@@ -12,7 +12,8 @@ Personal finance app: Laravel 12 + Inertia 3 + Vue 3 (TypeScript), MySQL, pnpm, 
 - Names: `XxxModel`, `XxxStoreDto` (readonly ctor props + `fromRequest()`/`toArray()`), `StoreXxxFormRequest`, `XxxControllerContract`, `XxxServiceContract`. Constants in `app/Constant/*Constant.php` (no Enums).
 - Vue styles live in SCSS partials under `resources/scss` mirroring the Vue path in kebab-case, not inside the component.
 - Use Context7 for library/framework documentation before relying on an API.
-- Tests: PHPUnit on sqlite `:memory:` (run `php artisan config:clear` first), Vitest for the frontend. Migrations must run on sqlite and MySQL.
+- Tests: PHPUnit on sqlite `:memory:` (run `php artisan config:clear` first), Vitest for the frontend. The test schema is built by `tests/Concerns/CreatesSchemaTrait.php` (mirror of the MySQL scripts; keep both in sync).
+- No crear, correr ni modificar migraciones; el esquema vive en `database/scripts` (scripts idempotentes). Orden de ejecución: `database` -> `tables` -> `indexes` -> `logins` (todos los archivos de cada carpeta, por número). Cache `file` y queue `sync`: no hay tablas de cache/jobs.
 - Format with `./vendor/bin/pint` and `pnpm lint`. Enable hooks with `git config core.hooksPath .githooks`.
 
 ## Money rules
