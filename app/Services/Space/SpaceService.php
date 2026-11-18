@@ -53,8 +53,8 @@ class SpaceService implements SpaceServiceContract
     }
 
     /**
-     * Update a space; the days are cleared when the resulting frequency is not custom. Changing the frequency only
-     * affects the periods proposed from now on.
+     * Update a space; the days are cleared when the resulting frequency is not custom. The frequency and days cannot
+     * change once the space has periods (the cuota and template splits of its periods depend on them).
      *
      * @param  SpaceUpdateDto  $spaceData  The space identifier and changed fields.
      * @return object The result of the update operation.
@@ -70,6 +70,11 @@ class SpaceService implements SpaceServiceContract
             $changes = $spaceData->toArray();
             if (($changes['Frequency'] ?? $space->Frequency) !== SpaceFrequencyConstant::CUSTOM) {
                 $changes['CustomDays'] = null;
+            }
+            $reschedules = ($changes['Frequency'] ?? $space->Frequency) !== $space->Frequency
+                || (array_key_exists('CustomDays', $changes) && $changes['CustomDays'] !== $space->CustomDays);
+            if ($reschedules && $this->spaceQueryRepository->hasPeriods($space->IdSpace)) {
+                return createValidationErrorResponse('No se puede cambiar la frecuencia de un espacio que ya tiene periodos', ['statusCode' => 409]);
             }
             $this->spaceRepository->update($space, $changes);
 
@@ -123,7 +128,7 @@ class SpaceService implements SpaceServiceContract
     }
 
     /**
-     * The JSON view of a space; initialBalance is in cents.
+     * The JSON view of a space; initialBalance is in cents, hasPeriods locks its frequency.
      *
      * @param  SpaceModel  $space  The space.
      * @return array<string, mixed> The view.
@@ -137,6 +142,7 @@ class SpaceService implements SpaceServiceContract
             'customDays' => $space->CustomDays,
             'initialBalance' => MoneyHelper::requireCents($space->InitialBalance),
             'isPrimary' => $space->IsPrimary,
+            'hasPeriods' => (bool) ($space->periods_exists ?? $this->spaceQueryRepository->hasPeriods($space->IdSpace)),
         ];
     }
 }

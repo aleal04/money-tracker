@@ -38,13 +38,13 @@ class SpaceQueryRepository extends BaseQueryRepository
     }
 
     /**
-     * Every space in creation order.
+     * Every space in creation order, with whether it has live periods (periods_exists).
      *
      * @return Collection<int, SpaceModel> The spaces.
      */
     public function listSpaces(): Collection
     {
-        return SpaceModel::query()->orderBy('IdSpace')->get();
+        return SpaceModel::query()->withExists('periods')->orderBy('IdSpace')->get();
     }
 
     /**
@@ -55,6 +55,17 @@ class SpaceQueryRepository extends BaseQueryRepository
     public function hasPrimary(): bool
     {
         return SpaceModel::query()->where('IsPrimary', true)->exists();
+    }
+
+    /**
+     * Whether the space has any live period.
+     *
+     * @param  int  $spaceId  The space identifier.
+     * @return bool True when it has periods.
+     */
+    public function hasPeriods(int $spaceId): bool
+    {
+        return PeriodModel::query()->where('FkSpace', $spaceId)->exists();
     }
 
     /**

@@ -35,7 +35,7 @@ class SpaceTest extends TestCase
     public function test_crud_round_trip(): void
     {
         $s = $this->store()->assertCreated()->json('space');
-        $this->assertSame(['name' => 'Ahorros', 'frequency' => 'monthly', 'customDays' => null, 'initialBalance' => 500000, 'isPrimary' => false], array_diff_key($s, ['id' => 1]));
+        $this->assertSame(['name' => 'Ahorros', 'frequency' => 'monthly', 'customDays' => null, 'initialBalance' => 500000, 'isPrimary' => false, 'hasPeriods' => false], array_diff_key($s, ['id' => 1]));
 
         $u = $this->putJson("/spaces/{$s['id']}/update", ['frequency' => 'custom', 'customDays' => 10, 'initialBalance' => '0'])->assertOk()->json('space');
         $this->assertSame(['custom', 10, 0], [$u['frequency'], $u['customDays'], $u['initialBalance']]);
@@ -121,6 +121,22 @@ class SpaceTest extends TestCase
         }
         $empty = $this->store(['name' => 'Vacío'])->assertCreated()->json('space.id');
         $this->deleteJson("/spaces/{$empty}/delete")->assertOk();
+    }
+
+    /**
+     * A space with periods keeps its frequency and days (the cuota and template splits depend on them); other fields still change.
+     */
+    public function test_frequency_is_locked_once_the_space_has_periods(): void
+    {
+        $id = $this->store(['name' => 'P', 'frequency' => 'custom', 'customDays' => 10])->assertCreated()->json('space.id');
+        $this->postJson('/periods/store', ['spaceId' => $id, 'startDate' => '2026-11-01', 'endDate' => '2026-11-10'])->assertCreated();
+        $message = 'No se puede cambiar la frecuencia de un espacio que ya tiene periodos';
+
+        $this->putJson("/spaces/{$id}/update", ['frequency' => 'monthly'])->assertStatus(409)->assertJsonPath('message', $message);
+        $this->putJson("/spaces/{$id}/update", ['frequency' => 'custom', 'customDays' => 7])->assertStatus(409)->assertJsonPath('message', $message);
+        $this->putJson("/spaces/{$id}/update", ['frequency' => 'custom', 'customDays' => 10, 'name' => 'Q'])->assertOk()->assertJsonPath('space.hasPeriods', true);
+        $this->assertSame(['custom', 10], [SpaceModel::find($id)->Frequency, SpaceModel::find($id)->CustomDays]);
+        $this->assertTrue(collect($this->getJson('/spaces/get-space-list')->json())->firstWhere('id', $id)['hasPeriods']);
     }
 
     /**

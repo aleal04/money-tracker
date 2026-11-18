@@ -11,6 +11,7 @@ const sp = (id: number, isPrimary = false): Space => ({
 	customDays: null,
 	initialBalance: 0,
 	isPrimary,
+	hasPeriods: false,
 });
 
 async function load(list: Space[] = [sp(1, true), sp(2)]) {

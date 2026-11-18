@@ -8,6 +8,8 @@ export interface Space {
 	customDays: number | null;
 	initialBalance: number;
 	isPrimary: boolean;
+	/** Its frequency and days are locked once it has periods. */
+	hasPeriods: boolean;
 }
 
 /** Request body: the amount is a raw string as typed. */

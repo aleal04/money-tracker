@@ -38,6 +38,7 @@ const sp = (id: number, name: string): Space => ({
 	customDays: null,
 	initialBalance: 0,
 	isPrimary: id === 1,
+	hasPeriods: false,
 });
 const spaces = [sp(1, "Salario"), sp(2, "Ahorro")];
 

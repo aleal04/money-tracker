@@ -17,16 +17,17 @@ const { name, frequency, customDays, initialBalance, confirmingDelete, errors, b
 			<span v-if="errors.name" role="alert" class="err">{{ errors.name }}</span>
 		</label>
 		<label class="field">Frecuencia
-			<select v-model="frequency" class="input">
+			<select v-model="frequency" :disabled="space?.hasPeriods" aria-describedby="space-frequency-hint" class="input">
 				<option value="weekly">Semanal</option>
 				<option value="biweekly">Quincenal</option>
 				<option value="monthly">Mensual</option>
 				<option value="custom">Personalizada</option>
 			</select>
+			<span v-if="space?.hasPeriods" id="space-frequency-hint" class="field-hint">No se puede cambiar: el espacio ya tiene periodos.</span>
 			<span v-if="errors.frequency" role="alert" class="err">{{ errors.frequency }}</span>
 		</label>
 		<label v-if="frequency === 'custom'" class="field">Días por periodo
-			<input v-model="customDays" type="number" min="1" max="366" inputmode="numeric" class="input" />
+			<input v-model="customDays" :disabled="space?.hasPeriods" type="number" min="1" max="366" inputmode="numeric" class="input" />
 			<span v-if="errors.customDays" role="alert" class="err">{{ errors.customDays }}</span>
 		</label>
 		<label class="field">Saldo inicial
