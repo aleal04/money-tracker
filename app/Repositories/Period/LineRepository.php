@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Period;
 
+use Closure;
 use App\Models\Period\LineModel;
 use App\DTOs\Period\LineStoreDto;
 use App\DTOs\Period\LineUpdateDto;
@@ -61,16 +62,18 @@ class LineRepository
      * Store a manual line in a period, locking the period row.
      *
      * @param  LineStoreDto  $lineData  The line fields.
-     * @return object The response with the line view, or a 404 error.
+     * @param  Closure(LineModel): ?object  $afterWrite  Runs in the same transaction after the write; an error response rolls it back.
+     * @return object The response with the line view, or a 404 error (or the error of $afterWrite).
      */
-    public function store(LineStoreDto $lineData): object
+    public function store(LineStoreDto $lineData, Closure $afterWrite): object
     {
-        return $this->runTransactionSteps(DB::connection(), function () use ($lineData): object {
+        return $this->runTransactionSteps(DB::connection(), function (Closure $stop) use ($lineData, $afterWrite): object {
             if ($this->periodQueryRepository->find($lineData->periodId, true) === null) {
                 return createValidationErrorResponse('No se encontró el periodo.', ['statusCode' => 404]);
             }
 
             $line = $this->insert($lineData->toArray() + ['Source' => LineSourceConstant::MANUAL]);
+            $this->afterWrite($stop, $afterWrite, $line);
 
             return createValidationSuccessResponse('Línea creada correctamente.', ['line' => $line->fresh()->toView()]);
         }, 'No se pudo crear la línea.', ['statusCode' => 500]);
@@ -80,11 +83,12 @@ class LineRepository
      * Update the sent fields of a line; carried lines are immutable and a paid line of a closed period cannot be un-paid.
      *
      * @param  LineUpdateDto  $lineData  The line identifier and changed fields.
-     * @return object The response with the line view, or a 404/409 error.
+     * @param  Closure(LineModel): ?object  $afterWrite  Runs in the same transaction after the write; an error response rolls it back.
+     * @return object The response with the line view, or a 404/409 error (or the error of $afterWrite).
      */
-    public function update(LineUpdateDto $lineData): object
+    public function update(LineUpdateDto $lineData, Closure $afterWrite): object
     {
-        return $this->runTransactionSteps(DB::connection(), function () use ($lineData): object {
+        return $this->runTransactionSteps(DB::connection(), function (Closure $stop) use ($lineData, $afterWrite): object {
             $line = $this->lineQueryRepository->find($lineData->lineId, true);
             $rejection = $this->rejectEdit($line, $lineData->paid === false);
             if ($rejection !== null) {
@@ -96,6 +100,7 @@ class LineRepository
                 $changes['PaidAt'] = $lineData->paid ? now() : null;
             }
             $line->update($changes);
+            $this->afterWrite($stop, $afterWrite, $line);
 
             return createValidationSuccessResponse('Línea actualizada correctamente.', ['line' => $line->fresh()->toView()]);
         }, 'No se pudo actualizar la línea.', ['statusCode' => 500]);
@@ -105,11 +110,12 @@ class LineRepository
      * Flip the paid flag of a line, with the same rules as update.
      *
      * @param  int  $lineId  The line identifier.
-     * @return object The response with the line view, or a 404/409 error.
+     * @param  Closure(LineModel): ?object  $afterWrite  Runs in the same transaction after the write; an error response rolls it back.
+     * @return object The response with the line view, or a 404/409 error (or the error of $afterWrite).
      */
-    public function togglePaid(int $lineId): object
+    public function togglePaid(int $lineId, Closure $afterWrite): object
     {
-        return $this->runTransactionSteps(DB::connection(), function () use ($lineId): object {
+        return $this->runTransactionSteps(DB::connection(), function (Closure $stop) use ($lineId, $afterWrite): object {
             $line = $this->lineQueryRepository->find($lineId, true);
             $rejection = $this->rejectEdit($line, $line !== null && $line->Paid);
             if ($rejection !== null) {
@@ -117,6 +123,7 @@ class LineRepository
             }
 
             $line->update(['Paid' => ! $line->Paid, 'PaidAt' => $line->Paid ? null : now()]);
+            $this->afterWrite($stop, $afterWrite, $line);
 
             return createValidationSuccessResponse('Línea actualizada correctamente.', ['line' => $line->fresh()->toView()]);
         }, 'No se pudo actualizar la línea.', ['statusCode' => 500]);
@@ -126,11 +133,12 @@ class LineRepository
      * Logically delete a line; carried lines and the arrastre line cannot be deleted.
      *
      * @param  int  $lineId  The line identifier.
-     * @return object The success response, or a 404/409 error.
+     * @param  Closure(LineModel): ?object  $afterWrite  Runs in the same transaction after the write; an error response rolls it back.
+     * @return object The success response, or a 404/409 error (or the error of $afterWrite).
      */
-    public function destroy(int $lineId): object
+    public function destroy(int $lineId, Closure $afterWrite): object
     {
-        return $this->runTransactionSteps(DB::connection(), function () use ($lineId): object {
+        return $this->runTransactionSteps(DB::connection(), function (Closure $stop) use ($lineId, $afterWrite): object {
             $line = $this->lineQueryRepository->find($lineId, true);
             $rejection = $this->rejectEdit($line, false);
             if ($rejection !== null) {
@@ -142,9 +150,46 @@ class LineRepository
             }
 
             $line->logicalDelete();
+            $this->afterWrite($stop, $afterWrite, $line);
 
             return createValidationSuccessResponse('Línea eliminada correctamente.');
         }, 'No se pudo eliminar la línea.', ['statusCode' => 500]);
+    }
+
+    /**
+     * Change columns of a line (transfer destinations); to run inside a transaction.
+     *
+     * @param  LineModel  $line  The locked line.
+     * @param  array<string, mixed>  $columns  The new column values.
+     */
+    public function updateColumns(LineModel $line, array $columns): void
+    {
+        $line->update($columns);
+    }
+
+    /**
+     * Logically delete a line (transfer destinations); to run inside a transaction.
+     *
+     * @param  LineModel  $line  The locked line.
+     */
+    public function remove(LineModel $line): void
+    {
+        $line->logicalDelete();
+    }
+
+    /**
+     * Run the after-write hook and stop the transaction when it answers an error.
+     *
+     * @param  Closure(object): void  $stop  The step checker of the transaction.
+     * @param  Closure(LineModel): ?object  $afterWrite  The hook.
+     * @param  LineModel  $line  The written line.
+     */
+    private function afterWrite(Closure $stop, Closure $afterWrite, LineModel $line): void
+    {
+        $error = $afterWrite($line);
+        if ($error !== null) {
+            $stop($error);
+        }
     }
 
     /**
@@ -169,6 +214,9 @@ class LineRepository
     {
         if ($line === null) {
             return createValidationErrorResponse('No se encontró la línea.', ['statusCode' => 404]);
+        }
+        if ($line->FkTransferFromLine !== null) {
+            return createValidationErrorResponse('Se edita desde el espacio de origen', ['statusCode' => 409]);
         }
         if ($line->FkCarriedToLine !== null) {
             return createValidationErrorResponse('Línea arrastrada', ['statusCode' => 409]);

@@ -30,6 +30,7 @@ trait ValidatesTemplateTrait
             'frequency' => [...$first, 'in:'.implode(',', TemplateFrequencyConstant::ALL)],
             'dayOfMonth' => ['sometimes', 'nullable'],
             'spaceId' => ['sometimes', 'nullable', 'integer'],
+            'targetSpaceId' => ['sometimes', 'nullable', 'integer', 'exists:Space,IdSpace,IsDeleted,0'],
             'active' => ['sometimes', 'boolean'],
         ];
     }
@@ -48,6 +49,7 @@ trait ValidatesTemplateTrait
             'frequency.*' => 'Frecuencia inválida',
             'active.*' => 'Valor inválido',
             'spaceId.*' => 'Espacio inválido',
+            'targetSpaceId.*' => 'Espacio inválido',
         ];
     }
 

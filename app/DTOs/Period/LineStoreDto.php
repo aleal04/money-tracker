@@ -16,6 +16,7 @@ class LineStoreDto
      * @param  int  $estimated  The estimated amount in cents.
      * @param  int|null  $actual  The actual amount in cents, or null.
      * @param  bool  $paid  Whether the line is paid.
+     * @param  int|null  $targetSpaceId  The space the paid amount is sent to, or null.
      */
     public function __construct(
         public readonly int $periodId,
@@ -24,6 +25,7 @@ class LineStoreDto
         public readonly int $estimated,
         public readonly ?int $actual,
         public readonly bool $paid,
+        public readonly ?int $targetSpaceId = null,
     ) {}
 
     /**
@@ -43,6 +45,7 @@ class LineStoreDto
             estimated: (int) MoneyHelper::parseAmount((string) $request->input('estimated')),
             actual: $actual === null ? null : MoneyHelper::parseAmount((string) $actual),
             paid: $request->boolean('paid'),
+            targetSpaceId: $request->filled('targetSpaceId') ? (int) $request->input('targetSpaceId') : null,
         );
     }
 
@@ -61,6 +64,7 @@ class LineStoreDto
             'Actual' => $this->actual === null ? null : MoneyHelper::fromCents($this->actual),
             'Paid' => $this->paid,
             'PaidAt' => $this->paid ? now() : null,
+            'FkTargetSpace' => $this->targetSpaceId,
         ];
     }
 }

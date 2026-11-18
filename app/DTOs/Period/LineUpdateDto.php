@@ -17,6 +17,8 @@ class LineUpdateDto
      * @param  bool  $hasActual  Whether actual was sent (it may be sent as null to clear it).
      * @param  int|null  $actual  The new actual amount in cents.
      * @param  bool|null  $paid  The new paid flag, or null when not sent.
+     * @param  bool  $hasTargetSpaceId  Whether targetSpaceId was sent (it may be sent as null to stop the transfer).
+     * @param  int|null  $targetSpaceId  The new target space identifier.
      */
     public function __construct(
         public readonly int $lineId,
@@ -26,6 +28,8 @@ class LineUpdateDto
         public readonly bool $hasActual,
         public readonly ?int $actual,
         public readonly ?bool $paid,
+        public readonly bool $hasTargetSpaceId = false,
+        public readonly ?int $targetSpaceId = null,
     ) {}
 
     /**
@@ -46,6 +50,8 @@ class LineUpdateDto
             hasActual: $request->has('actual'),
             actual: $actual === null ? null : MoneyHelper::parseAmount((string) $actual),
             paid: $request->has('paid') ? $request->boolean('paid') : null,
+            hasTargetSpaceId: $request->has('targetSpaceId'),
+            targetSpaceId: $request->filled('targetSpaceId') ? (int) $request->input('targetSpaceId') : null,
         );
     }
 
@@ -65,6 +71,10 @@ class LineUpdateDto
 
         if ($this->hasActual) {
             $changes['Actual'] = $this->actual === null ? null : MoneyHelper::fromCents($this->actual);
+        }
+
+        if ($this->hasTargetSpaceId) {
+            $changes['FkTargetSpace'] = $this->targetSpaceId;
         }
 
         return $changes;

@@ -30,6 +30,7 @@ class UpdateLineFormRequest extends FormRequest
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'estimated' => ['sometimes', 'required', $this->amountRule()],
             'actual' => ['sometimes', 'nullable', $this->amountRule()],
+            'targetSpaceId' => ['sometimes', 'nullable', 'integer', 'exists:Space,IdSpace,IsDeleted,0'],
             'paid' => ['sometimes', 'required', 'boolean'],
         ];
     }
@@ -44,6 +45,7 @@ class UpdateLineFormRequest extends FormRequest
         return [
             'category.*' => 'Categoría inválida',
             'name.*' => 'Nombre requerido',
+            'targetSpaceId.*' => 'Espacio inválido',
             'estimated.required' => 'Monto inválido',
             'paid.*' => 'Valor inválido',
         ];

@@ -13,7 +13,8 @@ interface PeriodCloseServiceContract
     public function preview(int $periodId): ?array;
 
     /**
-     * Close the period in one transaction, carrying its unpaid egresos into one arrastre line of the next period.
+     * Close the period in one transaction, carrying its unpaid egresos into one arrastre line of the next period
+     * (unpaid transfers are carried one by one).
      *
      * @param  int  $periodId  The period identifier.
      * @return object The response with arrastreLineId (null when nothing was carried), or a 404/409 error.
@@ -21,7 +22,7 @@ interface PeriodCloseServiceContract
     public function close(int $periodId): object;
 
     /**
-     * Reopen the period in one transaction, deleting its unpaid arrastre line.
+     * Reopen the period in one transaction, deleting its unpaid arrastre and carried transfer lines.
      *
      * @param  int  $periodId  The period identifier.
      * @return object The success response, or a 404/409 error.

@@ -18,6 +18,8 @@ class TemplateUpdateDto
      * @param  bool  $hasDayOfMonth  Whether dayOfMonth was sent.
      * @param  int|null  $dayOfMonth  The new day of the month.
      * @param  bool|null  $active  The new active flag, or null when not sent.
+     * @param  bool  $hasTargetSpaceId  Whether targetSpaceId was sent (null clears it).
+     * @param  int|null  $targetSpaceId  The new target space identifier.
      */
     public function __construct(
         public readonly int $templateId,
@@ -28,6 +30,8 @@ class TemplateUpdateDto
         public readonly bool $hasDayOfMonth,
         public readonly ?int $dayOfMonth,
         public readonly ?bool $active,
+        public readonly bool $hasTargetSpaceId = false,
+        public readonly ?int $targetSpaceId = null,
     ) {}
 
     /**
@@ -47,6 +51,8 @@ class TemplateUpdateDto
             hasDayOfMonth: $request->has('dayOfMonth'),
             dayOfMonth: $request->input('dayOfMonth') === null ? null : (int) $request->input('dayOfMonth'),
             active: $request->has('active') ? $request->boolean('active') : null,
+            hasTargetSpaceId: $request->has('targetSpaceId'),
+            targetSpaceId: $request->filled('targetSpaceId') ? (int) $request->input('targetSpaceId') : null,
         );
     }
 
@@ -67,6 +73,10 @@ class TemplateUpdateDto
 
         if ($this->hasDayOfMonth) {
             $changes['DayOfMonth'] = $this->dayOfMonth;
+        }
+
+        if ($this->hasTargetSpaceId) {
+            $changes['FkTargetSpace'] = $this->targetSpaceId;
         }
 
         return $changes;

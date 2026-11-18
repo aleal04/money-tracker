@@ -190,6 +190,7 @@ class PeriodService implements PeriodServiceContract
                 $this->periodRepository->advanceInstallments($space->IdSpace, PeriodKeyHelper::prevMonthKey($year, $month));
             }
             $templates = $this->periodQueryRepository->listActiveTemplateInputs($space->IdSpace);
+            $targets = $templates->pluck('targetSpaceId', 'id');
             foreach (TemplateExpander::expandForPeriod($templates, $period->monthSlot()) as $line) {
                 $this->lineRepository->insert([
                     'FkPeriod' => $period->IdPeriod,
@@ -199,6 +200,7 @@ class PeriodService implements PeriodServiceContract
                     'Actual' => null,
                     'Source' => LineSourceConstant::TEMPLATE,
                     'FkTemplate' => $line['templateId'],
+                    'FkTargetSpace' => $targets[$line['templateId']] ?? null,
                 ]);
             }
             $this->cuotasSyncService->syncWithinTransaction($period->IdPeriod);

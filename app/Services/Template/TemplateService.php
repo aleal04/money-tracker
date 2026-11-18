@@ -6,6 +6,7 @@ use App\Helpers\MoneyHelper;
 use App\Models\Template\TemplateModel;
 use App\DTOs\Template\TemplateStoreDto;
 use App\DTOs\Template\TemplateUpdateDto;
+use App\Services\Period\TransferService;
 use App\Constant\TemplateFrequencyConstant;
 use App\Repositories\Space\SpaceQueryRepository;
 use App\Repositories\Template\TemplateRepository;
@@ -21,11 +22,13 @@ class TemplateService implements TemplateServiceContract
      * @param  TemplateRepository  $templateRepository  The template writes.
      * @param  TemplateQueryRepository  $templateQueryRepository  The template reads.
      * @param  SpaceQueryRepository  $spaceQueryRepository  The space reads.
+     * @param  TransferService  $transferService  The target space rule.
      */
     public function __construct(
         private readonly TemplateRepository $templateRepository,
         private readonly TemplateQueryRepository $templateQueryRepository,
         private readonly SpaceQueryRepository $spaceQueryRepository,
+        private readonly TransferService $transferService,
     ) {}
 
     /**
@@ -54,6 +57,10 @@ class TemplateService implements TemplateServiceContract
             if ($space === null) {
                 return createValidationErrorResponse('No se encontró el espacio.', ['statusCode' => 404]);
             }
+            $targetError = $this->transferService->targetError($templateData->targetSpaceId, $templateData->category, $space->IdSpace);
+            if ($targetError !== null) {
+                return $targetError;
+            }
             $template = $this->templateRepository->insert($templateData->toArray() + ['FkSpace' => $space->IdSpace]);
 
             return createValidationSuccessResponse('Plantilla creada correctamente.', ['template' => $this->toView($template->fresh())]);
@@ -61,7 +68,8 @@ class TemplateService implements TemplateServiceContract
     }
 
     /**
-     * Update a template; the day of the month is cleared when the resulting frequency is not mensual_dia.
+     * Update a template; the day of the month is cleared when the resulting frequency is not mensual_dia, and the target
+     * space must be another live space of an egreso template.
      *
      * @param  TemplateUpdateDto  $templateData  The template identifier and changed fields.
      * @return object The result of the update operation.
@@ -77,6 +85,11 @@ class TemplateService implements TemplateServiceContract
             $changes = $templateData->toArray();
             if (($changes['Frequency'] ?? $template->Frequency) !== TemplateFrequencyConstant::MENSUAL_DIA) {
                 $changes['DayOfMonth'] = null;
+            }
+            $target = array_key_exists('FkTargetSpace', $changes) ? $changes['FkTargetSpace'] : $template->FkTargetSpace;
+            $targetError = $this->transferService->targetError($target === null ? null : (int) $target, $changes['Category'] ?? $template->Category, (int) $template->FkSpace);
+            if ($targetError !== null) {
+                return $targetError;
             }
             $this->templateRepository->update($template, $changes);
 
@@ -115,6 +128,7 @@ class TemplateService implements TemplateServiceContract
         return [
             'id' => $template->IdTemplate,
             'spaceId' => $template->FkSpace,
+            'targetSpaceId' => $template->FkTargetSpace === null ? null : (int) $template->FkTargetSpace,
             'name' => $template->Name,
             'category' => $template->Category,
             'estimated' => MoneyHelper::requireCents($template->Estimated),

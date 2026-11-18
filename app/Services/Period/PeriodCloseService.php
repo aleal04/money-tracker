@@ -51,7 +51,8 @@ class PeriodCloseService implements PeriodCloseServiceContract
 
     /**
      * Close the period in one transaction (idempotent), carrying its unpaid egresos into one arrastre line of the next
-     * period of its space (created with the proposed dates when there is none).
+     * period of its space (created with the proposed dates when there is none); unpaid transfer lines are not summed,
+     * each one is carried as its own '↩ <name>' line that keeps its category and target space.
      *
      * @param  int  $periodId  The period identifier.
      * @return object The response with arrastreLineId (null when nothing was carried), or a 404/409 error.
@@ -86,23 +87,43 @@ class PeriodCloseService implements PeriodCloseServiceContract
                 $created = $this->periodService->createAfter($period);
                 $stop($created);
             }
-            $total = MoneyHelper::fromCents($this->total($unpaid));
-            $arrastre = $this->lineRepository->insert([
-                'FkPeriod' => $next?->IdPeriod ?? $created->get('period')['id'],
-                'Category' => CategoryConstant::DEUDA_FIJA,
-                'Name' => 'Arrastre '.$period->label(),
-                'Estimated' => $total,
-                'Actual' => $total,
-                'Source' => LineSourceConstant::CARRIED,
-            ]);
-            $this->lineRepository->markCarried($unpaid->pluck('IdLine')->all(), $arrastre->IdLine);
+            $nextId = $next?->IdPeriod ?? $created->get('period')['id'];
+            [$transfers, $general] = $unpaid->partition(fn (LineModel $l) => $l->FkTargetSpace !== null);
+            $arrastreId = null;
+            if ($general->isNotEmpty()) {
+                $total = MoneyHelper::fromCents($this->total($general));
+                $arrastreId = $this->lineRepository->insert([
+                    'FkPeriod' => $nextId,
+                    'Category' => CategoryConstant::DEUDA_FIJA,
+                    'Name' => 'Arrastre '.$period->label(),
+                    'Estimated' => $total,
+                    'Actual' => $total,
+                    'Source' => LineSourceConstant::CARRIED,
+                ])->IdLine;
+                $this->lineRepository->markCarried($general->pluck('IdLine')->all(), $arrastreId);
+            }
+            // Each unpaid transfer travels on as its own line, so paying it later still reaches its target space.
+            foreach ($transfers as $line) {
+                $amount = $line->Actual ?? $line->Estimated;
+                $carried = $this->lineRepository->insert([
+                    'FkPeriod' => $nextId,
+                    'Category' => $line->Category,
+                    'Name' => str_starts_with($line->Name, '↩ ') ? $line->Name : mb_substr('↩ '.$line->Name, 0, 255),
+                    'Estimated' => $amount,
+                    'Actual' => $amount,
+                    'Source' => LineSourceConstant::CARRIED,
+                    'FkTargetSpace' => $line->FkTargetSpace,
+                ]);
+                $this->lineRepository->markCarried([$line->IdLine], $carried->IdLine);
+            }
 
-            return createValidationSuccessResponse('Periodo cerrado.', ['arrastreLineId' => $arrastre->IdLine]);
+            return createValidationSuccessResponse('Periodo cerrado.', ['arrastreLineId' => $arrastreId]);
         }, 'No se pudo cerrar el periodo.');
     }
 
     /**
-     * Reopen the period in one transaction, deleting its unpaid arrastre line and un-carrying the originals.
+     * Reopen the period in one transaction, deleting its unpaid arrastre and carried transfer lines and un-carrying the
+     * originals; a carried line that is paid or carried onward blocks it.
      *
      * @param  int  $periodId  The period identifier.
      * @return object The success response, or a 404/409 error.
@@ -117,12 +138,12 @@ class PeriodCloseService implements PeriodCloseServiceContract
                 return $result;
             }
 
-            $carriedTo = $this->lineQueryRepository->listByPeriod($periodId, true)->firstWhere(fn (LineModel $l) => $l->FkCarriedToLine !== null)?->FkCarriedToLine;
-            if ($carriedTo !== null) {
-                $arrastre = $this->lineQueryRepository->find($carriedTo, true);
+            $carriedLines = $this->lineQueryRepository->listByPeriod($periodId, true)->pluck('FkCarriedToLine')->filter()->unique()
+                ->map(fn ($id) => $this->lineQueryRepository->find((int) $id, true))->filter();
+            foreach ($carriedLines as $carried) {
                 $conflict = match (true) {
-                    $arrastre?->Paid => 'No se puede reabrir: el arrastre ya está pagado',
-                    $arrastre?->FkCarriedToLine !== null => 'Reabrí primero el periodo siguiente',
+                    $carried->Paid => 'No se puede reabrir: el arrastre ya está pagado',
+                    $carried->FkCarriedToLine !== null => 'Reabrí primero el periodo siguiente',
                     default => null,
                 };
                 if ($conflict !== null) {
@@ -130,9 +151,9 @@ class PeriodCloseService implements PeriodCloseServiceContract
 
                     return $result;
                 }
-                if ($arrastre !== null) {
-                    $this->lineRepository->removeArrastre($arrastre);
-                }
+            }
+            foreach ($carriedLines as $carried) {
+                $this->lineRepository->removeArrastre($carried);
             }
 
             $this->periodRepository->setClosed($period, false);

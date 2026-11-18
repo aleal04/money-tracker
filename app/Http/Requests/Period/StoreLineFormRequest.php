@@ -30,6 +30,7 @@ class StoreLineFormRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'estimated' => ['required', $this->amountRule()],
             'actual' => ['nullable', $this->amountRule()],
+            'targetSpaceId' => ['nullable', 'integer', 'exists:Space,IdSpace,IsDeleted,0'],
             'paid' => ['nullable', 'boolean'],
         ];
     }
@@ -44,6 +45,7 @@ class StoreLineFormRequest extends FormRequest
         return [
             'category.*' => 'Categoría inválida',
             'name.*' => 'Nombre requerido',
+            'targetSpaceId.*' => 'Espacio inválido',
             'estimated.required' => 'Monto inválido',
             'paid.boolean' => 'Valor inválido',
         ];

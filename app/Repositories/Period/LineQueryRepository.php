@@ -35,7 +35,7 @@ class LineQueryRepository extends BaseQueryRepository
      */
     public function listByPeriod(int $periodId, bool $lock = false): Collection
     {
-        $query = LineModel::query()->where('FkPeriod', $periodId)->orderBy('Sort')->orderBy('IdLine');
+        $query = LineModel::query()->with('transferFrom.period.space')->where('FkPeriod', $periodId)->orderBy('Sort')->orderBy('IdLine');
 
         return ($lock ? $query->lockForUpdate() : $query)->get();
     }
@@ -49,6 +49,20 @@ class LineQueryRepository extends BaseQueryRepository
     public function listCarriedTo(int $lineId): Collection
     {
         return LineModel::query()->where('FkCarriedToLine', $lineId)->orderBy('Sort')->orderBy('IdLine')->get();
+    }
+
+    /**
+     * The live destination line of a transfer.
+     *
+     * @param  int  $originLineId  The origin line identifier.
+     * @param  bool  $lock  Whether to lock the row (FOR UPDATE).
+     * @return LineModel|null The destination line, or null when there is none.
+     */
+    public function findTransferOf(int $originLineId, bool $lock = false): ?LineModel
+    {
+        $query = LineModel::query()->where('FkTransferFromLine', $originLineId);
+
+        return ($lock ? $query->lockForUpdate() : $query)->first();
     }
 
     /**

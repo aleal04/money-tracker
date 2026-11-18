@@ -80,6 +80,14 @@ class LineModel extends Model
     }
 
     /**
+     * The origin line of a transfer destination line.
+     */
+    public function transferFrom(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'FkTransferFromLine', 'IdLine');
+    }
+
+    /**
      * The template this line was generated from.
      */
     public function template(): BelongsTo
@@ -104,9 +112,9 @@ class LineModel extends Model
     }
 
     /**
-     * The stable JSON shape of the line: money in cents, plus the carried flag.
+     * The stable JSON shape of the line: money in cents, plus the carried flag and the transfer links.
      *
-     * @return array{id:int,periodId:int,category:string,name:string,estimated:int,actual:?int,paid:bool,paidAt:?string,source:string,templateId:?int,cardId:?int,carriedToLineId:?int,sort:int,carried:bool}
+     * @return array{id:int,periodId:int,category:string,name:string,estimated:int,actual:?int,paid:bool,paidAt:?string,source:string,templateId:?int,cardId:?int,carriedToLineId:?int,sort:int,carried:bool,targetSpaceId:?int,transferFromLineId:?int,transferFromSpaceName:?string}
      */
     public function toView(): array
     {
@@ -125,6 +133,9 @@ class LineModel extends Model
             'carriedToLineId' => $this->FkCarriedToLine,
             'sort' => $this->Sort,
             'carried' => $this->FkCarriedToLine !== null,
+            'targetSpaceId' => $this->FkTargetSpace === null ? null : (int) $this->FkTargetSpace,
+            'transferFromLineId' => $this->FkTransferFromLine === null ? null : (int) $this->FkTransferFromLine,
+            'transferFromSpaceName' => $this->FkTransferFromLine === null ? null : $this->transferFrom?->period?->space?->Name,
         ];
     }
 }

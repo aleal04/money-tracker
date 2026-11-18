@@ -18,6 +18,7 @@ class TemplateStoreDto
      * @param  int|null  $dayOfMonth  The day of the month (1 to 31), only for mensual_dia.
      * @param  bool  $active  Whether the template is expanded into new periods.
      * @param  int|null  $spaceId  The space identifier, or null for the primary space.
+     * @param  int|null  $targetSpaceId  The space its lines send money to when paid, or null.
      */
     public function __construct(
         public readonly string $name,
@@ -27,6 +28,7 @@ class TemplateStoreDto
         public readonly ?int $dayOfMonth,
         public readonly bool $active,
         public readonly ?int $spaceId,
+        public readonly ?int $targetSpaceId = null,
     ) {}
 
     /**
@@ -47,6 +49,7 @@ class TemplateStoreDto
             dayOfMonth: $frequency === TemplateFrequencyConstant::MENSUAL_DIA ? (int) $request->input('dayOfMonth') : null,
             active: $request->boolean('active', true),
             spaceId: $request->filled('spaceId') ? (int) $request->input('spaceId') : null,
+            targetSpaceId: $request->filled('targetSpaceId') ? (int) $request->input('targetSpaceId') : null,
         );
     }
 
@@ -64,6 +67,7 @@ class TemplateStoreDto
             'Frequency' => $this->frequency,
             'DayOfMonth' => $this->dayOfMonth,
             'Active' => $this->active,
+            'FkTargetSpace' => $this->targetSpaceId,
         ];
     }
 }

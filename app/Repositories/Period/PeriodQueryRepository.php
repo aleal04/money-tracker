@@ -141,6 +141,7 @@ class PeriodQueryRepository extends BaseQueryRepository
             'estimated' => (int) MoneyHelper::toCents($t->Estimated),
             'frequency' => $t->Frequency,
             'dayOfMonth' => $t->DayOfMonth,
+            'targetSpaceId' => $t->FkTargetSpace,
             'active' => true,
         ]);
     }

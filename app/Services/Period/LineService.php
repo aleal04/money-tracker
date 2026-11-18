@@ -16,10 +16,12 @@ class LineService implements LineServiceContract
      *
      * @param  LineRepository  $lineRepository  The line writes.
      * @param  LineQueryRepository  $lineQueryRepository  The line reads.
+     * @param  TransferService  $transferService  The transfer validation and destination sync.
      */
     public function __construct(
         private readonly LineRepository $lineRepository,
         private readonly LineQueryRepository $lineQueryRepository,
+        private readonly TransferService $transferService,
     ) {}
 
     /**
@@ -30,7 +32,7 @@ class LineService implements LineServiceContract
      */
     public function storeLine(LineStoreDto $lineData): object
     {
-        return $this->lineRepository->store($lineData);
+        return $this->lineRepository->store($lineData, $this->transferService->sync(...));
     }
 
     /**
@@ -41,7 +43,7 @@ class LineService implements LineServiceContract
      */
     public function updateLine(LineUpdateDto $lineData): object
     {
-        return $this->lineRepository->update($lineData);
+        return $this->lineRepository->update($lineData, $this->transferService->sync(...));
     }
 
     /**
@@ -52,7 +54,7 @@ class LineService implements LineServiceContract
      */
     public function togglePaid(int $lineId): object
     {
-        return $this->lineRepository->togglePaid($lineId);
+        return $this->lineRepository->togglePaid($lineId, $this->transferService->sync(...));
     }
 
     /**
@@ -63,7 +65,7 @@ class LineService implements LineServiceContract
      */
     public function deleteLine(int $lineId): object
     {
-        return $this->lineRepository->destroy($lineId);
+        return $this->lineRepository->destroy($lineId, $this->transferService->sync(...));
     }
 
     /**
