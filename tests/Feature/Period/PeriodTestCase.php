@@ -10,12 +10,9 @@ use Illuminate\Support\Collection;
 use App\Models\Installment\CardModel;
 use App\Models\Template\TemplateModel;
 use App\Models\Installment\InstallmentModel;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 abstract class PeriodTestCase extends TestCase
 {
-    use RefreshDatabase;
-
     /**
      * Create a period through the HTTP endpoint and return its JSON view.
      *

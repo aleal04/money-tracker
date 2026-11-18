@@ -4,12 +4,9 @@ namespace Tests\Feature\Template;
 
 use Tests\TestCase;
 use App\Models\Template\TemplateModel;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TemplateTest extends TestCase
 {
-    use RefreshDatabase;
-
     /** @var array<string, string> */
     private array $base = ['name' => 'Agua', 'category' => 'servicio', 'estimated' => '1.000'];
 

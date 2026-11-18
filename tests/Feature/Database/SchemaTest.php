@@ -11,12 +11,9 @@ use App\Constant\LineSourceConstant;
 use App\Models\Installment\CardModel;
 use Illuminate\Database\QueryException;
 use App\Models\Installment\InstallmentModel;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class SchemaTest extends TestCase
 {
-    use RefreshDatabase;
-
     /**
      * Build a line attribute set for a period.
      *
