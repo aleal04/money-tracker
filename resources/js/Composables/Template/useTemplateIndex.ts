@@ -1,5 +1,6 @@
 import axios from "axios";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
+import { useSpace } from "@/Composables/shared/useSpace";
 import { CATEGORIES } from "@/Constants/Pages/Period/categories";
 import { errorMessage } from "@/Composables/shared/http";
 import type { Template } from "@/Types/Pages/Template/Template";
@@ -22,6 +23,7 @@ export const groupByCategory = (templates: Template[]) =>
 	})).filter((g) => g.items.length);
 
 export function useTemplateIndex() {
+	const { selectedId, spaceParams } = useSpace();
 	const templates = ref<Template[]>([]);
 	const error = ref("");
 	const editing = ref<number | "new" | null>(null);
@@ -29,7 +31,9 @@ export function useTemplateIndex() {
 	async function load() {
 		try {
 			templates.value = (
-				await axios.get<Template[]>("/templates/get-template-list")
+				await axios.get<Template[]>("/templates/get-template-list", {
+					params: spaceParams(),
+				})
 			).data;
 			error.value = "";
 		} catch (e) {
@@ -37,6 +41,7 @@ export function useTemplateIndex() {
 		}
 	}
 	load();
+	watch(selectedId, load);
 
 	/** After a save or delete: close the form and reload. */
 	async function saved() {

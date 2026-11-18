@@ -33,10 +33,10 @@ async function confirm() {
 </script>
 
 <template>
-	<div class="close-dialog" role="dialog" aria-modal="true" aria-label="Cerrar quincena">
+	<div class="close-dialog" role="dialog" aria-modal="true" aria-label="Cerrar periodo">
 		<div class="close-dialog__panel">
-			<h2 class="close-dialog__title">Cerrar quincena</h2>
-			<p class="close-dialog__hint">Se arrastra a la próxima quincena lo que falta por pagar:</p>
+			<h2 class="close-dialog__title">Cerrar periodo</h2>
+			<p class="close-dialog__hint">Se arrastra a la próximo periodo lo que falta por pagar:</p>
 			<ul v-if="preview" class="close-dialog__list">
 				<li v-for="l in preview.lines" :key="l.id" class="close-dialog__row"><span>{{ l.name }}</span><span class="num">{{ formatCRC(l.actual ?? l.estimated) }}</span></li>
 				<li v-if="!preview.lines.length" class="close-dialog__row close-dialog__row--empty">Nada pendiente.</li>

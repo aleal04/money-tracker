@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Icon from "@/Components/UI/Icon.vue";
 import { GROUPS } from "@/Constants/Pages/Installment/groups";
-import { ofStatus, signed } from "@/Composables/Installment/useInstallmentIndex";
+import { ofStatus, porPeriodoLabel, signed } from "@/Composables/Installment/useInstallmentIndex";
 import { formatCRC } from "@/Composables/shared/format";
 import type { CardView, Installment } from "@/Types/Pages/Installment/Installment";
 import InstallmentForm from "./InstallmentForm.vue";
@@ -53,7 +53,7 @@ const emit = defineEmits<{ edit: [string | null]; saved: []; cancelSoon: [Instal
 		<footer class="card-section__foot">
 			<div><div class="th">Cuota mensual</div><span class="card-section__strong">{{ formatCRC(card.totals.cuotaMensual) }}</span></div>
 			<div><div class="th">Saldo faltante</div><span>{{ formatCRC(card.totals.saldoFaltante) }}</span></div>
-			<div><div class="th">Por quincena</div><span>{{ formatCRC(card.totals.porQuincena[0]) }} / {{ formatCRC(card.totals.porQuincena[1]) }}</span></div>
+			<div><div class="th">Por periodo</div><span>{{ porPeriodoLabel(card.totals, formatCRC) }}</span></div>
 			<button v-if="editing !== `new-${card.id}`" type="button" class="btn card-section__add" @click="emit('edit', `new-${card.id}`)"><Icon name="plus" />Cuota</button>
 		</footer>
 	</section>

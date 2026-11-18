@@ -1,7 +1,9 @@
 import axios from "axios";
-import { ref } from "vue";
+import { ref, watch } from "vue";
+import { useSpace } from "@/Composables/shared/useSpace";
 import { errorMessage, fieldErrors } from "@/Composables/shared/http";
 import type {
+	CardTotals,
 	CardView,
 	Installment,
 	InstallmentStatus,
@@ -15,7 +17,14 @@ export const ofStatus = (c: CardView, s: InstallmentStatus): Installment[] =>
 export const signed = (n: number, fmt: (c: number) => string): string =>
 	(n > 0 ? "+" : "") + fmt(n);
 
+/** Amounts per period of the space ("a / b"); old payloads only have porQuincena. */
+export const porPeriodoLabel = (
+	t: Pick<CardTotals, "porQuincena" | "porPeriodo">,
+	fmt: (c: number) => string,
+): string => (t.porPeriodo ?? t.porQuincena).map(fmt).join(" / ");
+
 export function useInstallmentIndex() {
+	const { selectedId, current, spaceParams } = useSpace();
 	const cards = ref<CardView[]>([]);
 	const error = ref("");
 	/** "new-<cardId>" while adding an installment, "<installmentId>" while editing one. */
@@ -27,7 +36,9 @@ export function useInstallmentIndex() {
 	async function load() {
 		try {
 			cards.value = (
-				await axios.get<CardView[]>("/installments/get-card-list")
+				await axios.get<CardView[]>("/installments/get-card-list", {
+					params: spaceParams(),
+				})
 			).data;
 			error.value = "";
 		} catch (e) {
@@ -35,6 +46,7 @@ export function useInstallmentIndex() {
 		}
 	}
 	load();
+	watch(selectedId, load);
 
 	/** After a save or delete: close the form and reload. */
 	async function saved() {
@@ -53,7 +65,10 @@ export function useInstallmentIndex() {
 	async function saveCard() {
 		cardError.value = "";
 		try {
-			await axios.post("/cards/store", { name: cardName.value });
+			await axios.post("/cards/store", {
+				name: cardName.value,
+				spaceId: current.value?.id,
+			});
 			newCard.value = false;
 			cardName.value = "";
 			await load();

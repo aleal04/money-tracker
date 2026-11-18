@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ref } from "vue";
+import { useSpace } from "@/Composables/shared/useSpace";
 import { fieldErrors } from "@/Composables/shared/http";
 import { plainAmount } from "@/Composables/shared/format";
 import type { Category } from "@/Types/Pages/Period/Period";
@@ -21,6 +22,7 @@ export function useTemplateForm(
 	props: { template?: Template },
 	onSaved: () => void,
 ) {
+	const { current } = useSpace();
 	const t = props.template;
 	const name = ref(t?.name ?? "");
 	const category = ref<Category>(t?.category ?? "servicio");
@@ -56,7 +58,11 @@ export function useTemplateForm(
 			};
 			return t
 				? axios.put(`/templates/${t.id}/update`, body)
-				: axios.post("/templates/store", { ...body, active: true });
+				: axios.post("/templates/store", {
+						...body,
+						active: true,
+						spaceId: current.value?.id,
+					});
 		});
 	const remove = () => call(() => axios.delete(`/templates/${t?.id}/delete`));
 

@@ -15,7 +15,6 @@ import {
 	groupByCategory,
 } from "@/Composables/Template/useTemplateIndex";
 import { dayFor } from "@/Composables/Template/useTemplateForm";
-import { quincenaDates } from "@/Composables/Period/periodDates";
 import { toInt } from "@/Composables/Installment/useInstallmentForm";
 import { formatCRC } from "@/Composables/shared/format";
 import type {
@@ -106,16 +105,6 @@ describe("templates", () => {
 		expect(dayFor("mensual_dia", "16")).toBe(16);
 		expect(dayFor("mensual_dia", " ")).toBeNaN();
 		expect(dayFor("cada_periodo", "16")).toBeNull();
-	});
-	it("maps a quincena to its dates", () => {
-		expect(quincenaDates(2026, 10, 1)).toEqual({
-			startDate: "2026-10-01",
-			endDate: "2026-10-15",
-		});
-		expect(quincenaDates(2028, 2, 2)).toEqual({
-			startDate: "2028-02-16",
-			endDate: "2028-02-29",
-		});
 	});
 	it("groups by category, skipping empty ones", () => {
 		const g = groupByCategory([

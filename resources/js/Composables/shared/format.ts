@@ -18,3 +18,28 @@ export function diffLabel(
 /** Cents to a plain editable number: 1086500 -> "10865", 1086550 -> "10865,50". */
 export const plainAmount = (c: number): string =>
 	c % 100 === 0 ? String(c / 100) : (c / 100).toFixed(2).replace(".", ",");
+
+const MONTHS_SHORT = [
+	"ene",
+	"feb",
+	"mar",
+	"abr",
+	"may",
+	"jun",
+	"jul",
+	"ago",
+	"sep",
+	"oct",
+	"nov",
+	"dic",
+];
+
+/** "12 nov – 26 nov 2026" (the year goes on each side only when they differ); input "YYYY-MM-DD". */
+export function dateRange(start: string, end: string): string {
+	const part = (d: string, year: boolean) => {
+		const [y, m, day] = d.split("-").map(Number);
+		return `${day} ${MONTHS_SHORT[m - 1]}${year ? ` ${y}` : ""}`;
+	};
+	const sameYear = start.slice(0, 4) === end.slice(0, 4);
+	return `${part(start, !sameYear)} – ${part(end, true)}`;
+}

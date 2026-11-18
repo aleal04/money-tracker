@@ -14,7 +14,7 @@ const emit = defineEmits<{ pay: [Line] }>();
 			<h2 class="pending-panel__title">Pendientes de pagar</h2>
 			<span class="th">{{ pending.length }}</span>
 		</div>
-		<p v-if="!pending.length" class="pending-panel__empty">Todo pagado en esta quincena.</p>
+		<p v-if="!pending.length" class="pending-panel__empty">Todo pagado en este periodo.</p>
 		<ul v-else class="pending-panel__list">
 			<li v-for="l in pending" :key="l.id" class="pending-panel__item">
 				<button type="button" :disabled="busy" class="pending-panel__check" :aria-label="`Marcar como pagado: ${l.name}`" @click="emit('pay', l)">
@@ -24,6 +24,6 @@ const emit = defineEmits<{ pay: [Line] }>();
 				<span class="num pending-panel__amount">{{ formatCRC(l.actual ?? l.estimated) }}</span>
 			</li>
 		</ul>
-		<Link :href="`/periods/${periodId}`" class="btn btn-ghost pending-panel__link">Ver quincena<Icon name="right" /></Link>
+		<Link :href="`/periods/${periodId}`" class="btn btn-ghost pending-panel__link">Ver periodo<Icon name="right" /></Link>
 	</section>
 </template>

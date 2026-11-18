@@ -1,6 +1,7 @@
 import axios from "axios";
 import { router } from "@inertiajs/vue3";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
+import { useSpace } from "@/Composables/shared/useSpace";
 import { errorMessage } from "@/Composables/shared/http";
 import type { DashboardData } from "@/Types/Pages/Dashboard/Dashboard";
 import type { Line } from "@/Types/Pages/Period/Period";
@@ -28,6 +29,7 @@ export const finishingLabel = (c: CardView): string =>
 		.join(", ");
 
 export function useDashboard() {
+	const { selectedId, current, spaceParams } = useSpace();
 	const data = ref<DashboardData | null>(null);
 	const error = ref("");
 	const busy = ref(false);
@@ -35,13 +37,18 @@ export function useDashboard() {
 
 	async function load() {
 		try {
-			data.value = (await axios.get<DashboardData>("/dashboard/data")).data;
+			data.value = (
+				await axios.get<DashboardData>("/dashboard/data", {
+					params: spaceParams(),
+				})
+			).data;
 			error.value = "";
 		} catch (e) {
 			error.value = errorMessage(e);
 		}
 	}
 	load();
+	watch(selectedId, load);
 
 	const pending = computed(() =>
 		pendingLines(data.value?.current?.lines ?? []),
@@ -69,7 +76,10 @@ export function useDashboard() {
 		}
 		busy.value = true;
 		try {
-			const res = await axios.post<{ period: { id: number } }>("/periods/next");
+			const res = await axios.post<{ period: { id: number } }>(
+				"/periods/next",
+				{ spaceId: current.value?.id },
+			);
 			router.visit(`/periods/${res.data.period.id}`);
 		} catch (e) {
 			error.value = errorMessage(e);

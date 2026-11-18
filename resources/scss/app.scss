@@ -5,6 +5,7 @@
 @use "components/ui/app-sidebar";
 @use "components/ui/app-topbar";
 @use "components/ui/logo";
+@use "pages/space/index" as space-index;
 @use "pages/period/index";
 @use "pages/period/show";
 @use "components/pages/period/summary-cards";
@@ -20,3 +21,4 @@
 @use "components/pages/dashboard/cards-panel";
 @use "components/pages/dashboard/welcome-steps";
 @use "components/pages/installment/card-section";
+@use "components/pages/period/period-dates-form";

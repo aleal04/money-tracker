@@ -32,6 +32,11 @@
 		font-size: 14px;
 	}
 
+	&__edit {
+		display: inline-flex;
+		vertical-align: middle;
+	}
+
 	&__actions {
 		display: flex;
 		flex-wrap: wrap;

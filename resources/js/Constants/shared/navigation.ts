@@ -3,6 +3,7 @@ export type IconName =
 	| "periods"
 	| "installments"
 	| "templates"
+	| "spaces"
 	| "user"
 	| "moon"
 	| "theme"
@@ -26,7 +27,7 @@ export const NAV_LINKS: NavLink[] = [
 	{ href: "/", label: "Inicio", icon: "home" },
 	{
 		href: "/periods",
-		label: "Quincenas",
+		label: "Periodos",
 		icon: "periods",
 	},
 	{
@@ -38,6 +39,11 @@ export const NAV_LINKS: NavLink[] = [
 		href: "/templates",
 		label: "Plantillas",
 		icon: "templates",
+	},
+	{
+		href: "/spaces",
+		label: "Espacios",
+		icon: "spaces",
 	},
 ];
 

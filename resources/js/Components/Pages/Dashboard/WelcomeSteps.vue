@@ -32,10 +32,10 @@ defineEmits<{ create: [] }>();
 			<li class="welcome-steps__item">
 				<span class="welcome-steps__num">3</span>
 				<div class="welcome-steps__text">
-					<p class="welcome-steps__label">Creá tu primera quincena</p>
+					<p class="welcome-steps__label">Creá tu primer periodo</p>
 					<p class="welcome-steps__sub">Se llena sola con tus plantillas y la cuota de cada tarjeta.</p>
 				</div>
-				<button type="button" class="btn btn-primary" @click="$emit('create')"><Icon name="plus" />Crear quincena</button>
+				<button type="button" class="btn btn-primary" @click="$emit('create')"><Icon name="plus" />Crear periodo</button>
 			</li>
 		</ol>
 	</section>

@@ -95,6 +95,12 @@ class LineRepository
                 return $rejection;
             }
 
+            if ($lineData->targetSpaceId !== null && ! in_array($line->Source, [LineSourceConstant::MANUAL, LineSourceConstant::TEMPLATE], true)) {
+                $message = 'Esta línea no se puede enviar a otro espacio';
+
+                return createValidationErrorResponse($message, ['statusCode' => 422, 'errors' => ['targetSpaceId' => [$message]]]);
+            }
+
             $changes = $lineData->toArray();
             if ($lineData->paid !== null && $lineData->paid !== (bool) $line->Paid) {
                 $changes['PaidAt'] = $lineData->paid ? now() : null;

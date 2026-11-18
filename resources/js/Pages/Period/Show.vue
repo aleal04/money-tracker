@@ -3,34 +3,40 @@ import { toRef } from "vue";
 import { Head } from "@inertiajs/vue3";
 import CategoryBlock from "@/Components/Pages/Period/CategoryBlock.vue";
 import ClosePeriodDialog from "@/Components/Pages/Period/ClosePeriodDialog.vue";
+import PeriodDatesForm from "@/Components/Pages/Period/PeriodDatesForm.vue";
 import SummaryCards from "@/Components/Pages/Period/SummaryCards.vue";
 import Icon from "@/Components/UI/Icon.vue";
 import { CATEGORIES } from "@/Constants/Pages/Period/categories";
 import { pendingIn, usePeriodShow } from "@/Composables/Period/usePeriodShow";
+import { dateRange } from "@/Composables/shared/format";
 
 const props = defineProps<{ periodId: number }>();
-const { data, error, busy, closing, tab, setTab, linesOf, load, toggle, reopen, go, createNext, closed } = usePeriodShow(toRef(props, "periodId"));
+const { data, error, busy, closing, tab, setTab, linesOf, load, toggle, reopen, go, createNext, closed, editingDates, startDate, endDate, dateErrors, editDates, saveDates } = usePeriodShow(toRef(props, "periodId"));
 </script>
 
 <template>
 	<div class="period-show">
-		<Head :title="data?.period.label ?? 'Quincena'" />
+		<Head :title="data?.period.label ?? 'Periodo'" />
 		<p v-if="error" role="alert" class="alert">{{ error }}</p>
 		<template v-if="data">
 			<header class="card period-show__header">
 				<div class="period-show__heading">
 					<h1 class="period-show__title">{{ data.period.label }}</h1>
-					<p class="period-show__sub">{{ data.lines.length }} líneas · {{ data.period.closed ? "Cerrada" : "Abierta" }}</p>
+					<p class="period-show__sub">
+						{{ dateRange(data.period.startDate, data.period.endDate) }} · {{ data.lines.length }} líneas · {{ data.period.closed ? "Cerrado" : "Abierto" }}
+						<button v-if="!editingDates" type="button" class="icon-btn period-show__edit" aria-label="Editar fechas" @click="editDates"><Icon name="edit" /></button>
+					</p>
 				</div>
 				<div class="period-show__actions">
 					<div class="period-show__nav">
-						<button type="button" :disabled="data.prevId === null" aria-label="Quincena anterior" class="icon-btn" @click="go(data.prevId)"><Icon name="left" /></button>
-						<button type="button" :disabled="data.nextId === null" aria-label="Quincena siguiente" class="icon-btn" @click="go(data.nextId)"><Icon name="right" /></button>
+						<button type="button" :disabled="data.prevId === null" aria-label="Periodo anterior" class="icon-btn" @click="go(data.prevId)"><Icon name="left" /></button>
+						<button type="button" :disabled="data.nextId === null" aria-label="Periodo siguiente" class="icon-btn" @click="go(data.nextId)"><Icon name="right" /></button>
 					</div>
 					<button v-if="data.period.closed" type="button" :disabled="busy" class="btn btn-ghost" @click="reopen"><Icon name="unlock" />Reabrir</button>
-					<button v-else type="button" :disabled="busy" class="btn btn-primary" @click="closing = true"><Icon name="lock" />Cerrar quincena</button>
-					<button type="button" :disabled="busy" class="btn btn-accent" @click="createNext"><Icon name="plus" />Nueva quincena</button>
+					<button v-else type="button" :disabled="busy" class="btn btn-primary" @click="closing = true"><Icon name="lock" />Cerrar periodo</button>
+					<button type="button" :disabled="busy" class="btn btn-accent" @click="createNext"><Icon name="plus" />Nuevo periodo</button>
 				</div>
+				<PeriodDatesForm v-if="editingDates" v-model:start="startDate" v-model:end="endDate" :errors="dateErrors" :busy="busy" @save="saveDates" @cancel="editingDates = false" />
 			</header>
 			<SummaryCards :summary="data.summary" />
 			<nav role="tablist" aria-label="Categorías" class="card period-show__tabs">

@@ -2,7 +2,8 @@ import axios from "axios";
 import { router } from "@inertiajs/vue3";
 import { computed, type Ref, ref, watch } from "vue";
 import { CATEGORIES } from "@/Constants/Pages/Period/categories";
-import { errorMessage } from "@/Composables/shared/http";
+import { errorMessage, fieldErrors } from "@/Composables/shared/http";
+import { useSpace } from "@/Composables/shared/useSpace";
 import type { Category, Line, PeriodDetail } from "@/Types/Pages/Period/Period";
 
 export const isCategory = (v: unknown): v is Category =>
@@ -18,11 +19,12 @@ export const pendingIn = (lines: Line[], c: Category): number =>
 export const defaultTab = (lines: Line[]): Category =>
 	CATEGORIES.find((c) => pendingIn(lines, c.key))?.key ?? "ingreso";
 
-/** Paying is allowed in a closed quincena; un-paying there would leave an unpaid line that is never carried. */
+/** Paying is allowed in a closed period; un-paying there would leave an unpaid line that is never carried. */
 export const canToggle = (l: Line, closed: boolean, busy: boolean): boolean =>
 	!(l.carried || busy || (closed && l.paid));
 
 export function usePeriodShow(periodId: Ref<number>) {
+	const { current, adoptSpace } = useSpace();
 	const data = ref<PeriodDetail | null>(null);
 	const error = ref("");
 	const busy = ref(false);
@@ -38,6 +40,8 @@ export function usePeriodShow(periodId: Ref<number>) {
 				await axios.get<PeriodDetail>(`/periods/${periodId.value}/data`)
 			).data;
 			error.value = "";
+			// The period on screen decides the space the topbar shows.
+			adoptSpace(data.value.period.spaceId);
 		} catch (e) {
 			error.value = errorMessage(e);
 		}
@@ -80,10 +84,41 @@ export function usePeriodShow(periodId: Ref<number>) {
 		error.value = "";
 		busy.value = true;
 		try {
-			const res = await axios.post<{ period: { id: number } }>("/periods/next");
+			const res = await axios.post<{ period: { id: number } }>(
+				"/periods/next",
+				{
+					spaceId: data.value?.period.spaceId ?? current.value?.id,
+				},
+			);
 			router.visit(`/periods/${res.data.period.id}`);
 		} catch (e) {
 			error.value = errorMessage(e);
+		} finally {
+			busy.value = false;
+		}
+	}
+	const editingDates = ref(false);
+	const startDate = ref("");
+	const endDate = ref("");
+	const dateErrors = ref<Record<string, string>>({});
+	function editDates() {
+		startDate.value = data.value?.period.startDate ?? "";
+		endDate.value = data.value?.period.endDate ?? "";
+		dateErrors.value = {};
+		editingDates.value = true;
+	}
+	async function saveDates() {
+		busy.value = true;
+		dateErrors.value = {};
+		try {
+			await axios.put(`/periods/${periodId.value}/update`, {
+				startDate: startDate.value,
+				endDate: endDate.value,
+			});
+			editingDates.value = false;
+			await load();
+		} catch (e) {
+			dateErrors.value = fieldErrors(e);
 		} finally {
 			busy.value = false;
 		}
@@ -107,5 +142,11 @@ export function usePeriodShow(periodId: Ref<number>) {
 		go,
 		createNext,
 		closed,
+		editingDates,
+		startDate,
+		endDate,
+		dateErrors,
+		editDates,
+		saveDates,
 	};
 }

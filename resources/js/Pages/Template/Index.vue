@@ -14,7 +14,7 @@ const { error, editing, groups, saved, toggle } = useTemplateIndex();
 		<header class="card template-index__header">
 			<div class="template-index__heading">
 				<h1 class="template-index__title">Plantillas</h1>
-				<p class="template-index__sub">Se aplican al crear una quincena nueva.</p>
+				<p class="template-index__sub">Se aplican al crear un periodo nuevo.</p>
 			</div>
 			<button v-if="editing !== 'new'" type="button" class="btn btn-accent" @click="editing = 'new'"><Icon name="plus" />Plantilla</button>
 		</header>

@@ -239,6 +239,23 @@ class TransferTest extends PeriodTestCase
         $this->postJson("/lines/{$line['id']}/toggle-paid")->assertStatus(409)->assertJsonPath('message', 'Creá primero el periodo en Ahorro');
     }
 
+    public function test_only_manual_or_template_lines_can_get_a_target(): void
+    {
+        $ahorro = $this->space();
+        $p = $this->makePeriod($this->dates(11, 2))['id'];
+        $this->postJson("/periods/{$p}/lines/store", ['category' => 'gasto', 'name' => 'Super', 'estimated' => '5.000', 'paid' => true]);
+        $this->postJson("/periods/{$p}/lines/store", ['category' => 'gasto', 'name' => 'Otro', 'estimated' => '1.000']);
+        $this->postJson("/periods/{$p}/close")->assertSuccessful();
+        $arrastre = LineModel::where('Source', 'carried')->firstOrFail();
+        $installments = LineModel::where('Source', 'manual')->where('Name', 'Super')->firstOrFail();
+        $installments->update(['Source' => 'installments']);
+
+        foreach ([$arrastre, $installments] as $line) {
+            $this->putJson("/lines/{$line->IdLine}/update", ['targetSpaceId' => $ahorro])->assertStatus(422)->assertJsonPath('errors.targetSpaceId.0', 'Esta línea no se puede enviar a otro espacio');
+        }
+        $this->assertNull(LineModel::find($arrastre->IdLine)->FkTargetSpace);
+    }
+
     public function test_reopening_origin_keeps_paid_transfer_destination(): void
     {
         $p = $this->makePeriod()['id'];

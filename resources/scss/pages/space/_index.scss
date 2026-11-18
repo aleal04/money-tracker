@@ -1,0 +1,89 @@
+@use "../../ui/tokens" as *;
+
+.space-index {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-width: 0;
+
+	&__header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px;
+		padding: 16px;
+	}
+
+	&__heading {
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__title {
+		margin: 0;
+		color: var(--teal);
+		font-size: 22px;
+		font-weight: 600;
+	}
+
+	&__sub {
+		margin: 0;
+		color: var(--muted);
+		font-size: 14px;
+	}
+
+	&__group {
+		padding: 16px;
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		border-bottom: 1px solid var(--line);
+
+		&:last-child {
+			border: 0;
+		}
+	}
+
+	&__row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+		min-height: 52px;
+		font-size: 14px;
+	}
+
+	&__main {
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__name {
+		font-weight: 500;
+	}
+
+	&__badge {
+		margin-left: 8px;
+		background: var(--teal-soft);
+		color: var(--teal);
+	}
+
+	&__freq {
+		display: block;
+		color: var(--muted);
+		font-size: 12px;
+	}
+
+	@media (min-width: $bp-md) {
+		&__header,
+		&__group {
+			padding: 24px;
+		}
+	}
+}

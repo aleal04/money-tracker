@@ -2,9 +2,12 @@
 import { Link, usePage } from "@inertiajs/vue3";
 import { isActive, NAV_LINKS } from "@/Constants/shared/navigation";
 import Icon from "./Icon.vue";
+import { useSpace } from "@/Composables/shared/useSpace";
 import Logo from "./Logo.vue";
 
 const page = usePage();
+const { selectedId } = useSpace();
+const hrefOf = (href: string) => (href === "/periods" && selectedId.value !== null ? `${href}?space=${selectedId.value}` : href);
 </script>
 
 <template>
@@ -14,7 +17,7 @@ const page = usePage();
 			<Link
 				v-for="link in NAV_LINKS"
 				:key="link.href"
-				:href="link.href"
+				:href="hrefOf(link.href)"
 				class="app-sidebar__link"
 				:class="{ 'app-sidebar__link--active': isActive(link, page.url) }"
 				:aria-current="isActive(link, page.url) ? 'page' : undefined"

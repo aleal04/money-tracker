@@ -21,6 +21,9 @@ const line = (category: Category, over: Partial<Line> = {}): Line => ({
 	carriedToLineId: null,
 	sort: 0,
 	carried: false,
+	targetSpaceId: null,
+	transferFromLineId: null,
+	transferFromSpaceName: null,
 	...over,
 });
 

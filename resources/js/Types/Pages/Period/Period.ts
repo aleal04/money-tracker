@@ -22,6 +22,9 @@ export interface Line {
 	carriedToLineId: number | null;
 	sort: number;
 	carried: boolean;
+	targetSpaceId: number | null;
+	transferFromLineId: number | null;
+	transferFromSpaceName: string | null;
 }
 
 /** year/month/half are only set for biweekly periods on calendar halves; dates are "YYYY-MM-DD". */
@@ -48,6 +51,10 @@ export interface Summary {
 	disponible: number;
 	faltaPorPagar: number;
 	byCategory: Record<Category, CategoryTotals>;
+	saldoAnterior: number;
+	restante: number;
+	entro: number;
+	gastado: number;
 }
 
 export interface PeriodDetail {

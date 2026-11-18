@@ -2,10 +2,11 @@
 import { Link } from "@inertiajs/vue3";
 import Icon from "@/Components/UI/Icon.vue";
 import { finishing, finishingLabel } from "@/Composables/Dashboard/useDashboard";
+import { porPeriodoLabel } from "@/Composables/Installment/useInstallmentIndex";
 import { formatCRC } from "@/Composables/shared/format";
 import type { CardView } from "@/Types/Pages/Installment/Installment";
 
-defineProps<{ cards: CardView[]; half: 1 | 2 }>();
+defineProps<{ cards: CardView[] }>();
 </script>
 
 <template>
@@ -16,7 +17,7 @@ defineProps<{ cards: CardView[]; half: 1 | 2 }>();
 			<p class="cards-panel__name">{{ c.name }}</p>
 			<div class="cards-panel__cols">
 				<div><div class="th">Cuota por mes</div><div class="cards-panel__value">{{ formatCRC(c.totals.cuotaMensual) }}</div></div>
-				<div><div class="th">Por quincena</div><div class="cards-panel__value">{{ formatCRC(c.totals.porQuincena[half - 1]) }}</div></div>
+				<div><div class="th">Por periodo</div><div class="cards-panel__value">{{ porPeriodoLabel(c.totals, formatCRC) }}</div></div>
 			</div>
 			<p v-if="finishing(c).length" class="cards-panel__finishing">
 				<span class="pill cards-panel__pill">Por terminar</span>

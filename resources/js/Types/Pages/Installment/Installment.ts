@@ -22,7 +22,8 @@ export interface Installment {
 export interface CardTotals {
 	cuotaMensual: number;
 	saldoFaltante: number;
-	porQuincena: [number, number];
+	porQuincena: number[];
+	porPeriodo?: number[];
 }
 
 export interface CardView {

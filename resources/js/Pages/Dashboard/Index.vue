@@ -23,10 +23,10 @@ const { data, error, busy, creating, pending, installmentCount, pay, createNext 
 						{{ greeting(new Date().getHours()) }}<template v-if="data.current"> · {{ data.current.period.label }} ({{ data.current.period.closed ? "cerrada" : "abierta" }})</template>
 					</p>
 				</div>
-				<button type="button" :disabled="busy" class="btn btn-accent" @click="createNext"><Icon name="plus" />Nueva quincena</button>
+				<button type="button" :disabled="busy" class="btn btn-accent" @click="createNext"><Icon name="plus" />Nuevo periodo</button>
 			</header>
 			<section v-if="creating" class="card dashboard-index__create">
-				<h2 class="dashboard-index__create-title">Nueva quincena</h2>
+				<h2 class="dashboard-index__create-title">Nuevo periodo</h2>
 				<CreatePeriodForm cancellable @cancel="creating = false" />
 			</section>
 			<WelcomeSteps v-if="!data.current && !creating" :template-count="data.templateCount" :installment-count="installmentCount" @create="creating = true" />
@@ -34,7 +34,7 @@ const { data, error, busy, creating, pending, installmentCount, pay, createNext 
 				<SummaryCards :summary="data.current.summary" />
 				<div class="dashboard-index__grid">
 					<PendingPanel :period-id="data.current.period.id" :pending="pending" :busy="busy" @pay="pay" />
-					<CardsPanel :cards="data.cards" :half="data.current.period.half ?? 1" />
+					<CardsPanel :cards="data.cards" />
 				</div>
 			</template>
 		</template>

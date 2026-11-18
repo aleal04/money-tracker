@@ -11,6 +11,7 @@ import {
 	faLockOpen,
 	faPen,
 	faPlus,
+	faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import type { IconName } from "@/Constants/shared/navigation";
@@ -21,6 +22,7 @@ const ICONS = {
 	periods: faCalendar,
 	installments: faCreditCard,
 	templates: faLayerGroup,
+	spaces: faWallet,
 	user: faUser,
 	moon: faMoon,
 	theme: faCircleHalfStroke,

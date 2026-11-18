@@ -29,7 +29,7 @@ const { name, estimated, actual, paid, confirmingDelete, errors, busy, submit, r
 			<button :disabled="busy" class="btn btn-primary">Guardar</button>
 			<button type="button" :disabled="busy" class="btn btn-ghost" @click="emit('cancel')">Cancelar</button>
 		</div>
-		<!-- An arrastre line is removed by reopening the previous quincena, not by deleting it. -->
+		<!-- An arrastre line is removed by reopening the previous period, not by deleting it. -->
 		<template v-if="line && line.source !== 'carried'">
 			<button v-if="!confirmingDelete" type="button" :disabled="busy" class="btn btn-danger line-form__wide" @click="confirmingDelete = true">Eliminar</button>
 			<div v-else class="line-form__confirm line-form__wide">

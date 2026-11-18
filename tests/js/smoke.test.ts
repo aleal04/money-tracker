@@ -23,6 +23,6 @@ describe("Dashboard/Index", () => {
 		});
 		await flushPromises();
 		expect(wrapper.text()).toContain("Bienvenido a Finanzas");
-		expect(wrapper.text()).toContain("Nueva quincena");
+		expect(wrapper.text()).toContain("Nuevo periodo");
 	});
 });
