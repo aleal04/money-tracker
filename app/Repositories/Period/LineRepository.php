@@ -43,18 +43,18 @@ class LineRepository
      */
     public function markCarried(array $lineIds, int $arrastreLineId): void
     {
-        LineModel::query()->whereIn('id', $lineIds)->update(['carried_to_line_id' => $arrastreLineId]);
+        LineModel::query()->whereIn('IdLine', $lineIds)->update(['FkCarriedToLine' => $arrastreLineId]);
     }
 
     /**
-     * Un-carry every line carried into an arrastre line, then delete it; to run inside a transaction.
+     * Un-carry every line carried into an arrastre line, then logically delete it; to run inside a transaction.
      *
      * @param  LineModel  $arrastre  The locked arrastre line.
      */
     public function removeArrastre(LineModel $arrastre): void
     {
-        LineModel::query()->where('carried_to_line_id', $arrastre->id)->update(['carried_to_line_id' => null]);
-        $arrastre->delete();
+        LineModel::query()->where('FkCarriedToLine', $arrastre->IdLine)->update(['FkCarriedToLine' => null]);
+        $arrastre->logicalDelete();
     }
 
     /**
@@ -70,7 +70,7 @@ class LineRepository
                 return createValidationErrorResponse('No se encontró la quincena.', ['statusCode' => 404]);
             }
 
-            $line = $this->insert($lineData->toArray() + ['source' => LineSourceConstant::MANUAL]);
+            $line = $this->insert($lineData->toArray() + ['Source' => LineSourceConstant::MANUAL]);
 
             return createValidationSuccessResponse('Línea creada correctamente.', ['line' => $line->fresh()->toView()]);
         }, 'No se pudo crear la línea.', ['statusCode' => 500]);
@@ -92,8 +92,8 @@ class LineRepository
             }
 
             $changes = $lineData->toArray();
-            if ($lineData->paid !== null && $lineData->paid !== (bool) $line->paid) {
-                $changes['paid_at'] = $lineData->paid ? now() : null;
+            if ($lineData->paid !== null && $lineData->paid !== (bool) $line->Paid) {
+                $changes['PaidAt'] = $lineData->paid ? now() : null;
             }
             $line->update($changes);
 
@@ -111,19 +111,19 @@ class LineRepository
     {
         return $this->runTransactionSteps(DB::connection(), function () use ($lineId): object {
             $line = $this->lineQueryRepository->find($lineId, true);
-            $rejection = $this->rejectEdit($line, $line !== null && $line->paid);
+            $rejection = $this->rejectEdit($line, $line !== null && $line->Paid);
             if ($rejection !== null) {
                 return $rejection;
             }
 
-            $line->update(['paid' => ! $line->paid, 'paid_at' => $line->paid ? null : now()]);
+            $line->update(['Paid' => ! $line->Paid, 'PaidAt' => $line->Paid ? null : now()]);
 
             return createValidationSuccessResponse('Línea actualizada correctamente.', ['line' => $line->fresh()->toView()]);
         }, 'No se pudo actualizar la línea.', ['statusCode' => 500]);
     }
 
     /**
-     * Delete a line; carried lines and the arrastre line cannot be deleted.
+     * Logically delete a line; carried lines and the arrastre line cannot be deleted.
      *
      * @param  int  $lineId  The line identifier.
      * @return object The success response, or a 404/409 error.
@@ -136,12 +136,12 @@ class LineRepository
             if ($rejection !== null) {
                 return $rejection;
             }
-            if ($line->source === LineSourceConstant::CARRIED) {
-                // Deleting would un-carry the originals (FK SET NULL) and resurrect debt in the closed quincena.
+            if ($line->Source === LineSourceConstant::CARRIED) {
+                // Deleting would orphan the carried originals and resurrect debt in the closed quincena.
                 return createValidationErrorResponse('Para quitar el arrastre, reabrí la quincena anterior', ['statusCode' => 409]);
             }
 
-            $line->delete();
+            $line->logicalDelete();
 
             return createValidationSuccessResponse('Línea eliminada correctamente.');
         }, 'No se pudo eliminar la línea.', ['statusCode' => 500]);
@@ -155,7 +155,7 @@ class LineRepository
      */
     public function updateEstimated(LineModel $line, string $estimated): void
     {
-        $line->update(['estimated' => $estimated]);
+        $line->update(['Estimated' => $estimated]);
     }
 
     /**
@@ -170,11 +170,11 @@ class LineRepository
         if ($line === null) {
             return createValidationErrorResponse('No se encontró la línea.', ['statusCode' => 404]);
         }
-        if ($line->carried_to_line_id !== null) {
+        if ($line->FkCarriedToLine !== null) {
             return createValidationErrorResponse('Línea arrastrada', ['statusCode' => 409]);
         }
         // Un-paying in a closed quincena would leave an unpaid line that is never carried.
-        if ($unpaying && $line->paid && $this->periodQueryRepository->find($line->period_id, true)?->closed) {
+        if ($unpaying && $line->Paid && $this->periodQueryRepository->find($line->FkPeriod, true)?->Closed) {
             return createValidationErrorResponse('No se puede desmarcar un pago en una quincena cerrada', ['statusCode' => 409]);
         }
 

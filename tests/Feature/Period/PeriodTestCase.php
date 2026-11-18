@@ -30,7 +30,7 @@ abstract class PeriodTestCase extends TestCase
     protected function seedTemplates(): void
     {
         foreach ([['Kolbi', 1086500, 'quincenal', null], ['Banco Popular', 24000000, 'mensual_dividido', null], ['CONAPE', 6846000, 'mensual_en_quincena', 1]] as [$name, $cents, $frequency, $half]) {
-            TemplateModel::create(['name' => $name, 'category' => 'deuda_fija', 'estimated' => MoneyHelper::fromCents($cents), 'frequency' => $frequency, 'half' => $half, 'active' => true]);
+            TemplateModel::create(['Name' => $name, 'Category' => 'deuda_fija', 'Estimated' => MoneyHelper::fromCents($cents), 'Frequency' => $frequency, 'Half' => $half, 'Active' => true]);
         }
     }
 
@@ -41,7 +41,7 @@ abstract class PeriodTestCase extends TestCase
      */
     protected function seedReloj(): CardModel
     {
-        $card = CardModel::create(['name' => 'TC BAC']);
+        $card = CardModel::create(['Name' => 'TC BAC']);
         $this->seedInstallment($card, 'Reloj', 'tasa0', 24, 12, 1104261 * 24, null);
 
         return $card;
@@ -63,9 +63,9 @@ abstract class PeriodTestCase extends TestCase
     protected function seedInstallment(CardModel $card, string $name, string $type, int $total, int $paid, int $initialCents, ?int $amountCents, string $lastAdvanced = '2026-10'): InstallmentModel
     {
         return InstallmentModel::create([
-            'card_id' => $card->id, 'merchant' => $name, 'item' => $name, 'type' => $type, 'total_installments' => $total,
-            'paid_installments' => $paid, 'initial_balance' => MoneyHelper::fromCents($initialCents),
-            'installment_amount' => $amountCents === null ? null : MoneyHelper::fromCents($amountCents), 'last_advanced_month' => $lastAdvanced,
+            'FkCard' => $card->IdCard, 'Merchant' => $name, 'Item' => $name, 'Type' => $type, 'TotalInstallments' => $total,
+            'PaidInstallments' => $paid, 'InitialBalance' => MoneyHelper::fromCents($initialCents),
+            'InstallmentAmount' => $amountCents === null ? null : MoneyHelper::fromCents($amountCents), 'LastAdvancedMonth' => $lastAdvanced,
         ]);
     }
 
@@ -89,7 +89,7 @@ abstract class PeriodTestCase extends TestCase
      */
     protected function cuotasLines(int $periodId)
     {
-        return LineModel::where(['period_id' => $periodId, 'source' => 'installments'])->get();
+        return LineModel::where(['FkPeriod' => $periodId, 'Source' => 'installments'])->get();
     }
 
     /**
@@ -101,6 +101,6 @@ abstract class PeriodTestCase extends TestCase
      */
     protected function period(int $month, int $half): PeriodModel
     {
-        return PeriodModel::where(['year' => 2026, 'month' => $month, 'half' => $half])->firstOrFail();
+        return PeriodModel::where(['Year' => 2026, 'Month' => $month, 'Half' => $half])->firstOrFail();
     }
 }

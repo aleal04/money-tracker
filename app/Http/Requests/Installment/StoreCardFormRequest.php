@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Installment;
 
+use Illuminate\Validation\Rule;
+use App\Constant\GeneralConstant;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCardFormRequest extends FormRequest
@@ -15,13 +17,13 @@ class StoreCardFormRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Get the validation rules that apply to the request; the name is unique among the cards that are not deleted.
      *
      * @return array<string, mixed>
      */
     public function rules(): array
     {
-        return ['name' => ['required', 'string', 'max:255', 'unique:cards,name']];
+        return ['name' => ['required', 'string', 'max:255', Rule::unique('Card', 'Name')->where(fn ($query) => $query->where('IsDeleted', GeneralConstant::NOT_DELETED))]];
     }
 
     /**

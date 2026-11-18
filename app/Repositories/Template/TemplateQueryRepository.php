@@ -29,6 +29,6 @@ class TemplateQueryRepository extends BaseQueryRepository
      */
     public function listTemplates(): Collection
     {
-        return TemplateModel::query()->orderBy('id')->get();
+        return TemplateModel::query()->orderBy('IdTemplate')->get();
     }
 }

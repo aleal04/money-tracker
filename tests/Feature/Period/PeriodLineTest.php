@@ -45,7 +45,7 @@ class PeriodLineTest extends PeriodTestCase
             $this->addLine($p['id'], ['category' => 'gasto', 'name' => 'x', 'estimated' => (string) $input])
                 ->assertCreated()->assertJsonPath('line.estimated', $cents);
         }
-        $this->assertSame(['5900.00', '10865.00', '5900.50'], LineModel::orderBy('id')->pluck('estimated')->all());
+        $this->assertSame(['5900.00', '10865.00', '5900.50'], LineModel::orderBy('IdLine')->pluck('Estimated')->all());
     }
 
     /**
@@ -127,6 +127,25 @@ class PeriodLineTest extends PeriodTestCase
     }
 
     /**
+     * A deleted line stays in the table (IsDeleted, DeletedAt) but is left out of the period lines and summary.
+     */
+    public function test_deleted_line_is_logical_and_hidden_from_detail_and_summary(): void
+    {
+        $p = $this->makePeriod();
+        $this->addLine($p['id'], ['category' => 'gasto', 'name' => 'keep', 'estimated' => '1']);
+        $id = $this->addLine($p['id'], ['category' => 'gasto', 'name' => 'gone', 'estimated' => '5'])->json('line.id');
+
+        $this->deleteJson("/lines/$id/delete")->assertOk();
+
+        $row = LineModel::withoutGlobalScopes()->find($id);
+        $this->assertTrue($row->IsDeleted);
+        $this->assertNotNull($row->DeletedAt);
+        $this->getJson("/periods/{$p['id']}/data")->assertOk()
+            ->assertJsonPath('lines.0.name', 'keep')->assertJsonCount(1, 'lines')
+            ->assertJsonPath('summary.egreso', 100)->assertJsonPath('summary.byCategory.gasto.estimated', 100);
+    }
+
+    /**
      * Toggling paid sets and clears paidAt.
      */
     public function test_toggle_paid(): void
@@ -146,18 +165,18 @@ class PeriodLineTest extends PeriodTestCase
         $p = $this->makePeriod();
         $next = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 2]);
         $original = $this->addLine($p['id'], ['category' => 'gasto', 'name' => 'Deuda', 'estimated' => '5.000'])->json('line.id');
-        $arrastre = LineModel::create(['period_id' => $next['id'], 'category' => 'gasto', 'name' => 'Arrastre', 'estimated' => '5000.00', 'source' => 'carried']);
-        LineModel::whereKey($original)->update(['carried_to_line_id' => $arrastre->id]);
+        $arrastre = LineModel::create(['FkPeriod' => $next['id'], 'Category' => 'gasto', 'Name' => 'Arrastre', 'Estimated' => '5000.00', 'Source' => 'carried']);
+        LineModel::whereKey($original)->update(['FkCarriedToLine' => $arrastre->IdLine]);
 
         $this->putJson("/lines/$original/update", ['name' => 'z'])->assertStatus(409)->assertJsonPath('message', 'Línea arrastrada');
         $this->postJson("/lines/$original/toggle-paid")->assertStatus(409);
         $this->deleteJson("/lines/$original/delete")->assertStatus(409);
-        $this->deleteJson("/lines/{$arrastre->id}/delete")->assertStatus(409)->assertJsonPath('message', 'Para quitar el arrastre, reabrí la quincena anterior');
+        $this->deleteJson("/lines/{$arrastre->IdLine}/delete")->assertStatus(409)->assertJsonPath('message', 'Para quitar el arrastre, reabrí la quincena anterior');
 
-        $this->getJson("/lines/{$arrastre->id}/arrastre-detail")->assertOk()->assertJsonCount(1)
+        $this->getJson("/lines/{$arrastre->IdLine}/arrastre-detail")->assertOk()->assertJsonCount(1)
             ->assertJsonPath('0.id', $original)->assertJsonPath('0.carried', true);
         $this->getJson("/periods/{$p['id']}/data")->assertJsonPath('lines.0.carried', true)->assertJsonPath('summary.egreso', 0);
-        $this->postJson("/lines/{$arrastre->id}/toggle-paid")->assertOk()->assertJsonPath('line.paid', true);
+        $this->postJson("/lines/{$arrastre->IdLine}/toggle-paid")->assertOk()->assertJsonPath('line.paid', true);
     }
 
     /**
@@ -166,13 +185,13 @@ class PeriodLineTest extends PeriodTestCase
     public function test_cannot_unpay_in_a_closed_period(): void
     {
         $p = $this->makePeriod();
-        $this->period(11, 1)->update(['closed' => true]);
+        $this->period(11, 1)->update(['Closed' => true]);
         $id = $this->addLine($p['id'], ['category' => 'gasto', 'name' => 'Tarde', 'estimated' => '1.000'])->assertCreated()->json('line.id');
 
         $this->postJson("/lines/$id/toggle-paid")->assertOk()->assertJsonPath('line.paid', true);
         $this->postJson("/lines/$id/toggle-paid")->assertStatus(409)->assertJsonPath('message', 'No se puede desmarcar un pago en una quincena cerrada');
         $this->putJson("/lines/$id/update", ['paid' => false])->assertStatus(409);
         $this->putJson("/lines/$id/update", ['name' => 'ok'])->assertOk();
-        $this->assertTrue((bool) LineModel::find($id)->paid);
+        $this->assertTrue((bool) LineModel::find($id)->Paid);
     }
 }

@@ -58,22 +58,22 @@ class CuotasSyncService implements CuotasSyncServiceContract
 
         foreach ($this->periodsToSync($periodId) as $period) {
             foreach ($cards as $card) {
-                $amount = InstallmentCalculator::cuotasLineAmount($installments->where('cardId', $card->id), $period->half);
-                $line = $this->lineQueryRepository->findInstallmentsLine($period->id, $card->id);
+                $amount = InstallmentCalculator::cuotasLineAmount($installments->where('cardId', $card->IdCard), $period->Half);
+                $line = $this->lineQueryRepository->findInstallmentsLine($period->IdPeriod, $card->IdCard);
 
                 if ($line === null) {
                     if ($amount > 0) {
                         $this->lineRepository->insert([
-                            'period_id' => $period->id,
-                            'category' => CategoryConstant::DEUDA_FIJA,
-                            'name' => 'Cuotas '.$card->name,
-                            'estimated' => MoneyHelper::fromCents($amount),
-                            'actual' => null,
-                            'source' => LineSourceConstant::INSTALLMENTS,
-                            'card_id' => $card->id,
+                            'FkPeriod' => $period->IdPeriod,
+                            'Category' => CategoryConstant::DEUDA_FIJA,
+                            'Name' => 'Cuotas '.$card->Name,
+                            'Estimated' => MoneyHelper::fromCents($amount),
+                            'Actual' => null,
+                            'Source' => LineSourceConstant::INSTALLMENTS,
+                            'FkCard' => $card->IdCard,
                         ]);
                     }
-                } elseif (! $line->paid) {
+                } elseif (! $line->Paid) {
                     $this->lineRepository->updateEstimated($line, MoneyHelper::fromCents($amount));
                 }
             }
@@ -92,13 +92,13 @@ class CuotasSyncService implements CuotasSyncServiceContract
         if ($periodId !== null) {
             $period = $this->periodQueryRepository->find($periodId, true);
 
-            return $period !== null && ! $period->closed ? [$period] : [];
+            return $period !== null && ! $period->Closed ? [$period] : [];
         }
 
         $periods = $this->periodQueryRepository->listChronological();
-        $monthIndex = fn ($p) => $p->year * 12 + $p->month;
-        $from = $periods->where('half', 1)->map($monthIndex)->max() ?? 0;
+        $monthIndex = fn ($p) => $p->Year * 12 + $p->Month;
+        $from = $periods->where('Half', 1)->map($monthIndex)->max() ?? 0;
 
-        return $periods->where('closed', false)->filter(fn ($p) => $monthIndex($p) >= $from);
+        return $periods->where('Closed', false)->filter(fn ($p) => $monthIndex($p) >= $from);
     }
 }

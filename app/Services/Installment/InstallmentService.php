@@ -36,16 +36,16 @@ class InstallmentService implements InstallmentServiceContract
      */
     public function cardList(): array
     {
-        $installments = $this->installmentQueryRepository->listInstallments()->groupBy('card_id');
+        $installments = $this->installmentQueryRepository->listInstallments()->groupBy('FkCard');
 
         return $this->installmentQueryRepository->listCards()->map(function (CardModel $card) use ($installments): array {
-            $views = ($installments[$card->id] ?? collect())->map(fn (InstallmentModel $i) => $this->toView($i));
+            $views = ($installments[$card->IdCard] ?? collect())->map(fn (InstallmentModel $i) => $this->toView($i));
             $live = $views->where('status', '!=', InstallmentStatusConstant::TERMINADA);
             $monthly = (int) $live->sum('cuota');
 
             return [
-                'id' => $card->id,
-                'name' => $card->name,
+                'id' => $card->IdCard,
+                'name' => $card->Name,
                 'installments' => $views->values()->all(),
                 'totals' => [
                     'cuotaMensual' => $monthly,
@@ -146,7 +146,7 @@ class InstallmentService implements InstallmentServiceContract
                 return createValidationErrorResponse('No se encontró la cuota.', ['statusCode' => 404]);
             }
 
-            $this->installmentRepository->update($installment, ['cancel_soon' => ! $installment->cancel_soon]);
+            $this->installmentRepository->update($installment, ['CancelSoon' => ! $installment->CancelSoon]);
 
             return createValidationSuccessResponse('Cuota actualizada correctamente.', ['installment' => $this->toView($installment->fresh())]);
         }, 'No se pudo actualizar la cuota.');
@@ -163,9 +163,9 @@ class InstallmentService implements InstallmentServiceContract
         $input = $installment->toInput();
 
         return $input + [
-            'merchant' => $installment->merchant,
-            'item' => $installment->item,
-            'cancelSoon' => $installment->cancel_soon,
+            'merchant' => $installment->Merchant,
+            'item' => $installment->Item,
+            'cancelSoon' => $installment->CancelSoon,
             'cuota' => InstallmentCalculator::cuota($input),
             'saldo' => InstallmentCalculator::saldoFaltante($input),
             'status' => InstallmentCalculator::status($input),

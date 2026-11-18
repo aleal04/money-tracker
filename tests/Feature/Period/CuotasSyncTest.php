@@ -21,18 +21,18 @@ class CuotasSyncTest extends PeriodTestCase
     {
         $card = $this->seedReloj();
         $p = $this->makePeriod();
-        $this->assertSame('5521.31', $this->cuotasLines($p['id'])->sole()->estimated);
+        $this->assertSame('5521.31', $this->cuotasLines($p['id'])->sole()->Estimated);
 
         $this->seedWallet($card);
         $this->sync();
         $line = $this->cuotasLines($p['id'])->sole();
-        $this->assertSame(['6778.61', null], [$line->estimated, $line->actual]);
+        $this->assertSame(['6778.61', null], [$line->Estimated, $line->Actual]);
 
-        $line->update(['paid' => true]);
+        $line->update(['Paid' => true]);
         $this->seedWallet($card, 'X');
         $this->sync();
         $line = $this->cuotasLines($p['id'])->sole();
-        $this->assertSame(['6778.61', true], [$line->estimated, $line->paid]);
+        $this->assertSame(['6778.61', true], [$line->Estimated, $line->Paid]);
     }
 
     /**
@@ -42,13 +42,13 @@ class CuotasSyncTest extends PeriodTestCase
     {
         $card = $this->seedReloj();
         $p = $this->makePeriod();
-        $this->cuotasLines($p['id'])->sole()->update(['actual' => '6000.00']);
+        $this->cuotasLines($p['id'])->sole()->update(['Actual' => '6000.00']);
 
         $this->seedWallet($card);
         $this->sync();
 
         $line = $this->cuotasLines($p['id'])->sole();
-        $this->assertSame(['6778.61', '6000.00'], [$line->estimated, $line->actual]);
+        $this->assertSame(['6778.61', '6000.00'], [$line->Estimated, $line->Actual]);
     }
 
     /**
@@ -61,15 +61,15 @@ class CuotasSyncTest extends PeriodTestCase
         $this->seedWallet($card);
         $this->sync();
         $nov2 = $this->period(11, 2);
-        $this->assertSame('6778.60', $this->cuotasLines($nov2->id)->sole()->estimated);
+        $this->assertSame('6778.60', $this->cuotasLines($nov2->IdPeriod)->sole()->Estimated);
 
         $dec1 = $this->makePeriod(['year' => 2026, 'month' => 12, 'half' => 1]); // Reloj 13/24, Wallet finished
-        $this->assertSame('5521.31', $this->cuotasLines($dec1['id'])->sole()->estimated);
+        $this->assertSame('5521.31', $this->cuotasLines($dec1['id'])->sole()->Estimated);
 
         $this->seedInstallment($card, 'X', 'minicuotas', 18, 0, 100000 * 18, 100000, '2026-11');
         $this->sync();
-        $this->assertSame('6778.60', $this->cuotasLines($nov2->id)->sole()->estimated);
-        $this->assertSame('6021.31', $this->cuotasLines($dec1['id'])->sole()->estimated);
+        $this->assertSame('6778.60', $this->cuotasLines($nov2->IdPeriod)->sole()->Estimated);
+        $this->assertSame('6021.31', $this->cuotasLines($dec1['id'])->sole()->Estimated);
     }
 
     /**
@@ -79,11 +79,11 @@ class CuotasSyncTest extends PeriodTestCase
     {
         $card = $this->seedReloj();
         $p = $this->makePeriod();
-        $this->period(11, 1)->update(['closed' => true]);
+        $this->period(11, 1)->update(['Closed' => true]);
         $this->seedWallet($card);
 
         $this->sync($p['id']);
 
-        $this->assertSame('5521.31', $this->cuotasLines($p['id'])->sole()->estimated);
+        $this->assertSame('5521.31', $this->cuotasLines($p['id'])->sole()->Estimated);
     }
 }

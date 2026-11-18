@@ -3,6 +3,7 @@
 namespace Tests\Feature\Template;
 
 use Tests\TestCase;
+use App\Models\Period\LineModel;
 use App\Models\Template\TemplateModel;
 
 class TemplateTest extends TestCase
@@ -35,6 +36,23 @@ class TemplateTest extends TestCase
         $this->getJson('/templates/get-template-list')->assertOk()->assertJsonCount(1)->assertJsonPath('0.estimated', 4000000);
         $this->deleteJson("/templates/{$t['id']}/delete")->assertOk();
         $this->getJson('/templates/get-template-list')->assertOk()->assertExactJson([]);
+        $this->assertTrue(TemplateModel::withoutGlobalScopes()->find($t['id'])->IsDeleted);
+    }
+
+    /**
+     * A deleted template is not expanded into new periods and its existing lines lose the reference, as before.
+     */
+    public function test_deleted_template_is_not_expanded_and_lines_are_detached(): void
+    {
+        $t = $this->postJson('/templates/store', $this->base + ['frequency' => 'quincenal'])->assertCreated()->json('template');
+        $first = $this->postJson('/periods/store', ['year' => 2026, 'month' => 11, 'half' => 1])->assertCreated()->json('period');
+        $this->assertSame($t['id'], LineModel::query()->where('FkPeriod', $first['id'])->sole()->FkTemplate);
+
+        $this->deleteJson("/templates/{$t['id']}/delete")->assertOk();
+
+        $this->assertNull(LineModel::query()->where('FkPeriod', $first['id'])->sole()->FkTemplate);
+        $second = $this->postJson('/periods/store', ['year' => 2026, 'month' => 11, 'half' => 2])->assertCreated()->json('period');
+        $this->assertSame(0, LineModel::query()->where('FkPeriod', $second['id'])->count());
     }
 
     /**
@@ -72,7 +90,7 @@ class TemplateTest extends TestCase
         $this->putJson("/templates/$id/update", ['half' => 5])->assertStatus(422);
         $this->putJson("/templates/$id/update", ['half' => 2])->assertOk()->assertJsonPath('template.half', 2);
         $this->putJson("/templates/$id/update", ['frequency' => 'mensual_dividido'])->assertOk()->assertJsonPath('template.half', null);
-        $this->assertNull(TemplateModel::find($id)->half);
+        $this->assertNull(TemplateModel::find($id)->Half);
     }
 
     /**

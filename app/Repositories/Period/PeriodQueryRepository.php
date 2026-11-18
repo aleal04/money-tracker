@@ -34,7 +34,7 @@ class PeriodQueryRepository extends BaseQueryRepository
      */
     public function latest(bool $lock = false): ?PeriodModel
     {
-        $query = PeriodModel::query()->orderByDesc('year')->orderByDesc('month')->orderByDesc('half');
+        $query = PeriodModel::query()->orderByDesc('Year')->orderByDesc('Month')->orderByDesc('Half');
 
         return ($lock ? $query->lockForUpdate() : $query)->first();
     }
@@ -46,7 +46,7 @@ class PeriodQueryRepository extends BaseQueryRepository
      */
     public function listChronological(): Collection
     {
-        return PeriodModel::query()->orderBy('year')->orderBy('month')->orderBy('half')->get();
+        return PeriodModel::query()->orderBy('Year')->orderBy('Month')->orderBy('Half')->get();
     }
 
     /**
@@ -57,7 +57,7 @@ class PeriodQueryRepository extends BaseQueryRepository
      */
     public function findByKey(array $key): ?PeriodModel
     {
-        return PeriodModel::query()->where($key)->first();
+        return PeriodModel::query()->where(PeriodModel::keyColumns($key))->first();
     }
 
     /**
@@ -67,7 +67,7 @@ class PeriodQueryRepository extends BaseQueryRepository
      */
     public function listCards(): Collection
     {
-        return CardModel::query()->orderBy('id')->get();
+        return CardModel::query()->orderBy('IdCard')->get();
     }
 
     /**
@@ -77,7 +77,7 @@ class PeriodQueryRepository extends BaseQueryRepository
      */
     public function listInstallmentInputs(): Collection
     {
-        return InstallmentModel::query()->orderBy('id')->get()->map(fn (InstallmentModel $i) => $i->toInput());
+        return InstallmentModel::query()->orderBy('IdInstallment')->get()->map(fn (InstallmentModel $i) => $i->toInput());
     }
 
     /**
@@ -87,13 +87,13 @@ class PeriodQueryRepository extends BaseQueryRepository
      */
     public function listActiveTemplateInputs(): Collection
     {
-        return TemplateModel::query()->where('active', true)->orderBy('id')->get()->map(fn (TemplateModel $t) => [
-            'id' => $t->id,
-            'name' => $t->name,
-            'category' => $t->category,
-            'estimated' => (int) MoneyHelper::toCents($t->estimated),
-            'frequency' => $t->frequency,
-            'half' => $t->half,
+        return TemplateModel::query()->where('Active', true)->orderBy('IdTemplate')->get()->map(fn (TemplateModel $t) => [
+            'id' => $t->IdTemplate,
+            'name' => $t->Name,
+            'category' => $t->Category,
+            'estimated' => (int) MoneyHelper::toCents($t->Estimated),
+            'frequency' => $t->Frequency,
+            'half' => $t->Half,
             'active' => true,
         ]);
     }

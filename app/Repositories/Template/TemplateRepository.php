@@ -3,6 +3,7 @@
 namespace App\Repositories\Template;
 
 use Closure;
+use App\Models\Period\LineModel;
 use Illuminate\Support\Facades\DB;
 use App\Models\Template\TemplateModel;
 use App\Repositories\Concerns\RunsTransactionStepsTrait;
@@ -46,12 +47,13 @@ class TemplateRepository
     }
 
     /**
-     * Delete a template; to run inside a transaction.
+     * Logically delete a template and detach its lines (as the FK's ON DELETE SET NULL did); to run inside a transaction.
      *
      * @param  TemplateModel  $template  The locked template.
      */
     public function delete(TemplateModel $template): void
     {
-        $template->delete();
+        LineModel::query()->where('FkTemplate', $template->IdTemplate)->update(['FkTemplate' => null]);
+        $template->logicalDelete();
     }
 }

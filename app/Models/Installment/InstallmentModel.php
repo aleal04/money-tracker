@@ -4,23 +4,47 @@ namespace App\Models\Installment;
 
 use App\Helpers\MoneyHelper;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\LogicalDeleteTrait;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InstallmentModel extends Model
 {
+    use LogicalDeleteTrait;
+
     /**
      * The name of the table.
      *
      * @var string
      */
-    protected $table = 'installments';
+    protected $table = 'Installment';
+
+    /**
+     * The name of the primary key.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'IdInstallment';
+
+    /**
+     * The audit column filled by Eloquent when the row is created.
+     *
+     * @var string
+     */
+    const CREATED_AT = 'CreatedAt';
+
+    /**
+     * The audit column filled by Eloquent when the row is updated.
+     *
+     * @var string
+     */
+    const UPDATED_AT = 'UpdatedAt';
 
     /**
      * The attributes that are mass assignable (money columns stay decimal strings).
      *
      * @var list<string>
      */
-    protected $fillable = ['card_id', 'merchant', 'item', 'total_installments', 'paid_installments', 'type', 'initial_balance', 'installment_amount', 'balance_override', 'cancel_soon', 'last_advanced_month'];
+    protected $fillable = ['FkCard', 'Merchant', 'Item', 'TotalInstallments', 'PaidInstallments', 'Type', 'InitialBalance', 'InstallmentAmount', 'BalanceOverride', 'CancelSoon', 'LastAdvancedMonth'];
 
     /**
      * The attributes that should be cast.
@@ -28,12 +52,13 @@ class InstallmentModel extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'total_installments' => 'integer',
-        'paid_installments' => 'integer',
-        'initial_balance' => 'decimal:2',
-        'installment_amount' => 'decimal:2',
-        'balance_override' => 'decimal:2',
-        'cancel_soon' => 'boolean',
+        'TotalInstallments' => 'integer',
+        'PaidInstallments' => 'integer',
+        'InitialBalance' => 'decimal:2',
+        'InstallmentAmount' => 'decimal:2',
+        'BalanceOverride' => 'decimal:2',
+        'CancelSoon' => 'boolean',
+        'IsDeleted' => 'boolean',
     ];
 
     /**
@@ -41,7 +66,7 @@ class InstallmentModel extends Model
      */
     public function card(): BelongsTo
     {
-        return $this->belongsTo(CardModel::class, 'card_id');
+        return $this->belongsTo(CardModel::class, 'FkCard', 'IdCard');
     }
 
     /**
@@ -52,15 +77,15 @@ class InstallmentModel extends Model
     public function toInput(): array
     {
         return [
-            'id' => $this->id,
-            'cardId' => $this->card_id,
-            'type' => $this->type,
-            'totalInstallments' => $this->total_installments,
-            'paidInstallments' => $this->paid_installments,
-            'lastAdvancedMonth' => $this->last_advanced_month,
-            'initialBalance' => (int) MoneyHelper::toCents($this->initial_balance),
-            'installmentAmount' => MoneyHelper::toCents($this->installment_amount),
-            'balanceOverride' => MoneyHelper::toCents($this->balance_override),
+            'id' => $this->IdInstallment,
+            'cardId' => $this->FkCard,
+            'type' => $this->Type,
+            'totalInstallments' => $this->TotalInstallments,
+            'paidInstallments' => $this->PaidInstallments,
+            'lastAdvancedMonth' => $this->LastAdvancedMonth,
+            'initialBalance' => (int) MoneyHelper::toCents($this->InitialBalance),
+            'installmentAmount' => MoneyHelper::toCents($this->InstallmentAmount),
+            'balanceOverride' => MoneyHelper::toCents($this->BalanceOverride),
         ];
     }
 }

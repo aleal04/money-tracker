@@ -17,10 +17,10 @@ class CreatePeriodTest extends PeriodTestCase
         $p1 = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 1]);
         $p2 = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 2]);
 
-        $h1 = LineModel::where('period_id', $p1['id'])->get()->map(fn ($l) => [$l->name, $l->estimated, $l->source, $l->paid])->sort()->values()->all();
+        $h1 = LineModel::where('FkPeriod', $p1['id'])->get()->map(fn ($l) => [$l->Name, $l->Estimated, $l->Source, $l->Paid])->sort()->values()->all();
         $this->assertSame([['Banco Popular', '120000.00', 'template', false], ['CONAPE', '68460.00', 'template', false], ['Kolbi', '10865.00', 'template', false]], $h1);
-        $this->assertSame(['Banco Popular', 'Kolbi'], LineModel::where('period_id', $p2['id'])->orderBy('name')->pluck('name')->all());
-        $this->assertSame('120000.00', LineModel::where(['period_id' => $p2['id'], 'name' => 'Banco Popular'])->value('estimated'));
+        $this->assertSame(['Banco Popular', 'Kolbi'], LineModel::where('FkPeriod', $p2['id'])->orderBy('Name')->pluck('Name')->all());
+        $this->assertSame('120000.00', LineModel::where(['FkPeriod' => $p2['id'], 'Name' => 'Banco Popular'])->value('Estimated'));
     }
 
     /**
@@ -44,14 +44,14 @@ class CreatePeriodTest extends PeriodTestCase
     public function test_advances_installments_only_on_half_one_of_a_new_month(): void
     {
         $this->seedReloj();
-        $state = fn () => InstallmentModel::first()->only(['paid_installments', 'last_advanced_month']);
+        $state = fn () => InstallmentModel::first()->only(['PaidInstallments', 'LastAdvancedMonth']);
 
         $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 1]);
-        $this->assertSame(['paid_installments' => 12, 'last_advanced_month' => '2026-10'], $state());
+        $this->assertSame(['PaidInstallments' => 12, 'LastAdvancedMonth' => '2026-10'], $state());
         $this->makePeriod(['year' => 2026, 'month' => 12, 'half' => 1]);
-        $this->assertSame(['paid_installments' => 13, 'last_advanced_month' => '2026-11'], $state());
+        $this->assertSame(['PaidInstallments' => 13, 'LastAdvancedMonth' => '2026-11'], $state());
         $this->makePeriod(['year' => 2026, 'month' => 12, 'half' => 2]);
-        $this->assertSame(13, $state()['paid_installments']);
+        $this->assertSame(13, $state()['PaidInstallments']);
     }
 
     /**
@@ -63,7 +63,7 @@ class CreatePeriodTest extends PeriodTestCase
         $p = $this->makePeriod();
 
         $line = $this->cuotasLines($p['id'])->sole();
-        $this->assertSame(['Cuotas TC BAC', '5521.31', null, 'deuda_fija', $card->id], [$line->name, $line->estimated, $line->actual, $line->category, $line->card_id]);
+        $this->assertSame(['Cuotas TC BAC', '5521.31', null, 'deuda_fija', $card->IdCard], [$line->Name, $line->Estimated, $line->Actual, $line->Category, $line->FkCard]);
     }
 
     /**
@@ -89,7 +89,7 @@ class CreatePeriodTest extends PeriodTestCase
         $this->postJson('/periods/next')->assertCreated();
         $this->postJson('/periods/next')->assertCreated();
 
-        $keys = PeriodModel::get()->map(fn ($p) => "$p->year-$p->month-$p->half");
+        $keys = PeriodModel::get()->map(fn ($p) => "$p->Year-$p->Month-$p->Half");
         $this->assertSame($keys->count(), $keys->unique()->count());
     }
 

@@ -22,7 +22,7 @@ class SchemaTest extends TestCase
      */
     private function line(PeriodModel $period, array $extra = []): array
     {
-        return $extra + ['period_id' => $period->id, 'category' => CategoryConstant::GASTO, 'name' => 'x', 'estimated' => '1.00'];
+        return $extra + ['FkPeriod' => $period->IdPeriod, 'Category' => CategoryConstant::GASTO, 'Name' => 'x', 'Estimated' => '1.00'];
     }
 
     /**
@@ -30,10 +30,10 @@ class SchemaTest extends TestCase
      */
     public function test_duplicate_period_is_rejected(): void
     {
-        PeriodModel::create(['year' => 2026, 'month' => 10, 'half' => 1]);
+        PeriodModel::create(['Year' => 2026, 'Month' => 10, 'Half' => 1]);
 
         $this->expectException(QueryException::class);
-        PeriodModel::create(['year' => 2026, 'month' => 10, 'half' => 1]);
+        PeriodModel::create(['Year' => 2026, 'Month' => 10, 'Half' => 1]);
     }
 
     /**
@@ -41,13 +41,13 @@ class SchemaTest extends TestCase
      */
     public function test_installments_line_is_unique_per_period_and_card(): void
     {
-        $period = PeriodModel::create(['year' => 2026, 'month' => 10, 'half' => 1]);
-        $card = CardModel::create(['name' => 'Visa']);
-        $cuotas = $this->line($period, ['source' => LineSourceConstant::INSTALLMENTS, 'card_id' => $card->id]);
+        $period = PeriodModel::create(['Year' => 2026, 'Month' => 10, 'Half' => 1]);
+        $card = CardModel::create(['Name' => 'Visa']);
+        $cuotas = $this->line($period, ['Source' => LineSourceConstant::INSTALLMENTS, 'FkCard' => $card->IdCard]);
 
         LineModel::create($cuotas);
-        LineModel::create($this->line($period, ['card_id' => $card->id]));
-        LineModel::create($this->line($period, ['card_id' => $card->id]));
+        LineModel::create($this->line($period, ['FkCard' => $card->IdCard]));
+        LineModel::create($this->line($period, ['FkCard' => $card->IdCard]));
         $this->assertSame(3, LineModel::count());
 
         $this->expectException(QueryException::class);
@@ -55,14 +55,30 @@ class SchemaTest extends TestCase
     }
 
     /**
+     * A logically deleted installments line does not block a new one for the same (period, card).
+     */
+    public function test_deleted_installments_line_frees_the_unique_slot(): void
+    {
+        $period = PeriodModel::create(['Year' => 2026, 'Month' => 10, 'Half' => 1]);
+        $card = CardModel::create(['Name' => 'Visa']);
+        $cuotas = $this->line($period, ['Source' => LineSourceConstant::INSTALLMENTS, 'FkCard' => $card->IdCard]);
+
+        LineModel::create($cuotas)->logicalDelete();
+        LineModel::create($cuotas);
+
+        $this->assertSame(1, LineModel::count());
+        $this->assertSame(2, LineModel::withoutGlobalScopes()->count());
+    }
+
+    /**
      * Money survives a DB round trip exactly.
      */
     public function test_money_round_trip_is_exact(): void
     {
-        $period = PeriodModel::create(['year' => 2026, 'month' => 10, 'half' => 1]);
-        $line = LineModel::create($this->line($period, ['estimated' => MoneyHelper::fromCents(1086500)]));
+        $period = PeriodModel::create(['Year' => 2026, 'Month' => 10, 'Half' => 1]);
+        $line = LineModel::create($this->line($period, ['Estimated' => MoneyHelper::fromCents(1086500)]));
 
-        $estimated = $line->fresh()->estimated;
+        $estimated = $line->fresh()->Estimated;
         $this->assertIsString($estimated);
         $this->assertSame('10865.00', $estimated);
         $this->assertSame(1086500, MoneyHelper::toCents($estimated));
@@ -73,7 +89,7 @@ class SchemaTest extends TestCase
      */
     public function test_deleting_period_cascades_lines(): void
     {
-        $period = PeriodModel::create(['year' => 2026, 'month' => 10, 'half' => 1]);
+        $period = PeriodModel::create(['Year' => 2026, 'Month' => 10, 'Half' => 1]);
         LineModel::create($this->line($period));
 
         $period->delete();
@@ -86,13 +102,13 @@ class SchemaTest extends TestCase
      */
     public function test_deleting_card_nulls_line_card(): void
     {
-        $period = PeriodModel::create(['year' => 2026, 'month' => 10, 'half' => 1]);
-        $card = CardModel::create(['name' => 'Visa']);
-        $line = LineModel::create($this->line($period, ['card_id' => $card->id]));
+        $period = PeriodModel::create(['Year' => 2026, 'Month' => 10, 'Half' => 1]);
+        $card = CardModel::create(['Name' => 'Visa']);
+        $line = LineModel::create($this->line($period, ['FkCard' => $card->IdCard]));
 
         $card->delete();
 
-        $this->assertNull($line->fresh()->card_id);
+        $this->assertNull($line->fresh()->FkCard);
     }
 
     /**
@@ -100,10 +116,10 @@ class SchemaTest extends TestCase
      */
     public function test_card_with_installments_cannot_be_deleted(): void
     {
-        $card = CardModel::create(['name' => 'Visa']);
+        $card = CardModel::create(['Name' => 'Visa']);
         InstallmentModel::create([
-            'card_id' => $card->id, 'merchant' => 'm', 'item' => 'i', 'total_installments' => 6,
-            'type' => 'tasa0', 'initial_balance' => '600.00', 'last_advanced_month' => '2026-10',
+            'FkCard' => $card->IdCard, 'Merchant' => 'm', 'Item' => 'i', 'TotalInstallments' => 6,
+            'Type' => 'tasa0', 'InitialBalance' => '600.00', 'LastAdvancedMonth' => '2026-10',
         ]);
 
         $this->expectException(QueryException::class);
@@ -115,12 +131,12 @@ class SchemaTest extends TestCase
      */
     public function test_deleting_carried_to_line_nulls_reference(): void
     {
-        $period = PeriodModel::create(['year' => 2026, 'month' => 10, 'half' => 1]);
+        $period = PeriodModel::create(['Year' => 2026, 'Month' => 10, 'Half' => 1]);
         $target = LineModel::create($this->line($period));
-        $source = LineModel::create($this->line($period, ['carried_to_line_id' => $target->id]));
+        $source = LineModel::create($this->line($period, ['FkCarriedToLine' => $target->IdLine]));
 
         $target->delete();
 
-        $this->assertNull($source->fresh()->carried_to_line_id);
+        $this->assertNull($source->fresh()->FkCarriedToLine);
     }
 }

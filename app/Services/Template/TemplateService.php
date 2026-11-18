@@ -64,8 +64,8 @@ class TemplateService implements TemplateServiceContract
             }
 
             $changes = $templateData->toArray();
-            if (($changes['frequency'] ?? $template->frequency) !== TemplateFrequencyConstant::MENSUAL_EN_QUINCENA) {
-                $changes['half'] = null;
+            if (($changes['Frequency'] ?? $template->Frequency) !== TemplateFrequencyConstant::MENSUAL_EN_QUINCENA) {
+                $changes['Half'] = null;
             }
             $this->templateRepository->update($template, $changes);
 
@@ -102,13 +102,13 @@ class TemplateService implements TemplateServiceContract
     private function toView(TemplateModel $template): array
     {
         return [
-            'id' => $template->id,
-            'name' => $template->name,
-            'category' => $template->category,
-            'estimated' => MoneyHelper::requireCents($template->estimated),
-            'frequency' => $template->frequency,
-            'half' => $template->half,
-            'active' => $template->active,
+            'id' => $template->IdTemplate,
+            'name' => $template->Name,
+            'category' => $template->Category,
+            'estimated' => MoneyHelper::requireCents($template->Estimated),
+            'frequency' => $template->Frequency,
+            'half' => $template->Half,
+            'active' => $template->Active,
         ];
     }
 }

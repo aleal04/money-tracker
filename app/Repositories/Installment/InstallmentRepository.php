@@ -36,7 +36,7 @@ class InstallmentRepository
         return $this->transaction(function () use ($cardData): object {
             $card = CardModel::query()->create($cardData->toArray());
 
-            return createValidationSuccessResponse('Tarjeta creada correctamente.', ['card' => ['id' => $card->id, 'name' => $card->name]]);
+            return createValidationSuccessResponse('Tarjeta creada correctamente.', ['card' => ['id' => $card->IdCard, 'name' => $card->Name]]);
         }, 'No se pudo crear la tarjeta.');
     }
 
@@ -63,12 +63,12 @@ class InstallmentRepository
     }
 
     /**
-     * Delete an installment; to run inside a transaction.
+     * Logically delete an installment; to run inside a transaction.
      *
      * @param  InstallmentModel  $installment  The locked installment.
      */
     public function delete(InstallmentModel $installment): void
     {
-        $installment->delete();
+        $installment->logicalDelete();
     }
 }

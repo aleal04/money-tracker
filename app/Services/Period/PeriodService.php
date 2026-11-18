@@ -62,7 +62,7 @@ class PeriodService implements PeriodServiceContract
             if ($latest === null) {
                 $result = createValidationErrorResponse('No hay quincenas para continuar.', ['statusCode' => 409]);
             } else {
-                $result = $this->createWithinTransaction(PeriodKeyHelper::next($latest->year, $latest->month, $latest->half));
+                $result = $this->createWithinTransaction(PeriodKeyHelper::next($latest->Year, $latest->Month, $latest->Half));
             }
             $stop($result);
 
@@ -89,16 +89,16 @@ class PeriodService implements PeriodServiceContract
             $templates = $this->periodQueryRepository->listActiveTemplateInputs();
             foreach (TemplateExpander::expand($templates, $key['half']) as $line) {
                 $this->lineRepository->insert([
-                    'period_id' => $period->id,
-                    'category' => $line['category'],
-                    'name' => $line['name'],
-                    'estimated' => MoneyHelper::fromCents($line['estimated']),
-                    'actual' => null,
-                    'source' => LineSourceConstant::TEMPLATE,
-                    'template_id' => $line['templateId'],
+                    'FkPeriod' => $period->IdPeriod,
+                    'Category' => $line['category'],
+                    'Name' => $line['name'],
+                    'Estimated' => MoneyHelper::fromCents($line['estimated']),
+                    'Actual' => null,
+                    'Source' => LineSourceConstant::TEMPLATE,
+                    'FkTemplate' => $line['templateId'],
                 ]);
             }
-            $this->cuotasSyncService->syncWithinTransaction($period->id);
+            $this->cuotasSyncService->syncWithinTransaction($period->IdPeriod);
         }
 
         return createValidationSuccessResponse('Quincena lista.', ['period' => $period->toView(), 'created' => $created]);
@@ -111,7 +111,7 @@ class PeriodService implements PeriodServiceContract
      */
     public function latestPeriodId(): ?int
     {
-        return $this->periodQueryRepository->latest()?->id;
+        return $this->periodQueryRepository->latest()?->IdPeriod;
     }
 
     /**
@@ -138,7 +138,7 @@ class PeriodService implements PeriodServiceContract
             return null;
         }
 
-        $ids = $this->periodQueryRepository->listChronological()->pluck('id')->values();
+        $ids = $this->periodQueryRepository->listChronological()->pluck('IdPeriod')->values();
         $index = $ids->search($periodId);
         $lines = $this->lineQueryRepository->listByPeriod($periodId)->map(fn (LineModel $line) => $line->toView())->all();
 

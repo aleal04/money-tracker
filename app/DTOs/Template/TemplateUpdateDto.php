@@ -58,15 +58,15 @@ class TemplateUpdateDto
     public function toArray(): array
     {
         $changes = array_filter([
-            'name' => $this->name,
-            'category' => $this->category,
-            'estimated' => $this->estimated === null ? null : MoneyHelper::fromCents($this->estimated),
-            'frequency' => $this->frequency,
-            'active' => $this->active,
+            'Name' => $this->name,
+            'Category' => $this->category,
+            'Estimated' => $this->estimated === null ? null : MoneyHelper::fromCents($this->estimated),
+            'Frequency' => $this->frequency,
+            'Active' => $this->active,
         ], fn ($value) => $value !== null);
 
         if ($this->hasHalf) {
-            $changes['half'] = $this->half;
+            $changes['Half'] = $this->half;
         }
 
         return $changes;

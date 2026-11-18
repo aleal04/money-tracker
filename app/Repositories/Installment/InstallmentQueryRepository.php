@@ -41,7 +41,7 @@ class InstallmentQueryRepository extends BaseQueryRepository
      */
     public function listCards(): Collection
     {
-        return CardModel::query()->orderBy('id')->get();
+        return CardModel::query()->orderBy('IdCard')->get();
     }
 
     /**
@@ -51,6 +51,6 @@ class InstallmentQueryRepository extends BaseQueryRepository
      */
     public function listInstallments(): Collection
     {
-        return InstallmentModel::query()->orderBy('id')->get();
+        return InstallmentModel::query()->orderBy('IdInstallment')->get();
     }
 }

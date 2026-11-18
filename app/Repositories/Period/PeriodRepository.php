@@ -33,9 +33,10 @@ class PeriodRepository
      */
     public function insertIfAbsent(array $key): array
     {
-        $created = PeriodModel::query()->insertOrIgnore([...$key, 'closed' => false, 'created_at' => now(), 'updated_at' => now()]) === 1;
+        $columns = PeriodModel::keyColumns($key);
+        $created = PeriodModel::query()->insertOrIgnore([...$columns, 'Closed' => false, 'CreatedAt' => now(), 'UpdatedAt' => now()]) === 1;
 
-        return ['period' => PeriodModel::query()->where($key)->lockForUpdate()->firstOrFail(), 'created' => $created];
+        return ['period' => PeriodModel::query()->where($columns)->lockForUpdate()->firstOrFail(), 'created' => $created];
     }
 
     /**
@@ -46,7 +47,7 @@ class PeriodRepository
      */
     public function setClosed(PeriodModel $period, bool $closed): void
     {
-        $period->update(['closed' => $closed]);
+        $period->update(['Closed' => $closed]);
     }
 
     /**
@@ -57,10 +58,10 @@ class PeriodRepository
     public function advanceInstallments(string $targetMonth): void
     {
         foreach (InstallmentModel::query()->get() as $installment) {
-            $next = InstallmentCalculator::advance($installment->paid_installments, $installment->total_installments, $installment->last_advanced_month, $targetMonth);
+            $next = InstallmentCalculator::advance($installment->PaidInstallments, $installment->TotalInstallments, $installment->LastAdvancedMonth, $targetMonth);
 
-            if ($next['paid'] !== $installment->paid_installments || $next['lastAdvanced'] !== $installment->last_advanced_month) {
-                $installment->update(['paid_installments' => $next['paid'], 'last_advanced_month' => $next['lastAdvanced']]);
+            if ($next['paid'] !== $installment->PaidInstallments || $next['lastAdvanced'] !== $installment->LastAdvancedMonth) {
+                $installment->update(['PaidInstallments' => $next['paid'], 'LastAdvancedMonth' => $next['lastAdvanced']]);
             }
         }
     }

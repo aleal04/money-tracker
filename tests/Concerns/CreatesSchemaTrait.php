@@ -9,7 +9,8 @@ use Illuminate\Database\Schema\Blueprint;
 /**
  * Builds the app schema on sqlite :memory: with the Schema builder.
  *
- * The source of truth is database/scripts/tables (MySQL); this mirrors it for the tests.
+ * The source of truth is database/scripts/tables (MySQL); this mirrors it for the tests,
+ * with the same table, column and constraint names.
  */
 trait CreatesSchemaTrait
 {
@@ -27,68 +28,86 @@ trait CreatesSchemaTrait
      */
     protected function createSchema(): void
     {
-        Schema::create('cards', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->timestamps();
+        Schema::create('Card', function (Blueprint $table) {
+            $table->id('IdCard');
+            $table->string('Name');
+            $this->auditColumns($table);
+            $table->string('ActiveName')->nullable()->virtualAs('CASE WHEN IsDeleted = 0 THEN Name ELSE NULL END');
+            $table->unique('ActiveName', 'UQ_Card_ActiveName');
         });
 
-        Schema::create('templates', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('category');
-            $table->decimal('estimated', 14, 2);
-            $table->string('frequency');
-            $table->unsignedTinyInteger('half')->nullable();
-            $table->boolean('active')->default(true);
-            $table->timestamps();
+        Schema::create('Template', function (Blueprint $table) {
+            $table->id('IdTemplate');
+            $table->string('Name');
+            $table->string('Category');
+            $table->decimal('Estimated', 14, 2);
+            $table->string('Frequency');
+            $table->unsignedTinyInteger('Half')->nullable();
+            $table->boolean('Active')->default(true);
+            $this->auditColumns($table);
         });
 
-        Schema::create('periods', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedSmallInteger('year');
-            $table->unsignedTinyInteger('month');
-            $table->unsignedTinyInteger('half');
-            $table->boolean('closed')->default(false);
-            $table->timestamps();
-            $table->unique(['year', 'month', 'half']);
+        Schema::create('Period', function (Blueprint $table) {
+            $table->id('IdPeriod');
+            $table->unsignedSmallInteger('Year');
+            $table->unsignedTinyInteger('Month');
+            $table->unsignedTinyInteger('Half');
+            $table->boolean('Closed')->default(false);
+            $this->auditColumns($table);
+            $table->unique(['Year', 'Month', 'Half'], 'UQ_Period_Year_Month_Half');
         });
 
-        Schema::create('lines', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('period_id')->constrained('periods')->cascadeOnDelete();
-            $table->string('category');
-            $table->string('name');
-            $table->decimal('estimated', 14, 2)->default(0);
-            $table->decimal('actual', 14, 2)->nullable();
-            $table->boolean('paid')->default(false);
-            $table->timestamp('paid_at')->nullable();
-            $table->string('source')->default(LineSourceConstant::MANUAL);
-            $table->foreignId('template_id')->nullable()->constrained('templates')->nullOnDelete();
-            $table->foreignId('card_id')->nullable()->constrained('cards')->nullOnDelete();
-            $table->foreignId('carried_to_line_id')->nullable()->constrained('lines')->nullOnDelete();
-            $table->integer('sort')->default(0);
-            $table->unsignedBigInteger('cuotas_card_id')
+        Schema::create('Line', function (Blueprint $table) {
+            $table->id('IdLine');
+            $table->foreignId('FkPeriod')->constrained('Period', 'IdPeriod', 'FK_Line_Period')->cascadeOnDelete();
+            $table->string('Category');
+            $table->string('Name');
+            $table->decimal('Estimated', 14, 2)->default(0);
+            $table->decimal('Actual', 14, 2)->nullable();
+            $table->boolean('Paid')->default(false);
+            $table->dateTime('PaidAt')->nullable();
+            $table->string('Source')->default(LineSourceConstant::MANUAL);
+            $table->foreignId('FkTemplate')->nullable()->constrained('Template', 'IdTemplate', 'FK_Line_Template')->nullOnDelete();
+            $table->foreignId('FkCard')->nullable()->constrained('Card', 'IdCard', 'FK_Line_Card')->nullOnDelete();
+            $table->foreignId('FkCarriedToLine')->nullable()->constrained('Line', 'IdLine', 'FK_Line_CarriedToLine')->nullOnDelete();
+            $table->integer('Sort')->default(0);
+            $this->auditColumns($table);
+            $table->unsignedBigInteger('CuotasCardKey')
                 ->nullable()
-                ->virtualAs("CASE WHEN source = '".LineSourceConstant::INSTALLMENTS."' THEN card_id ELSE NULL END");
-            $table->timestamps();
-            $table->unique(['period_id', 'cuotas_card_id']);
+                ->virtualAs("CASE WHEN Source = '".LineSourceConstant::INSTALLMENTS."' AND IsDeleted = 0 THEN FkCard ELSE NULL END");
+            $table->unique(['FkPeriod', 'CuotasCardKey'], 'UQ_Line_FkPeriod_CuotasCardKey');
         });
 
-        Schema::create('installments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('card_id')->constrained('cards')->restrictOnDelete();
-            $table->string('merchant');
-            $table->string('item');
-            $table->unsignedSmallInteger('total_installments');
-            $table->unsignedSmallInteger('paid_installments')->default(0);
-            $table->string('type');
-            $table->decimal('initial_balance', 14, 2);
-            $table->decimal('installment_amount', 14, 2)->nullable();
-            $table->decimal('balance_override', 14, 2)->nullable();
-            $table->boolean('cancel_soon')->default(false);
-            $table->string('last_advanced_month', 7);
-            $table->timestamps();
+        Schema::create('Installment', function (Blueprint $table) {
+            $table->id('IdInstallment');
+            $table->foreignId('FkCard')->constrained('Card', 'IdCard', 'FK_Installment_Card')->restrictOnDelete();
+            $table->string('Merchant');
+            $table->string('Item');
+            $table->unsignedSmallInteger('TotalInstallments');
+            $table->unsignedSmallInteger('PaidInstallments')->default(0);
+            $table->string('Type');
+            $table->decimal('InitialBalance', 14, 2);
+            $table->decimal('InstallmentAmount', 14, 2)->nullable();
+            $table->decimal('BalanceOverride', 14, 2)->nullable();
+            $table->boolean('CancelSoon')->default(false);
+            $table->string('LastAdvancedMonth', 7);
+            $this->auditColumns($table);
         });
+    }
+
+    /**
+     * Add the ssi audit and logical delete columns to a table.
+     *
+     * @param  Blueprint  $table  The table being created.
+     */
+    private function auditColumns(Blueprint $table): void
+    {
+        $table->boolean('IsDeleted')->default(false);
+        $table->string('CreatedBy', 50)->nullable();
+        $table->string('UpdatedBy', 50)->nullable();
+        $table->string('DeletedBy', 50)->nullable();
+        $table->dateTime('CreatedAt')->nullable()->useCurrent();
+        $table->dateTime('UpdatedAt')->nullable();
+        $table->dateTime('DeletedAt')->nullable();
     }
 }

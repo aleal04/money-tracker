@@ -31,6 +31,6 @@ class CardStoreDto
      */
     public function toArray(): array
     {
-        return ['name' => $this->name];
+        return ['Name' => $this->name];
     }
 }

@@ -65,13 +65,13 @@ class PeriodCloseService implements PeriodCloseServiceContract
 
                 return $result;
             }
-            if ($period->closed) {
+            if ($period->Closed) {
                 return createValidationSuccessResponse('Quincena cerrada.', ['arrastreLineId' => null]);
             }
 
             $unpaid = $this->unpaidEgresos($periodId, true); // lock after the period row, so line writes serialise with the close
-            $nextKey = PeriodKeyHelper::next($period->year, $period->month, $period->half);
-            if ($unpaid->isNotEmpty() && $this->periodQueryRepository->findByKey($nextKey)?->closed) {
+            $nextKey = PeriodKeyHelper::next($period->Year, $period->Month, $period->Half);
+            if ($unpaid->isNotEmpty() && $this->periodQueryRepository->findByKey($nextKey)?->Closed) {
                 $stop($result = createValidationErrorResponse('La quincena siguiente está cerrada; reabrila primero', ['statusCode' => 409]));
 
                 return $result;
@@ -86,16 +86,16 @@ class PeriodCloseService implements PeriodCloseServiceContract
             $stop($created);
             $total = MoneyHelper::fromCents($this->total($unpaid));
             $arrastre = $this->lineRepository->insert([
-                'period_id' => $created->get('period')['id'],
-                'category' => CategoryConstant::DEUDA_FIJA,
-                'name' => 'Arrastre '.PeriodKeyHelper::label($period->year, $period->month, $period->half),
-                'estimated' => $total,
-                'actual' => $total,
-                'source' => LineSourceConstant::CARRIED,
+                'FkPeriod' => $created->get('period')['id'],
+                'Category' => CategoryConstant::DEUDA_FIJA,
+                'Name' => 'Arrastre '.PeriodKeyHelper::label($period->Year, $period->Month, $period->Half),
+                'Estimated' => $total,
+                'Actual' => $total,
+                'Source' => LineSourceConstant::CARRIED,
             ]);
-            $this->lineRepository->markCarried($unpaid->pluck('id')->all(), $arrastre->id);
+            $this->lineRepository->markCarried($unpaid->pluck('IdLine')->all(), $arrastre->IdLine);
 
-            return createValidationSuccessResponse('Quincena cerrada.', ['arrastreLineId' => $arrastre->id]);
+            return createValidationSuccessResponse('Quincena cerrada.', ['arrastreLineId' => $arrastre->IdLine]);
         }, 'No se pudo cerrar la quincena.');
     }
 
@@ -115,12 +115,12 @@ class PeriodCloseService implements PeriodCloseServiceContract
                 return $result;
             }
 
-            $carriedTo = $this->lineQueryRepository->listByPeriod($periodId, true)->firstWhere(fn (LineModel $l) => $l->carried_to_line_id !== null)?->carried_to_line_id;
+            $carriedTo = $this->lineQueryRepository->listByPeriod($periodId, true)->firstWhere(fn (LineModel $l) => $l->FkCarriedToLine !== null)?->FkCarriedToLine;
             if ($carriedTo !== null) {
                 $arrastre = $this->lineQueryRepository->find($carriedTo, true);
                 $conflict = match (true) {
-                    $arrastre?->paid => 'No se puede reabrir: el arrastre ya está pagado',
-                    $arrastre?->carried_to_line_id !== null => 'Reabrí primero la quincena siguiente',
+                    $arrastre?->Paid => 'No se puede reabrir: el arrastre ya está pagado',
+                    $arrastre?->FkCarriedToLine !== null => 'Reabrí primero la quincena siguiente',
                     default => null,
                 };
                 if ($conflict !== null) {
@@ -149,7 +149,7 @@ class PeriodCloseService implements PeriodCloseServiceContract
     private function unpaidEgresos(int $periodId, bool $lock = false): Collection
     {
         return $this->lineQueryRepository->listByPeriod($periodId, $lock)
-            ->filter(fn (LineModel $l) => $l->category !== CategoryConstant::INGRESO && ! $l->paid && $l->carried_to_line_id === null)
+            ->filter(fn (LineModel $l) => $l->Category !== CategoryConstant::INGRESO && ! $l->Paid && $l->FkCarriedToLine === null)
             ->values();
     }
 
@@ -161,6 +161,6 @@ class PeriodCloseService implements PeriodCloseServiceContract
      */
     private function total(Collection $lines): int
     {
-        return $lines->sum(fn (LineModel $l) => MoneyHelper::requireCents($l->actual ?? $l->estimated));
+        return $lines->sum(fn (LineModel $l) => MoneyHelper::requireCents($l->Actual ?? $l->Estimated));
     }
 }

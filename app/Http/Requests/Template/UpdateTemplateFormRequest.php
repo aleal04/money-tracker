@@ -44,8 +44,8 @@ class UpdateTemplateFormRequest extends FormRequest
 
             $this->checkHalf(
                 $validator,
-                $this->has('frequency') ? $this->input('frequency') : $current->frequency,
-                $this->has('half') ? $this->input('half') : $current->half,
+                $this->has('frequency') ? $this->input('frequency') : $current->Frequency,
+                $this->has('half') ? $this->input('half') : $current->Half,
             );
         }];
     }

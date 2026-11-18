@@ -43,10 +43,10 @@ class UpdateInstallmentFormRequest extends FormRequest
             }
 
             $this->checkInstallment($validator, array_replace([
-                'totalInstallments' => $current->total_installments,
-                'paidInstallments' => $current->paid_installments,
-                'type' => $current->type,
-                'installmentAmount' => $current->installment_amount,
+                'totalInstallments' => $current->TotalInstallments,
+                'paidInstallments' => $current->PaidInstallments,
+                'type' => $current->Type,
+                'installmentAmount' => $current->InstallmentAmount,
             ], $this->only(['totalInstallments', 'paidInstallments', 'type', 'installmentAmount', 'initialBalance'])));
         }];
     }

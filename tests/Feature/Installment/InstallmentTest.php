@@ -4,6 +4,7 @@ namespace Tests\Feature\Installment;
 
 use Carbon\Carbon;
 use Illuminate\Testing\TestResponse;
+use App\Models\Installment\CardModel;
 use Tests\Feature\Period\PeriodTestCase;
 use App\Models\Installment\InstallmentModel;
 
@@ -144,7 +145,7 @@ class InstallmentTest extends PeriodTestCase
         $b = $this->mkCard('B');
         $p = $this->makePeriod();
         $i = $this->mkInst($a)->assertCreated()->json('installment');
-        $est = fn (string $name) => $this->cuotasLines($p['id'])->firstWhere('name', "Cuotas $name")?->estimated;
+        $est = fn (string $name) => $this->cuotasLines($p['id'])->firstWhere('Name', "Cuotas $name")?->Estimated;
         $this->assertSame(['5521.31', null], [$est('A'), $est('B')]);
 
         $this->putJson("/installments/{$i['id']}/update", ['cardId' => $b])->assertOk();
@@ -165,7 +166,7 @@ class InstallmentTest extends PeriodTestCase
 
         $this->putJson($url, ['balanceOverride' => null])->assertOk()->assertJsonPath('installment.balanceOverride', null)->assertJsonPath('installment.saldo.diff', null);
         $this->putJson($url, ['type' => 'tasa0'])->assertOk()->assertJsonPath('installment.installmentAmount', null);
-        $this->assertNull(InstallmentModel::find($i['id'])->installment_amount);
+        $this->assertNull(InstallmentModel::find($i['id'])->InstallmentAmount);
     }
 
     /**
@@ -175,7 +176,7 @@ class InstallmentTest extends PeriodTestCase
     {
         $c = $this->mkCard();
         $p = $this->makePeriod();
-        $line = fn () => $this->cuotasLines($p['id'])->sole()->estimated;
+        $line = fn () => $this->cuotasLines($p['id'])->sole()->Estimated;
 
         $i = $this->mkInst($c, ['item' => 'Reloj'])->assertCreated()->json('installment');
         $this->assertSame('5521.31', $line());
@@ -184,6 +185,37 @@ class InstallmentTest extends PeriodTestCase
         $this->putJson("/installments/{$i['id']}/update", ['paidInstallments' => 12])->assertOk();
         $this->deleteJson("/installments/{$i['id']}/delete")->assertOk();
         $this->assertSame('0.00', $line());
+        $this->assertTrue(InstallmentModel::withoutGlobalScopes()->find($i['id'])->IsDeleted);
+    }
+
+    /**
+     * A deleted installment is kept as a logical delete and no longer counts in the card list or the Cuotas line.
+     */
+    public function test_deleted_installment_is_logical_and_not_counted(): void
+    {
+        $c = $this->mkCard();
+        $p = $this->makePeriod();
+        $this->mkInst($c, ['item' => 'Reloj'])->assertCreated();
+        $gone = $this->mkInst($c, ['item' => 'Tele'])->assertCreated()->json('installment.id');
+
+        $this->deleteJson("/installments/$gone/delete")->assertOk();
+
+        $this->assertNotNull(InstallmentModel::withoutGlobalScopes()->find($gone)->DeletedAt);
+        $this->assertSame(['Reloj'], array_column($this->firstCard()['installments'], 'item'));
+        $this->assertSame('5521.31', $this->cuotasLines($p['id'])->sole()->Estimated);
+    }
+
+    /**
+     * The name of a deleted card can be used again; a live duplicate is still rejected.
+     */
+    public function test_deleted_card_name_can_be_reused(): void
+    {
+        $id = $this->mkCard();
+        CardModel::query()->find($id)->logicalDelete();
+
+        $this->postJson('/cards/store', ['name' => 'Visa'])->assertCreated();
+        $this->postJson('/cards/store', ['name' => 'Visa'])->assertUnprocessable()->assertJsonPath('errors.name.0', 'Ya existe una tarjeta con ese nombre');
+        $this->assertSame(2, CardModel::withoutGlobalScopes()->where('Name', 'Visa')->count());
     }
 
     /**
@@ -195,11 +227,11 @@ class InstallmentTest extends PeriodTestCase
         $this->mkInst($c, ['item' => 'Reloj'])->assertCreated();
         $nov2 = $this->makePeriod(['year' => 2026, 'month' => 11, 'half' => 2]);
         $dic1 = $this->makePeriod(['year' => 2026, 'month' => 12, 'half' => 1]);
-        $this->assertSame('5521.30', $this->cuotasLines($nov2['id'])->sole()->estimated);
+        $this->assertSame('5521.30', $this->cuotasLines($nov2['id'])->sole()->Estimated);
 
         $this->mkInst($c, ['item' => 'Wallet', 'totalInstallments' => 18, 'paidInstallments' => 17, 'initialBalance' => '18.000'])->assertCreated();
 
-        $this->assertSame('5521.30', $this->cuotasLines($nov2['id'])->sole()->estimated);
-        $this->assertSame('6021.31', $this->cuotasLines($dic1['id'])->sole()->estimated);
+        $this->assertSame('5521.30', $this->cuotasLines($nov2['id'])->sole()->Estimated);
+        $this->assertSame('6021.31', $this->cuotasLines($dic1['id'])->sole()->Estimated);
     }
 }

@@ -54,13 +54,13 @@ class LineStoreDto
     public function toArray(): array
     {
         return [
-            'period_id' => $this->periodId,
-            'category' => $this->category,
-            'name' => $this->name,
-            'estimated' => MoneyHelper::fromCents($this->estimated),
-            'actual' => $this->actual === null ? null : MoneyHelper::fromCents($this->actual),
-            'paid' => $this->paid,
-            'paid_at' => $this->paid ? now() : null,
+            'FkPeriod' => $this->periodId,
+            'Category' => $this->category,
+            'Name' => $this->name,
+            'Estimated' => MoneyHelper::fromCents($this->estimated),
+            'Actual' => $this->actual === null ? null : MoneyHelper::fromCents($this->actual),
+            'Paid' => $this->paid,
+            'PaidAt' => $this->paid ? now() : null,
         ];
     }
 }

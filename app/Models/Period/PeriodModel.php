@@ -4,23 +4,47 @@ namespace App\Models\Period;
 
 use App\Helpers\PeriodKeyHelper;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\LogicalDeleteTrait;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PeriodModel extends Model
 {
+    use LogicalDeleteTrait;
+
     /**
      * The name of the table.
      *
      * @var string
      */
-    protected $table = 'periods';
+    protected $table = 'Period';
+
+    /**
+     * The name of the primary key.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'IdPeriod';
+
+    /**
+     * The audit column filled by Eloquent when the row is created.
+     *
+     * @var string
+     */
+    const CREATED_AT = 'CreatedAt';
+
+    /**
+     * The audit column filled by Eloquent when the row is updated.
+     *
+     * @var string
+     */
+    const UPDATED_AT = 'UpdatedAt';
 
     /**
      * The attributes that are mass assignable .
      *
      * @var list<string>
      */
-    protected $fillable = ['year', 'month', 'half', 'closed'];
+    protected $fillable = ['Year', 'Month', 'Half', 'Closed'];
 
     /**
      * The attributes that should be cast.
@@ -28,10 +52,11 @@ class PeriodModel extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'year' => 'integer',
-        'month' => 'integer',
-        'half' => 'integer',
-        'closed' => 'boolean',
+        'Year' => 'integer',
+        'Month' => 'integer',
+        'Half' => 'integer',
+        'Closed' => 'boolean',
+        'IsDeleted' => 'boolean',
     ];
 
     /**
@@ -39,7 +64,18 @@ class PeriodModel extends Model
      */
     public function lines(): HasMany
     {
-        return $this->hasMany(LineModel::class, 'period_id');
+        return $this->hasMany(LineModel::class, 'FkPeriod', 'IdPeriod');
+    }
+
+    /**
+     * Map a period key to its table columns.
+     *
+     * @param  array{year:int,month:int,half:int}  $key  The period key.
+     * @return array{Year:int,Month:int,Half:int} The column values.
+     */
+    public static function keyColumns(array $key): array
+    {
+        return ['Year' => $key['year'], 'Month' => $key['month'], 'Half' => $key['half']];
     }
 
     /**
@@ -50,12 +86,12 @@ class PeriodModel extends Model
     public function toView(): array
     {
         return [
-            'id' => $this->id,
-            'year' => $this->year,
-            'month' => $this->month,
-            'half' => $this->half,
-            'closed' => $this->closed,
-            'label' => PeriodKeyHelper::label($this->year, $this->month, $this->half),
+            'id' => $this->IdPeriod,
+            'year' => $this->Year,
+            'month' => $this->Month,
+            'half' => $this->Half,
+            'closed' => $this->Closed,
+            'label' => PeriodKeyHelper::label($this->Year, $this->Month, $this->Half),
         ];
     }
 }

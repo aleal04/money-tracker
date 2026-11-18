@@ -55,12 +55,12 @@ class TemplateStoreDto
     public function toArray(): array
     {
         return [
-            'name' => $this->name,
-            'category' => $this->category,
-            'estimated' => MoneyHelper::fromCents($this->estimated),
-            'frequency' => $this->frequency,
-            'half' => $this->half,
-            'active' => $this->active,
+            'Name' => $this->name,
+            'Category' => $this->category,
+            'Estimated' => MoneyHelper::fromCents($this->estimated),
+            'Frequency' => $this->frequency,
+            'Half' => $this->half,
+            'Active' => $this->active,
         ];
     }
 }

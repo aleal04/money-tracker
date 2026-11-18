@@ -57,14 +57,14 @@ class LineUpdateDto
     public function toArray(): array
     {
         $changes = array_filter([
-            'category' => $this->category,
-            'name' => $this->name,
-            'estimated' => $this->estimated === null ? null : MoneyHelper::fromCents($this->estimated),
-            'paid' => $this->paid,
+            'Category' => $this->category,
+            'Name' => $this->name,
+            'Estimated' => $this->estimated === null ? null : MoneyHelper::fromCents($this->estimated),
+            'Paid' => $this->paid,
         ], fn ($value) => $value !== null);
 
         if ($this->hasActual) {
-            $changes['actual'] = $this->actual === null ? null : MoneyHelper::fromCents($this->actual);
+            $changes['Actual'] = $this->actual === null ? null : MoneyHelper::fromCents($this->actual);
         }
 
         return $changes;

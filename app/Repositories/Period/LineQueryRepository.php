@@ -32,7 +32,7 @@ class LineQueryRepository extends BaseQueryRepository
      */
     public function listByPeriod(int $periodId, bool $lock = false): Collection
     {
-        $query = LineModel::query()->where('period_id', $periodId)->orderBy('sort')->orderBy('id');
+        $query = LineModel::query()->where('FkPeriod', $periodId)->orderBy('Sort')->orderBy('IdLine');
 
         return ($lock ? $query->lockForUpdate() : $query)->get();
     }
@@ -45,7 +45,7 @@ class LineQueryRepository extends BaseQueryRepository
      */
     public function listCarriedTo(int $lineId): Collection
     {
-        return LineModel::query()->where('carried_to_line_id', $lineId)->orderBy('sort')->orderBy('id')->get();
+        return LineModel::query()->where('FkCarriedToLine', $lineId)->orderBy('Sort')->orderBy('IdLine')->get();
     }
 
     /**
@@ -58,7 +58,7 @@ class LineQueryRepository extends BaseQueryRepository
     public function findInstallmentsLine(int $periodId, int $cardId): ?LineModel
     {
         return LineModel::query()
-            ->where(['period_id' => $periodId, 'card_id' => $cardId, 'source' => LineSourceConstant::INSTALLMENTS])
+            ->where(['FkPeriod' => $periodId, 'FkCard' => $cardId, 'Source' => LineSourceConstant::INSTALLMENTS])
             ->first();
     }
 }

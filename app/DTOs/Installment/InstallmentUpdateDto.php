@@ -76,22 +76,22 @@ class InstallmentUpdateDto
     public function toArray(): array
     {
         $changes = array_filter([
-            'card_id' => $this->cardId,
-            'merchant' => $this->merchant,
-            'item' => $this->item,
-            'total_installments' => $this->totalInstallments,
-            'paid_installments' => $this->paidInstallments,
-            'type' => $this->type,
-            'initial_balance' => $this->initialBalance === null ? null : MoneyHelper::fromCents($this->initialBalance),
+            'FkCard' => $this->cardId,
+            'Merchant' => $this->merchant,
+            'Item' => $this->item,
+            'TotalInstallments' => $this->totalInstallments,
+            'PaidInstallments' => $this->paidInstallments,
+            'Type' => $this->type,
+            'InitialBalance' => $this->initialBalance === null ? null : MoneyHelper::fromCents($this->initialBalance),
         ], fn ($value) => $value !== null);
 
         if ($this->type === InstallmentTypeConstant::TASA0) {
-            $changes['installment_amount'] = null; // tasa0 derives its cuota from the balance.
+            $changes['InstallmentAmount'] = null; // tasa0 derives its cuota from the balance.
         } elseif ($this->hasInstallmentAmount) {
-            $changes['installment_amount'] = $this->installmentAmount === null ? null : MoneyHelper::fromCents($this->installmentAmount);
+            $changes['InstallmentAmount'] = $this->installmentAmount === null ? null : MoneyHelper::fromCents($this->installmentAmount);
         }
         if ($this->hasBalanceOverride) {
-            $changes['balance_override'] = $this->balanceOverride === null ? null : MoneyHelper::fromCents($this->balanceOverride);
+            $changes['BalanceOverride'] = $this->balanceOverride === null ? null : MoneyHelper::fromCents($this->balanceOverride);
         }
 
         return $changes;
