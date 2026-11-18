@@ -1,0 +1,156 @@
+// Shared element classes for pages: card, btn*, icon-btn, field, input, form-panel, alert, pill, th, num.
+@use "tokens" as *;
+
+.card {
+	border-radius: var(--radius-card);
+	background: var(--surface);
+	box-shadow: var(--shadow-card);
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 44px;
+	padding: 0 16px;
+	border: 0;
+	border-radius: 12px;
+	font: 500 14px var(--font-sans);
+	cursor: pointer;
+	transition: background-color 0.15s, filter 0.15s;
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+}
+
+.btn-primary {
+	background: var(--teal);
+	color: #fff;
+
+	&:hover:not(:disabled) {
+		background: var(--teal-dark);
+	}
+}
+
+.btn-accent {
+	background: var(--yellow);
+	color: var(--on-accent);
+
+	&:hover:not(:disabled) {
+		filter: brightness(0.95);
+	}
+}
+
+.btn-ghost {
+	background: var(--pill);
+	color: var(--ink);
+
+	&:hover:not(:disabled) {
+		background: var(--line);
+	}
+}
+
+.btn-danger {
+	border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+	background: transparent;
+	color: var(--danger);
+
+	&:hover:not(:disabled) {
+		background: color-mix(in srgb, var(--danger) 6%, transparent);
+	}
+}
+
+.icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border: 0;
+	border-radius: 12px;
+	background: transparent;
+	color: var(--muted);
+	cursor: pointer;
+
+	&:hover:not(:disabled) {
+		background: var(--pill);
+		color: var(--teal);
+	}
+
+	&:disabled {
+		opacity: 0.4;
+	}
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	color: var(--muted);
+	font-size: 14px;
+}
+
+.input {
+	min-height: 44px;
+	padding: 0 12px;
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	outline: none;
+	background: var(--surface);
+	color: var(--ink);
+	font: 16px var(--font-sans);
+
+	&:focus {
+		border-color: var(--teal);
+		box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 20%, transparent);
+	}
+}
+
+.form-panel {
+	display: grid;
+	gap: 12px;
+	margin-top: 8px;
+	padding: 16px;
+	border: 1px solid var(--line);
+	border-radius: 16px;
+	background: color-mix(in srgb, var(--cream) 60%, transparent);
+
+	@media (min-width: $bp-md) {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+.err {
+	color: var(--danger);
+}
+
+.alert {
+	padding: 12px;
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--danger) 10%, transparent);
+	color: var(--danger);
+	font-size: 14px;
+}
+
+.pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.th {
+	color: var(--muted);
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.num {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}

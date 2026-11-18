@@ -1,0 +1,13 @@
+@use "../../ui/tokens" as *;
+
+.app-layout__content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-width: 0;
+	padding: calc(var(--topbar-h) + 16px) 12px 32px calc(var(--sidebar-w) + 12px);
+
+	@media (min-width: $bp-md) {
+		padding: calc(var(--topbar-h) + 24px) 24px 32px calc(var(--sidebar-w) + 24px);
+	}
+}
