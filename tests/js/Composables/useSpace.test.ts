@@ -45,6 +45,8 @@ describe("useSpace", () => {
 		const s = await load();
 		expect(s.current.value?.id).toBe(1);
 		expect(s.selectedId.value).toBeNull();
+		// Forgotten for good, so the next visit doesn't send it again.
+		expect(localStorage.getItem("space")).toBeNull();
 	});
 
 	it("survives a throwing localStorage", async () => {

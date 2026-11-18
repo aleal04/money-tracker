@@ -1,6 +1,10 @@
 // @vuepic/vue-datepicker (DatePicker.vue) mapped to the app tokens. The `:root` prefix beats the library's
-// .dp__theme_light/.dp__theme_dark blocks regardless of stylesheet order; the dark prop only flips the library classes.
-:root .date-picker {
+// .dp--theme-light/.dp--theme-dark blocks regardless of stylesheet order; the dark prop only flips the library classes.
+// The library also declares its variables on the menu element itself (.dp--theme-light/.dp--theme-dark),
+// so the tokens are set there too; otherwise the calendar keeps the library's default blue.
+:root .date-picker,
+:root .dp--theme-light,
+:root .dp--theme-dark {
 	--dp-font-family: var(--font-sans);
 	--dp-font-size: 16px;
 	--dp-border-radius: 12px;
@@ -25,7 +29,7 @@
 	--dp-scroll-bar-background: var(--pill);
 	--dp-scroll-bar-color: var(--line);
 
-	.dp__input {
+	.dp--input {
 		min-height: 44px;
 		padding-top: 0;
 		padding-bottom: 0;
@@ -36,11 +40,11 @@
 		}
 	}
 
-	.dp__input_wrap {
+	.dp--input-wrap {
 		min-height: 44px;
 	}
 
-	.dp__menu {
+	.dp--menu {
 		box-shadow: var(--shadow-card);
 	}
 }

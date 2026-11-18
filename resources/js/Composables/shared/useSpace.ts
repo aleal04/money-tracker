@@ -48,6 +48,11 @@ async function loadSpaces(): Promise<void> {
 		!spaces.value.some((s) => s.id === selectedId.value)
 	) {
 		selectedId.value = null;
+		try {
+			localStorage.removeItem(KEY);
+		} catch {
+			// Blocked storage: nothing persisted to clean.
+		}
 	}
 }
 

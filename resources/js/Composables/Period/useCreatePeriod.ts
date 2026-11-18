@@ -6,7 +6,7 @@ import { useSpace } from "@/Composables/shared/useSpace";
 import type { PeriodProposal } from "@/Types/Pages/Space/Space";
 
 export function useCreatePeriod() {
-	const { selectedId, current, spaceParams } = useSpace();
+	const { selectedId, current, spaceParams, ensureSpaces } = useSpace();
 	const startDate = ref("");
 	const endDate = ref("");
 	const errors = ref<Record<string, string>>({});
@@ -14,7 +14,10 @@ export function useCreatePeriod() {
 
 	/** Prefill the dates with what the space's frequency proposes; both stay editable. */
 	async function loadProposal() {
+		errors.value = {};
 		try {
+			// Spaces first, so a stale stored space id is dropped before it is sent (404).
+			await ensureSpaces();
 			const p = (
 				await axios.get<PeriodProposal>("/periods/next-proposal", {
 					params: spaceParams(),
