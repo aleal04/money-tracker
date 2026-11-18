@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import axios from "axios";
+import { flushPromises } from "@vue/test-utils";
+import { describe, expect, it, vi } from "vitest";
 import {
 	finishingLabel,
 	greeting,
@@ -121,5 +123,22 @@ describe("templates", () => {
 			tpl({ id: 2, category: "ahorro" }),
 		]);
 		expect(g.map((x) => x.key)).toEqual(["servicio", "ahorro"]);
+	});
+});
+
+describe("template toggle failure", () => {
+	it("reloads the list and shows the error", async () => {
+		const stored = [{ id: 1, name: "A", active: true }];
+		const get = vi.spyOn(axios, "get").mockResolvedValue({ data: stored });
+		vi.spyOn(axios, "put").mockRejectedValue(new Error("boom"));
+		const { useTemplateIndex } = await import(
+			"@/Composables/Template/useTemplateIndex"
+		);
+		const idx = useTemplateIndex();
+		await flushPromises();
+		get.mockClear();
+		await idx.toggle(stored[0] as Template);
+		expect(get).toHaveBeenCalledTimes(1);
+		expect(idx.error.value).not.toBe("");
 	});
 });

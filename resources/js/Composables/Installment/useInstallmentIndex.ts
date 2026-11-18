@@ -25,7 +25,6 @@ export function useInstallmentIndex() {
 	const cardError = ref("");
 
 	async function load() {
-		editing.value = null;
 		try {
 			cards.value = (
 				await axios.get<CardView[]>("/installments/get-card-list")
@@ -36,6 +35,12 @@ export function useInstallmentIndex() {
 		}
 	}
 	load();
+
+	/** After a save or delete: close the form and reload. */
+	async function saved() {
+		editing.value = null;
+		await load();
+	}
 
 	async function cancelSoon(i: Installment) {
 		try {
@@ -66,6 +71,7 @@ export function useInstallmentIndex() {
 		cardName,
 		cardError,
 		load,
+		saved,
 		cancelSoon,
 		saveCard,
 	};

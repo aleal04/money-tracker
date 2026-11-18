@@ -25,7 +25,6 @@ export function useTemplateIndex() {
 	const editing = ref<number | "new" | null>(null);
 
 	async function load() {
-		editing.value = null;
 		try {
 			templates.value = (
 				await axios.get<Template[]>("/templates/get-template-list")
@@ -37,15 +36,23 @@ export function useTemplateIndex() {
 	}
 	load();
 
+	/** After a save or delete: close the form and reload. */
+	async function saved() {
+		editing.value = null;
+		await load();
+	}
+
 	const groups = computed(() => groupByCategory(templates.value));
 	async function toggle(t: Template) {
 		try {
 			await axios.put(`/templates/${t.id}/update`, { active: !t.active });
 			await load();
 		} catch (e) {
+			// Reload so the checkbox goes back to the stored value, then show the error.
+			await load();
 			error.value = errorMessage(e);
 		}
 	}
 
-	return { templates, error, editing, groups, load, toggle };
+	return { templates, error, editing, groups, load, saved, toggle };
 }

@@ -5,7 +5,7 @@ import Icon from "@/Components/UI/Icon.vue";
 import { freqLabel, useTemplateIndex } from "@/Composables/Template/useTemplateIndex";
 import { formatCRC } from "@/Composables/shared/format";
 
-const { error, editing, groups, load, toggle } = useTemplateIndex();
+const { error, editing, groups, saved, toggle } = useTemplateIndex();
 </script>
 
 <template>
@@ -19,7 +19,7 @@ const { error, editing, groups, load, toggle } = useTemplateIndex();
 			<button v-if="editing !== 'new'" type="button" class="btn btn-accent" @click="editing = 'new'"><Icon name="plus" />Plantilla</button>
 		</header>
 		<p v-if="error" role="alert" class="alert">{{ error }}</p>
-		<TemplateForm v-if="editing === 'new'" class="card" @saved="load" @cancel="editing = null" />
+		<TemplateForm v-if="editing === 'new'" class="card" @saved="saved" @cancel="editing = null" />
 		<section v-for="g in groups" :key="g.key" class="card template-index__group">
 			<h2 class="template-index__group-title">{{ g.label }}</h2>
 			<div class="template-index__row template-index__head th">
@@ -33,14 +33,14 @@ const { error, editing, groups, load, toggle } = useTemplateIndex();
 							<span class="template-index__freq">{{ freqLabel(t) }}</span>
 						</div>
 						<span class="num" :class="{ 'template-index__off': !t.active }">{{ formatCRC(t.estimated) }}</span>
-						<label class="template-index__active" :aria-label="`Activa: ${t.name}`">
-							<input type="checkbox" :checked="t.active" @change="toggle(t)" />
+						<label class="template-index__active">
+							<input type="checkbox" :aria-label="`Activa: ${t.name}`" :checked="t.active" @change="toggle(t)" />
 						</label>
 						<div class="template-index__actions">
 							<button type="button" class="icon-btn" :aria-label="`Editar ${t.name}`" @click="editing = t.id"><Icon name="edit" /></button>
 						</div>
 					</div>
-					<TemplateForm v-if="editing === t.id" :template="t" @saved="load" @cancel="editing = null" />
+					<TemplateForm v-if="editing === t.id" :template="t" @saved="saved" @cancel="editing = null" />
 				</li>
 			</ul>
 		</section>

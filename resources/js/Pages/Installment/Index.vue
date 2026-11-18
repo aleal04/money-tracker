@@ -4,7 +4,7 @@ import CardSection from "@/Components/Pages/Installment/CardSection.vue";
 import Icon from "@/Components/UI/Icon.vue";
 import { useInstallmentIndex } from "@/Composables/Installment/useInstallmentIndex";
 
-const { cards, error, editing, newCard, cardName, cardError, load, cancelSoon, saveCard } = useInstallmentIndex();
+const { cards, error, editing, newCard, cardName, cardError, saved, cancelSoon, saveCard } = useInstallmentIndex();
 </script>
 
 <template>
@@ -28,6 +28,6 @@ const { cards, error, editing, newCard, cardName, cardError, load, cancelSoon, s
 				<button type="button" class="btn btn-ghost" @click="newCard = false">Cancelar</button>
 			</div>
 		</form>
-		<CardSection v-for="c in cards" :key="c.id" :card="c" :editing="editing" @edit="editing = $event" @saved="load" @cancel-soon="cancelSoon" />
+		<CardSection v-for="c in cards" :key="c.id" :card="c" :editing="editing" @edit="editing = $event" @saved="saved" @cancel-soon="cancelSoon" />
 	</div>
 </template>
