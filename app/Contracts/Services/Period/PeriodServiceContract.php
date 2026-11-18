@@ -5,6 +5,7 @@ namespace App\Contracts\Services\Period;
 use App\Models\Space\SpaceModel;
 use App\Models\Period\PeriodModel;
 use App\DTOs\Period\PeriodStoreDto;
+use App\DTOs\Period\PeriodUpdateDto;
 
 interface PeriodServiceContract
 {
@@ -15,6 +16,23 @@ interface PeriodServiceContract
      * @return object The response with the period view, or a 404 error.
      */
     public function storePeriod(PeriodStoreDto $periodData): object;
+
+    /**
+     * Change the dates of a period in one transaction (no overlap, same place in the order).
+     *
+     * @param  int  $periodId  The period identifier.
+     * @param  PeriodUpdateDto  $periodData  The new dates.
+     * @return object The response with the period view, or a 404/409/422 error.
+     */
+    public function updatePeriod(int $periodId, PeriodUpdateDto $periodData): object;
+
+    /**
+     * The dates and label the space's frequency proposes for its next period (primary space when none is given).
+     *
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
+     * @return array{startDate:string,endDate:string,label:string} The proposal; a missing space is a 404.
+     */
+    public function nextProposal(?int $spaceId = null): array;
 
     /**
      * Create the period that follows the latest one of a space (primary when none is given).

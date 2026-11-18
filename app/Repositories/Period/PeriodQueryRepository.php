@@ -64,6 +64,32 @@ class PeriodQueryRepository extends BaseQueryRepository
     }
 
     /**
+     * The period of the same space that starts right before the given one.
+     *
+     * @param  PeriodModel  $period  The period.
+     * @return PeriodModel|null The previous period, or null when there is none.
+     */
+    public function previousOf(PeriodModel $period): ?PeriodModel
+    {
+        return PeriodModel::query()->where('FkSpace', $period->FkSpace)->where('StartDate', '<', $period->StartDate)->orderByDesc('StartDate')->first();
+    }
+
+    /**
+     * A live period of the space whose dates overlap [startDate, endDate] (both ends inclusive).
+     *
+     * @param  int  $spaceId  The space identifier.
+     * @param  string  $startDate  The start date 'Y-m-d'.
+     * @param  string  $endDate  The end date 'Y-m-d'.
+     * @param  int  $exceptPeriodId  The period to ignore (0 for none).
+     * @return PeriodModel|null An overlapping period, or null when there is none.
+     */
+    public function findOverlapping(int $spaceId, string $startDate, string $endDate, int $exceptPeriodId = 0): ?PeriodModel
+    {
+        return PeriodModel::query()->where('FkSpace', $spaceId)->where('IdPeriod', '<>', $exceptPeriodId)
+            ->where('StartDate', '<=', $endDate)->where('EndDate', '>=', $startDate)->orderBy('StartDate')->first();
+    }
+
+    /**
      * Whether another period of the space starts in the same month as $startDate.
      *
      * @param  int  $spaceId  The space identifier.

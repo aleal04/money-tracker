@@ -86,10 +86,15 @@ final class MoneyHelper
     }
 
     /**
-     * Split cents into equal parts; the remainder cents go one each to the first parts (index is 0-based).
+     * Split non-negative cents into equal parts; the remainder cents go one each to the first parts (index is 0-based).
+     * Negative amounts are not supported. Throws when there are fewer than one part.
      */
     public static function splitAcross(int $cents, int $parts, int $index): int
     {
+        if ($parts < 1) {
+            throw new \InvalidArgumentException('Se necesita al menos una parte');
+        }
+
         return intdiv($cents, $parts) + ($index < $cents % $parts ? 1 : 0);
     }
 }

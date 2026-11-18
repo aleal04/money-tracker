@@ -7,6 +7,10 @@ use App\Constant\SpaceFrequencyConstant;
 
 /**
  * Period date rules per space frequency. Static style; dates are 'Y-m-d' strings.
+ *
+ * Known limit (monthly): a period starting on a day past 28 drifts, because only the previous end date is known.
+ * Starts on the last day of a month (day 28 or later) are treated as month-end anchored (31 Jan -> 28 Feb -> 31 Mar),
+ * so a 28 Feb start meant as "day 28" also jumps to the end of March; other days past 28 clamp and then re-anchor.
  */
 final class PeriodScheduleHelper
 {
@@ -24,7 +28,11 @@ final class PeriodScheduleHelper
         $start = $lastEndDate !== null ? CarbonImmutable::parse($lastEndDate)->addDay() : self::firstStart($frequency, CarbonImmutable::parse($today));
         $end = match ($frequency) {
             SpaceFrequencyConstant::BIWEEKLY => $start->day === 1 ? $start->day(15) : ($start->day === 16 ? $start->endOfMonth() : $start->addDays(14)),
-            SpaceFrequencyConstant::MONTHLY => $start->day === 1 ? $start->endOfMonth() : $start->addMonthNoOverflow()->subDay(),
+            SpaceFrequencyConstant::MONTHLY => match (true) {
+                $start->day === 1 => $start->endOfMonth(),
+                $start->day >= 28 && $start->isLastOfMonth() => $start->addMonthNoOverflow()->endOfMonth()->subDay(),
+                default => $start->addMonthNoOverflow()->subDay(),
+            },
             SpaceFrequencyConstant::WEEKLY => $start->addDays(6),
             default => $start->addDays(max(1, (int) $customDays) - 1),
         };
@@ -87,20 +95,20 @@ final class PeriodScheduleHelper
 
     /**
      * 0-based position of the period starting at $start among the projected periods that start in its month
-     * (biweekly: 0 for days 1–15, 1 after; monthly: 0; weekly/custom: steps back that stay in the month).
+     * (biweekly on calendar halves: 0 for day 1, 1 for day 16; monthly: 0; otherwise steps back that stay in the month,
+     * biweekly off the halves stepping 14 days like proposeNext does).
      */
     public static function indexInMonth(string $frequency, ?int $customDays, string $start): int
     {
         $d = CarbonImmutable::parse($start);
-        if ($frequency === SpaceFrequencyConstant::BIWEEKLY) {
-            return $d->day <= 15 ? 0 : 1;
+        if ($frequency === SpaceFrequencyConstant::BIWEEKLY && in_array($d->day, [1, 16], true)) {
+            return $d->day === 1 ? 0 : 1;
         }
         if ($frequency === SpaceFrequencyConstant::MONTHLY) {
             return 0;
         }
-        $step = $frequency === SpaceFrequencyConstant::WEEKLY ? 7 : max(1, (int) $customDays);
 
-        return intdiv($d->day - 1, $step);
+        return intdiv($d->day - 1, self::step($frequency, $customDays));
     }
 
     /**
@@ -108,14 +116,14 @@ final class PeriodScheduleHelper
      */
     public static function periodsStartingInMonth(string $frequency, ?int $customDays, string $anyStartInMonth): int
     {
-        if ($frequency === SpaceFrequencyConstant::BIWEEKLY) {
-            return 2;
-        }
+        $d = CarbonImmutable::parse($anyStartInMonth);
         if ($frequency === SpaceFrequencyConstant::MONTHLY) {
             return 1;
         }
-        $step = $frequency === SpaceFrequencyConstant::WEEKLY ? 7 : max(1, (int) $customDays);
-        $d = CarbonImmutable::parse($anyStartInMonth);
+        if ($frequency === SpaceFrequencyConstant::BIWEEKLY && in_array($d->day, [1, 16], true)) {
+            return 2;
+        }
+        $step = self::step($frequency, $customDays);
         $ym = $d->format('Y-m');
         while ($d->subDays($step)->format('Y-m') === $ym) {
             $d = $d->subDays($step);
@@ -125,5 +133,17 @@ final class PeriodScheduleHelper
         }
 
         return $n;
+    }
+
+    /**
+     * Days between period starts of a projected chain: weekly 7, custom its length, biweekly off the calendar halves 14.
+     */
+    private static function step(string $frequency, ?int $customDays): int
+    {
+        return match ($frequency) {
+            SpaceFrequencyConstant::BIWEEKLY => 14,
+            SpaceFrequencyConstant::WEEKLY => 7,
+            default => max(1, (int) $customDays),
+        };
     }
 }

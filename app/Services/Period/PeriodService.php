@@ -10,6 +10,7 @@ use App\Models\Space\SpaceModel;
 use App\Models\Period\PeriodModel;
 use App\DTOs\Period\PeriodStoreDto;
 use App\Constant\LineSourceConstant;
+use App\DTOs\Period\PeriodUpdateDto;
 use App\Helpers\PeriodScheduleHelper;
 use App\Repositories\Period\LineRepository;
 use App\Services\Template\TemplateExpander;
@@ -18,6 +19,7 @@ use App\Repositories\Period\LineQueryRepository;
 use App\Repositories\Space\SpaceQueryRepository;
 use App\Repositories\Period\PeriodQueryRepository;
 use App\Contracts\Services\Period\PeriodServiceContract;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class PeriodService implements PeriodServiceContract
 {
@@ -50,13 +52,83 @@ class PeriodService implements PeriodServiceContract
     {
         return $this->periodRepository->transaction(function (Closure $stop) use ($periodData): object {
             $space = $this->spaceQueryRepository->resolve($periodData->spaceId);
-            $result = $space === null
-                ? createValidationErrorResponse('No se encontró el espacio.', ['statusCode' => 404])
-                : $this->createWithinTransaction($space, $periodData->startDate, $periodData->endDate);
+            $overlap = $space === null ? null : $this->periodQueryRepository->findOverlapping($space->IdSpace, $periodData->startDate, $periodData->endDate);
+            $result = match (true) {
+                $space === null => createValidationErrorResponse('No se encontró el espacio.', ['statusCode' => 404]),
+                $overlap !== null && ($overlap->StartDate !== $periodData->startDate || $overlap->EndDate !== $periodData->endDate) => $this->overlapError(),
+                default => $this->createWithinTransaction($space, $periodData->startDate, $periodData->endDate),
+            };
             $stop($result);
 
             return $result;
-        }, 'No se pudo crear la quincena.');
+        }, 'No se pudo crear el periodo.');
+    }
+
+    /**
+     * Change the dates of a period in one transaction: no overlap with other live periods of its space and the period
+     * keeps its place in the order. Lines already generated are not regenerated.
+     *
+     * @param  int  $periodId  The period identifier.
+     * @param  PeriodUpdateDto  $periodData  The new dates.
+     * @return object The response with the period view, or a 404/409/422 error.
+     */
+    public function updatePeriod(int $periodId, PeriodUpdateDto $periodData): object
+    {
+        return $this->periodRepository->transaction(function (Closure $stop) use ($periodId, $periodData): object {
+            $period = $this->periodQueryRepository->find($periodId, true);
+            $overlap = $period === null ? null : $this->periodQueryRepository->findOverlapping($period->FkSpace, $periodData->startDate, $periodData->endDate, $periodId);
+            $previous = $period === null ? null : $this->periodQueryRepository->previousOf($period);
+            $next = $period === null ? null : $this->periodQueryRepository->nextOf($period);
+            $result = match (true) {
+                $period === null => createValidationErrorResponse('No se encontró el periodo.', ['statusCode' => 404]),
+                $overlap !== null => $this->overlapError(),
+                ($previous !== null && $periodData->startDate <= $previous->StartDate) || ($next !== null && $periodData->startDate >= $next->StartDate) => createValidationErrorResponse('El cambio de fechas cambiaría el orden de los periodos', ['statusCode' => 409]),
+                default => null,
+            };
+            if ($result !== null) {
+                $stop($result);
+            }
+            $this->periodRepository->updateDates($period, $periodData->startDate, $periodData->endDate);
+
+            return createValidationSuccessResponse('Periodo actualizado.', ['period' => $period->refresh()->toView()]);
+        }, 'No se pudo actualizar el periodo.');
+    }
+
+    /**
+     * The dates and label the space's frequency proposes for its next period (primary space when none is given).
+     *
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
+     * @return array{startDate:string,endDate:string,label:string} The proposal.
+     */
+    public function nextProposal(?int $spaceId = null): array
+    {
+        $space = $this->requireSpace($spaceId);
+        $next = PeriodScheduleHelper::proposeNext($space->Frequency, $space->CustomDays, $this->periodQueryRepository->latest($space->IdSpace)?->EndDate, now()->toDateString());
+
+        return ['startDate' => $next['start'], 'endDate' => $next['end'], 'label' => PeriodScheduleHelper::label($space->Frequency, $next['start'], $next['end'])];
+    }
+
+    /**
+     * The 422 response of the overlap rule.
+     *
+     * @return object The error response keyed on startDate.
+     */
+    private function overlapError(): object
+    {
+        $message = 'Las fechas se traslapan con otro periodo';
+
+        return createValidationErrorResponse($message, ['statusCode' => 422, 'errors' => ['startDate' => [$message]]]);
+    }
+
+    /**
+     * The given space (primary when none is given); a missing or deleted space is a 404.
+     *
+     * @param  int|null  $spaceId  The space identifier, or null for the primary space.
+     * @return SpaceModel The space.
+     */
+    private function requireSpace(?int $spaceId): SpaceModel
+    {
+        return $this->spaceQueryRepository->resolve($spaceId) ?? throw new NotFoundHttpException('No se encontró el espacio.');
     }
 
     /**
@@ -73,13 +145,13 @@ class PeriodService implements PeriodServiceContract
             $latest = $space === null ? null : $this->periodQueryRepository->latest($space->IdSpace, true);
             $result = match (true) {
                 $space === null => createValidationErrorResponse('No se encontró el espacio.', ['statusCode' => 404]),
-                $latest === null => createValidationErrorResponse('No hay quincenas para continuar.', ['statusCode' => 409]),
+                $latest === null => createValidationErrorResponse('No hay periodos para continuar.', ['statusCode' => 409]),
                 default => $this->createAfter($latest),
             };
             $stop($result);
 
             return $result;
-        }, 'No se pudo crear la quincena.');
+        }, 'No se pudo crear el periodo.');
     }
 
     /**
@@ -130,20 +202,18 @@ class PeriodService implements PeriodServiceContract
             $this->cuotasSyncService->syncWithinTransaction($period->IdPeriod);
         }
 
-        return createValidationSuccessResponse('Quincena lista.', ['period' => $period->toView(), 'created' => $created]);
+        return createValidationSuccessResponse('Periodo listo.', ['period' => $period->toView(), 'created' => $created]);
     }
 
     /**
      * The id of the latest period of a space (primary when none is given), or null when there are none.
      *
      * @param  int|null  $spaceId  The space identifier, or null for the primary space.
-     * @return int|null The latest period id.
+     * @return int|null The latest period id; a missing space is a 404.
      */
     public function latestPeriodId(?int $spaceId = null): ?int
     {
-        $space = $this->spaceQueryRepository->resolve($spaceId);
-
-        return $space === null ? null : $this->periodQueryRepository->latest($space->IdSpace)?->IdPeriod;
+        return $this->periodQueryRepository->latest($this->requireSpace($spaceId)->IdSpace)?->IdPeriod;
     }
 
     /**

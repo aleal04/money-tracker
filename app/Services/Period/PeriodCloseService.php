@@ -61,25 +61,25 @@ class PeriodCloseService implements PeriodCloseServiceContract
         return $this->periodRepository->transaction(function (Closure $stop) use ($periodId): object {
             $period = $this->periodQueryRepository->find($periodId, true);
             if ($period === null) {
-                $stop($result = createValidationErrorResponse('No se encontró la quincena.', ['statusCode' => 404]));
+                $stop($result = createValidationErrorResponse('No se encontró el periodo.', ['statusCode' => 404]));
 
                 return $result;
             }
             if ($period->Closed) {
-                return createValidationSuccessResponse('Quincena cerrada.', ['arrastreLineId' => null]);
+                return createValidationSuccessResponse('Periodo cerrado.', ['arrastreLineId' => null]);
             }
 
             $unpaid = $this->unpaidEgresos($periodId, true); // lock after the period row, so line writes serialise with the close
             $next = $this->periodQueryRepository->nextOf($period);
             if ($unpaid->isNotEmpty() && $next?->Closed) {
-                $stop($result = createValidationErrorResponse('La quincena siguiente está cerrada; reabrila primero', ['statusCode' => 409]));
+                $stop($result = createValidationErrorResponse('El periodo siguiente está cerrado; reabrila primero', ['statusCode' => 409]));
 
                 return $result;
             }
 
             $this->periodRepository->setClosed($period, true);
             if ($unpaid->isEmpty()) {
-                return createValidationSuccessResponse('Quincena cerrada.', ['arrastreLineId' => null]);
+                return createValidationSuccessResponse('Periodo cerrado.', ['arrastreLineId' => null]);
             }
 
             if ($next === null) {
@@ -97,8 +97,8 @@ class PeriodCloseService implements PeriodCloseServiceContract
             ]);
             $this->lineRepository->markCarried($unpaid->pluck('IdLine')->all(), $arrastre->IdLine);
 
-            return createValidationSuccessResponse('Quincena cerrada.', ['arrastreLineId' => $arrastre->IdLine]);
-        }, 'No se pudo cerrar la quincena.');
+            return createValidationSuccessResponse('Periodo cerrado.', ['arrastreLineId' => $arrastre->IdLine]);
+        }, 'No se pudo cerrar el periodo.');
     }
 
     /**
@@ -112,7 +112,7 @@ class PeriodCloseService implements PeriodCloseServiceContract
         return $this->periodRepository->transaction(function (Closure $stop) use ($periodId): object {
             $period = $this->periodQueryRepository->find($periodId, true);
             if ($period === null) {
-                $stop($result = createValidationErrorResponse('No se encontró la quincena.', ['statusCode' => 404]));
+                $stop($result = createValidationErrorResponse('No se encontró el periodo.', ['statusCode' => 404]));
 
                 return $result;
             }
@@ -122,7 +122,7 @@ class PeriodCloseService implements PeriodCloseServiceContract
                 $arrastre = $this->lineQueryRepository->find($carriedTo, true);
                 $conflict = match (true) {
                     $arrastre?->Paid => 'No se puede reabrir: el arrastre ya está pagado',
-                    $arrastre?->FkCarriedToLine !== null => 'Reabrí primero la quincena siguiente',
+                    $arrastre?->FkCarriedToLine !== null => 'Reabrí primero el periodo siguiente',
                     default => null,
                 };
                 if ($conflict !== null) {
@@ -137,8 +137,8 @@ class PeriodCloseService implements PeriodCloseServiceContract
 
             $this->periodRepository->setClosed($period, false);
 
-            return createValidationSuccessResponse('Quincena reabierta.');
-        }, 'No se pudo reabrir la quincena.');
+            return createValidationSuccessResponse('Periodo reabierto.');
+        }, 'No se pudo reabrir el periodo.');
     }
 
     /**

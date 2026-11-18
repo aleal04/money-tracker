@@ -80,7 +80,7 @@ class CreatePeriodTest extends PeriodTestCase
      */
     public function test_next_follows_latest_or_rejects(): void
     {
-        $this->postJson('/periods/next')->assertStatus(409)->assertJsonPath('message', 'No hay quincenas para continuar.');
+        $this->postJson('/periods/next')->assertStatus(409)->assertJsonPath('message', 'No hay periodos para continuar.');
 
         $this->makePeriod($this->dates(11, 1));
         $this->postJson('/periods/next')->assertCreated()->assertJsonPath('period.half', 2)->assertJsonPath('period.month', 11);

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use App\Http\Requests\Period\StorePeriodFormRequest;
+use App\Http\Requests\Period\UpdatePeriodFormRequest;
 
 interface PeriodControllerContract
 {
@@ -49,6 +50,23 @@ interface PeriodControllerContract
      * @return JsonResponse The result of the store operation.
      */
     public function storeNext(Request $request): JsonResponse;
+
+    /**
+     * Change the dates of a period.
+     *
+     * @param  int  $periodId  The period identifier.
+     * @param  UpdatePeriodFormRequest  $requestData  The validated dates.
+     * @return JsonResponse The result of the update operation.
+     */
+    public function update(int $periodId, UpdatePeriodFormRequest $requestData): JsonResponse;
+
+    /**
+     * The dates and label the space's frequency proposes for its next period (`?space=`, primary by default).
+     *
+     * @param  Request  $request  The request with the optional space.
+     * @return JsonResponse The proposal: startDate, endDate and label.
+     */
+    public function nextProposal(Request $request): JsonResponse;
 
     /**
      * Preview what closing the period would carry: unpaid egreso lines and their total.

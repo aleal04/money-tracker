@@ -67,7 +67,7 @@ class LineRepository
     {
         return $this->runTransactionSteps(DB::connection(), function () use ($lineData): object {
             if ($this->periodQueryRepository->find($lineData->periodId, true) === null) {
-                return createValidationErrorResponse('No se encontró la quincena.', ['statusCode' => 404]);
+                return createValidationErrorResponse('No se encontró el periodo.', ['statusCode' => 404]);
             }
 
             $line = $this->insert($lineData->toArray() + ['Source' => LineSourceConstant::MANUAL]);
@@ -138,7 +138,7 @@ class LineRepository
             }
             if ($line->Source === LineSourceConstant::CARRIED) {
                 // Deleting would orphan the carried originals and resurrect debt in the closed quincena.
-                return createValidationErrorResponse('Para quitar el arrastre, reabrí la quincena anterior', ['statusCode' => 409]);
+                return createValidationErrorResponse('Para quitar el arrastre, reabrí el periodo anterior', ['statusCode' => 409]);
             }
 
             $line->logicalDelete();
@@ -175,7 +175,7 @@ class LineRepository
         }
         // Un-paying in a closed quincena would leave an unpaid line that is never carried.
         if ($unpaying && $line->Paid && $this->periodQueryRepository->find($line->FkPeriod, true)?->Closed) {
-            return createValidationErrorResponse('No se puede desmarcar un pago en una quincena cerrada', ['statusCode' => 409]);
+            return createValidationErrorResponse('No se puede desmarcar un pago en un periodo cerrado', ['statusCode' => 409]);
         }
 
         return null;

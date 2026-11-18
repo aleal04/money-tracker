@@ -103,7 +103,7 @@ class PeriodModel extends Model
     /**
      * The stable JSON shape of the period. year/month/half are only set for biweekly periods on calendar halves.
      *
-     * @return array{id:int,spaceId:int,startDate:string,endDate:string,year:?int,month:?int,half:?int,closed:bool,label:string}
+     * @return array{id:int,spaceId:int,frequency:string,startDate:string,endDate:string,year:?int,month:?int,half:?int,closed:bool,label:string}
      */
     public function toView(): array
     {
@@ -112,6 +112,7 @@ class PeriodModel extends Model
         return [
             'id' => $this->IdPeriod,
             'spaceId' => $this->FkSpace,
+            'frequency' => $this->space->Frequency,
             'startDate' => $this->StartDate,
             'endDate' => $this->EndDate,
             'year' => $half === null ? null : (int) substr($this->StartDate, 0, 4),

@@ -99,4 +99,25 @@ class PeriodScheduleHelperTest extends TestCase
         $this->assertSame(1, P::indexInMonth('weekly', null, '2026-11-12'));
         $this->assertSame(1, P::indexInMonth('custom', 10, '2026-11-11'));
     }
+
+    /**
+     * Non-aligned biweekly projects 14-day steps, so the month count is not a fixed 2.
+     */
+    public function test_non_aligned_biweekly_projection(): void
+    {
+        $this->assertSame(3, P::periodsStartingInMonth('biweekly', null, '2026-03-17'));
+        $this->assertSame([0, 1, 2], [P::indexInMonth('biweekly', null, '2026-03-03'), P::indexInMonth('biweekly', null, '2026-03-17'), P::indexInMonth('biweekly', null, '2026-03-31')]);
+        $this->assertSame(2, P::periodsStartingInMonth('biweekly', null, '2026-11-03'));
+        $this->assertSame(2, P::periodsStartingInMonth('biweekly', null, '2026-11-16'));
+    }
+
+    /**
+     * Monthly starting on the last day of a month stays anchored to month ends (31 Jan -> 28 Feb -> 31 Mar).
+     */
+    public function test_monthly_end_of_month_anchor(): void
+    {
+        $this->assertSame(['start' => '2027-02-28', 'end' => '2027-03-30'], P::proposeNext('monthly', null, '2027-02-27', '2027-02-01'));
+        $this->assertSame(['start' => '2027-01-31', 'end' => '2027-02-27'], P::proposeNext('monthly', null, '2027-01-30', '2027-01-01'));
+        $this->assertSame(['start' => '2026-11-12', 'end' => '2026-12-11'], P::proposeNext('monthly', null, '2026-11-11', '2026-11-01'));
+    }
 }

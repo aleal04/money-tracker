@@ -8,7 +8,9 @@ Route::group(['prefix' => 'periods', 'as' => 'periods.'], function () {
     Route::get('/', [PeriodController::class, 'index'])->name('index');
     Route::post('/store', [PeriodController::class, 'store'])->name('store');
     Route::post('/next', [PeriodController::class, 'storeNext'])->name('next');
+    Route::get('/next-proposal', [PeriodController::class, 'nextProposal'])->name('next-proposal');
     Route::get('/{periodId}', [PeriodController::class, 'show'])->whereNumber('periodId')->name('show');
+    Route::put('/{periodId}/update', [PeriodController::class, 'update'])->whereNumber('periodId')->name('update');
     Route::get('/{periodId}/data', [PeriodController::class, 'data'])->whereNumber('periodId')->name('data');
     Route::get('/{periodId}/close-preview', [PeriodController::class, 'closePreview'])->whereNumber('periodId')->name('close-preview');
     Route::post('/{periodId}/close', [PeriodController::class, 'close'])->whereNumber('periodId')->name('close');

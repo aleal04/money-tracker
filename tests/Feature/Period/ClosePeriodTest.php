@@ -134,7 +134,7 @@ class ClosePeriodTest extends PeriodTestCase
         $this->postJson("/periods/{$next['id']}/close")->assertCreated();
         $this->addLine($p['id'], ['name' => 'X', 'estimated' => '5.000']);
 
-        $this->postJson("/periods/{$p['id']}/close")->assertConflict()->assertJson(['message' => 'La quincena siguiente está cerrada; reabrila primero']);
+        $this->postJson("/periods/{$p['id']}/close")->assertConflict()->assertJson(['message' => 'El periodo siguiente está cerrado; reabrila primero']);
 
         $this->assertFalse($this->period(10, 1)->Closed);
         $this->assertCount(0, $this->arrastres(10, 2));
@@ -194,7 +194,7 @@ class ClosePeriodTest extends PeriodTestCase
         $arr2 = $this->arrastres(10, 2)[0];
         $this->postJson("/periods/{$arr2->FkPeriod}/close")->assertCreated();
 
-        $this->postJson("/periods/{$p['id']}/reopen")->assertConflict()->assertJson(['message' => 'Reabrí primero la quincena siguiente']);
+        $this->postJson("/periods/{$p['id']}/reopen")->assertConflict()->assertJson(['message' => 'Reabrí primero el periodo siguiente']);
         $this->assertCount(1, $this->arrastres(11, 1));
         $this->assertTrue($this->period(10, 1)->Closed);
 
@@ -224,7 +224,7 @@ class ClosePeriodTest extends PeriodTestCase
         $this->putJson("/lines/{$l['id']}/update", ['name' => 'z'])->assertConflict();
         $this->postJson("/lines/{$l['id']}/toggle-paid")->assertConflict();
         $this->deleteJson("/lines/{$l['id']}/delete")->assertConflict();
-        $this->deleteJson("/lines/{$arrastreId}/delete")->assertConflict()->assertJson(['message' => 'Para quitar el arrastre, reabrí la quincena anterior']);
+        $this->deleteJson("/lines/{$arrastreId}/delete")->assertConflict()->assertJson(['message' => 'Para quitar el arrastre, reabrí el periodo anterior']);
         $this->assertCount(1, $this->getJson("/lines/{$arrastreId}/arrastre-detail")->json());
         $this->getJson("/periods/{$p['id']}/data")->assertJsonPath('nextId', $this->period(10, 2)->IdPeriod);
     }

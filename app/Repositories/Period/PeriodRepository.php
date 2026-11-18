@@ -56,6 +56,18 @@ class PeriodRepository
     }
 
     /**
+     * Change the dates of a period; to run inside a transaction.
+     *
+     * @param  PeriodModel  $period  The locked period.
+     * @param  string  $startDate  The start date 'Y-m-d'.
+     * @param  string  $endDate  The end date 'Y-m-d'.
+     */
+    public function updateDates(PeriodModel $period, string $startDate, string $endDate): void
+    {
+        $period->update(['StartDate' => $startDate, 'EndDate' => $endDate]);
+    }
+
+    /**
      * Advance the paid cuotas of the installments of the space's cards up to the target month; to run inside a transaction.
      *
      * @param  int  $spaceId  The space identifier.

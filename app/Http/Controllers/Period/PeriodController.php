@@ -7,11 +7,13 @@ use Inertia\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\DTOs\Period\PeriodStoreDto;
+use App\DTOs\Period\PeriodUpdateDto;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use App\Services\Period\PeriodService;
 use App\Services\Period\PeriodCloseService;
 use App\Http\Requests\Period\StorePeriodFormRequest;
+use App\Http\Requests\Period\UpdatePeriodFormRequest;
 use App\Contracts\Controllers\Period\PeriodControllerContract;
 
 class PeriodController extends Controller implements PeriodControllerContract
@@ -35,7 +37,7 @@ class PeriodController extends Controller implements PeriodControllerContract
      */
     public function index(Request $request): Response|RedirectResponse
     {
-        $latestId = $this->periodService->latestPeriodId($request->integer('space') ?: null);
+        $latestId = $this->periodService->latestPeriodId($this->spaceIdInput($request, 'space'));
 
         return $latestId === null ? Inertia::render('Period/Index') : redirect()->route('periods.show', $latestId);
     }
@@ -63,7 +65,7 @@ class PeriodController extends Controller implements PeriodControllerContract
     {
         $detail = $this->periodService->detail($periodId);
 
-        return $detail === null ? response()->json(['message' => 'No se encontró la quincena.'], 404) : response()->json($detail);
+        return $detail === null ? response()->json(['message' => 'No se encontró el periodo.'], 404) : response()->json($detail);
     }
 
     /**
@@ -85,7 +87,30 @@ class PeriodController extends Controller implements PeriodControllerContract
      */
     public function storeNext(Request $request): JsonResponse
     {
-        return $this->respond($this->periodService->storeNextPeriod($request->integer('spaceId') ?: null), 201);
+        return $this->respond($this->periodService->storeNextPeriod($this->spaceIdInput($request, 'spaceId')), 201);
+    }
+
+    /**
+     * Change the dates of a period.
+     *
+     * @param  int  $periodId  The period identifier.
+     * @param  UpdatePeriodFormRequest  $requestData  The validated dates.
+     * @return JsonResponse The result of the update operation.
+     */
+    public function update(int $periodId, UpdatePeriodFormRequest $requestData): JsonResponse
+    {
+        return $this->respond($this->periodService->updatePeriod($periodId, PeriodUpdateDto::fromRequest($requestData)));
+    }
+
+    /**
+     * The dates and label the space's frequency proposes for its next period (`?space=`, primary by default).
+     *
+     * @param  Request  $request  The request with the optional space.
+     * @return JsonResponse The proposal: startDate, endDate and label.
+     */
+    public function nextProposal(Request $request): JsonResponse
+    {
+        return response()->json($this->periodService->nextProposal($this->spaceIdInput($request, 'space')));
     }
 
     /**
@@ -98,7 +123,7 @@ class PeriodController extends Controller implements PeriodControllerContract
     {
         $preview = $this->periodCloseService->preview($periodId);
 
-        return $preview === null ? response()->json(['message' => 'No se encontró la quincena.'], 404) : response()->json($preview);
+        return $preview === null ? response()->json(['message' => 'No se encontró el periodo.'], 404) : response()->json($preview);
     }
 
     /**

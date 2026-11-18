@@ -80,4 +80,13 @@ class MoneyHelperTest extends TestCase
         $this->assertSame(100001, array_sum($parts));
         $this->assertSame([1168, 1167], [MoneyHelper::splitAcross(2335, 2, 0), MoneyHelper::splitAcross(2335, 2, 1)]);
     }
+
+    /**
+     * Splitting across fewer than one part fails loudly.
+     */
+    public function test_split_across_rejects_no_parts(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        MoneyHelper::splitAcross(100, 0, 0);
+    }
 }

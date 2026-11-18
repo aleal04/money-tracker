@@ -36,6 +36,6 @@ class DashboardController extends Controller implements DashboardControllerContr
      */
     public function data(Request $request): JsonResponse
     {
-        return response()->json($this->dashboardService->data($request->integer('space') ?: null));
+        return response()->json($this->dashboardService->data($this->spaceIdInput($request, 'space')));
     }
 }
