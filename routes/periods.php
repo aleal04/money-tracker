@@ -10,6 +10,9 @@ Route::group(['prefix' => 'periods', 'as' => 'periods.'], function () {
     Route::post('/next', [PeriodController::class, 'storeNext'])->name('next');
     Route::get('/{periodId}', [PeriodController::class, 'show'])->whereNumber('periodId')->name('show');
     Route::get('/{periodId}/data', [PeriodController::class, 'data'])->whereNumber('periodId')->name('data');
+    Route::get('/{periodId}/close-preview', [PeriodController::class, 'closePreview'])->whereNumber('periodId')->name('close-preview');
+    Route::post('/{periodId}/close', [PeriodController::class, 'close'])->whereNumber('periodId')->name('close');
+    Route::post('/{periodId}/reopen', [PeriodController::class, 'reopen'])->whereNumber('periodId')->name('reopen');
     Route::post('/{periodId}/lines/store', [LineController::class, 'store'])->whereNumber('periodId')->name('lines.store');
 });
 

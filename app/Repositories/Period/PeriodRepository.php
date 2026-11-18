@@ -35,7 +35,18 @@ class PeriodRepository
     {
         $created = PeriodModel::query()->insertOrIgnore([...$key, 'closed' => false, 'created_at' => now(), 'updated_at' => now()]) === 1;
 
-        return ['period' => PeriodModel::query()->where($key)->firstOrFail(), 'created' => $created];
+        return ['period' => PeriodModel::query()->where($key)->lockForUpdate()->firstOrFail(), 'created' => $created];
+    }
+
+    /**
+     * Set the closed flag of a period; to run inside a transaction.
+     *
+     * @param  PeriodModel  $period  The locked period.
+     * @param  bool  $closed  The new flag.
+     */
+    public function setClosed(PeriodModel $period, bool $closed): void
+    {
+        $period->update(['closed' => $closed]);
     }
 
     /**

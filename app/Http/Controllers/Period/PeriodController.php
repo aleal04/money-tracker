@@ -9,6 +9,7 @@ use App\DTOs\Period\PeriodStoreDto;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use App\Services\Period\PeriodService;
+use App\Services\Period\PeriodCloseService;
 use App\Http\Requests\Period\StorePeriodFormRequest;
 use App\Contracts\Controllers\Period\PeriodControllerContract;
 
@@ -18,8 +19,12 @@ class PeriodController extends Controller implements PeriodControllerContract
      * Create the period controller with its service dependency.
      *
      * @param  PeriodService  $periodService  The service for period operations.
+     * @param  PeriodCloseService  $periodCloseService  The service for closing and reopening periods.
      */
-    public function __construct(private readonly PeriodService $periodService) {}
+    public function __construct(
+        private readonly PeriodService $periodService,
+        private readonly PeriodCloseService $periodCloseService,
+    ) {}
 
     /**
      * Redirect to the latest period, or show the create form when there are none.
@@ -78,5 +83,40 @@ class PeriodController extends Controller implements PeriodControllerContract
     public function storeNext(): JsonResponse
     {
         return $this->respond($this->periodService->storeNextPeriod(), 201);
+    }
+
+    /**
+     * Preview what closing the period would carry: unpaid egreso lines and their total.
+     *
+     * @param  int  $periodId  The period identifier.
+     * @return JsonResponse The preview, or 404.
+     */
+    public function closePreview(int $periodId): JsonResponse
+    {
+        $preview = $this->periodCloseService->preview($periodId);
+
+        return $preview === null ? response()->json(['message' => 'No se encontró la quincena.'], 404) : response()->json($preview);
+    }
+
+    /**
+     * Close the period, carrying its unpaid egresos into one arrastre line of the next period.
+     *
+     * @param  int  $periodId  The period identifier.
+     * @return JsonResponse The result with arrastreLineId, or a 404/409 error.
+     */
+    public function close(int $periodId): JsonResponse
+    {
+        return $this->respond($this->periodCloseService->close($periodId), 201);
+    }
+
+    /**
+     * Reopen the period, undoing its unpaid arrastre.
+     *
+     * @param  int  $periodId  The period identifier.
+     * @return JsonResponse The result, or a 404/409 error.
+     */
+    public function reopen(int $periodId): JsonResponse
+    {
+        return $this->respond($this->periodCloseService->reopen($periodId));
     }
 }

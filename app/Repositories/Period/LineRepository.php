@@ -36,6 +36,28 @@ class LineRepository
     }
 
     /**
+     * Mark lines as carried into an arrastre line; to run inside a transaction.
+     *
+     * @param  list<int>  $lineIds  The carried line identifiers.
+     * @param  int  $arrastreLineId  The arrastre line identifier.
+     */
+    public function markCarried(array $lineIds, int $arrastreLineId): void
+    {
+        LineModel::query()->whereIn('id', $lineIds)->update(['carried_to_line_id' => $arrastreLineId]);
+    }
+
+    /**
+     * Un-carry every line carried into an arrastre line, then delete it; to run inside a transaction.
+     *
+     * @param  LineModel  $arrastre  The locked arrastre line.
+     */
+    public function removeArrastre(LineModel $arrastre): void
+    {
+        LineModel::query()->where('carried_to_line_id', $arrastre->id)->update(['carried_to_line_id' => null]);
+        $arrastre->delete();
+    }
+
+    /**
      * Store a manual line in a period, locking the period row.
      *
      * @param  LineStoreDto  $lineData  The line fields.
