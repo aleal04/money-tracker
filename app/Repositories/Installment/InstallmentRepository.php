@@ -50,4 +50,25 @@ class InstallmentRepository
     {
         return InstallmentModel::query()->create($attributes);
     }
+
+    /**
+     * Update an installment; to run inside a transaction.
+     *
+     * @param  InstallmentModel  $installment  The locked installment.
+     * @param  array<string, mixed>  $changes  The changed columns.
+     */
+    public function update(InstallmentModel $installment, array $changes): void
+    {
+        $installment->update($changes);
+    }
+
+    /**
+     * Delete an installment; to run inside a transaction.
+     *
+     * @param  InstallmentModel  $installment  The locked installment.
+     */
+    public function delete(InstallmentModel $installment): void
+    {
+        $installment->delete();
+    }
 }

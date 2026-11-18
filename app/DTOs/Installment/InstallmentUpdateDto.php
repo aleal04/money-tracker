@@ -4,6 +4,7 @@ namespace App\DTOs\Installment;
 
 use App\Helpers\MoneyHelper;
 use Illuminate\Http\Request;
+use App\Constant\InstallmentTypeConstant;
 
 class InstallmentUpdateDto
 {
@@ -84,7 +85,9 @@ class InstallmentUpdateDto
             'initial_balance' => $this->initialBalance === null ? null : MoneyHelper::fromCents($this->initialBalance),
         ], fn ($value) => $value !== null);
 
-        if ($this->hasInstallmentAmount) {
+        if ($this->type === InstallmentTypeConstant::TASA0) {
+            $changes['installment_amount'] = null; // tasa0 derives its cuota from the balance.
+        } elseif ($this->hasInstallmentAmount) {
             $changes['installment_amount'] = $this->installmentAmount === null ? null : MoneyHelper::fromCents($this->installmentAmount);
         }
         if ($this->hasBalanceOverride) {

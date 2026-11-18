@@ -39,7 +39,7 @@ class InstallmentService implements InstallmentServiceContract
         $installments = $this->installmentQueryRepository->listInstallments()->groupBy('card_id');
 
         return $this->installmentQueryRepository->listCards()->map(function (CardModel $card) use ($installments): array {
-            $views = ($installments[$card->id] ?? collect())->map(fn (InstallmentModel $i) => $i->toView());
+            $views = ($installments[$card->id] ?? collect())->map(fn (InstallmentModel $i) => $this->toView($i));
             $live = $views->where('status', '!=', InstallmentStatusConstant::TERMINADA);
             $monthly = (int) $live->sum('cuota');
 
@@ -83,7 +83,7 @@ class InstallmentService implements InstallmentServiceContract
             $installment = $this->installmentRepository->insert($installmentData->toArray());
             $this->cuotasSyncService->syncWithinTransaction();
 
-            return createValidationSuccessResponse('Cuota creada correctamente.', ['installment' => $installment->fresh()->toView()]);
+            return createValidationSuccessResponse('Cuota creada correctamente.', ['installment' => $this->toView($installment->fresh())]);
         }, 'No se pudo crear la cuota.');
     }
 
@@ -104,10 +104,10 @@ class InstallmentService implements InstallmentServiceContract
                 return createValidationErrorResponse('No se encontró la tarjeta.', ['statusCode' => 404]);
             }
 
-            $installment->update($installmentData->toArray());
+            $this->installmentRepository->update($installment, $installmentData->toArray());
             $this->cuotasSyncService->syncWithinTransaction();
 
-            return createValidationSuccessResponse('Cuota actualizada correctamente.', ['installment' => $installment->fresh()->toView()]);
+            return createValidationSuccessResponse('Cuota actualizada correctamente.', ['installment' => $this->toView($installment->fresh())]);
         }, 'No se pudo actualizar la cuota.');
     }
 
@@ -125,7 +125,7 @@ class InstallmentService implements InstallmentServiceContract
                 return createValidationErrorResponse('No se encontró la cuota.', ['statusCode' => 404]);
             }
 
-            $installment->delete();
+            $this->installmentRepository->delete($installment);
             $this->cuotasSyncService->syncWithinTransaction();
 
             return createValidationSuccessResponse('Cuota eliminada correctamente.');
@@ -146,9 +146,29 @@ class InstallmentService implements InstallmentServiceContract
                 return createValidationErrorResponse('No se encontró la cuota.', ['statusCode' => 404]);
             }
 
-            $installment->update(['cancel_soon' => ! $installment->cancel_soon]);
+            $this->installmentRepository->update($installment, ['cancel_soon' => ! $installment->cancel_soon]);
 
-            return createValidationSuccessResponse('Cuota actualizada correctamente.', ['installment' => $installment->fresh()->toView()]);
+            return createValidationSuccessResponse('Cuota actualizada correctamente.', ['installment' => $this->toView($installment->fresh())]);
         }, 'No se pudo actualizar la cuota.');
+    }
+
+    /**
+     * The JSON view: the calculator input plus merchant, item, cancelSoon, cuota, saldo and status.
+     *
+     * @param  InstallmentModel  $installment  The installment.
+     * @return array<string, mixed> The view.
+     */
+    private function toView(InstallmentModel $installment): array
+    {
+        $input = $installment->toInput();
+
+        return $input + [
+            'merchant' => $installment->merchant,
+            'item' => $installment->item,
+            'cancelSoon' => $installment->cancel_soon,
+            'cuota' => InstallmentCalculator::cuota($input),
+            'saldo' => InstallmentCalculator::saldoFaltante($input),
+            'status' => InstallmentCalculator::status($input),
+        ];
     }
 }

@@ -4,7 +4,6 @@ namespace App\Models\Installment;
 
 use App\Helpers\MoneyHelper;
 use Illuminate\Database\Eloquent\Model;
-use App\Services\Installment\InstallmentCalculator;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InstallmentModel extends Model
@@ -62,25 +61,6 @@ class InstallmentModel extends Model
             'initialBalance' => (int) MoneyHelper::toCents($this->initial_balance),
             'installmentAmount' => MoneyHelper::toCents($this->installment_amount),
             'balanceOverride' => MoneyHelper::toCents($this->balance_override),
-        ];
-    }
-
-    /**
-     * The JSON view: input plus merchant, item, cancelSoon, cuota, saldo and status.
-     *
-     * @return array<string, mixed> The view.
-     */
-    public function toView(): array
-    {
-        $input = $this->toInput();
-
-        return $input + [
-            'merchant' => $this->merchant,
-            'item' => $this->item,
-            'cancelSoon' => $this->cancel_soon,
-            'cuota' => InstallmentCalculator::cuota($input),
-            'saldo' => InstallmentCalculator::saldoFaltante($input),
-            'status' => InstallmentCalculator::status($input),
         ];
     }
 }

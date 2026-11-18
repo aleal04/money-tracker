@@ -125,13 +125,47 @@ class InstallmentTest extends PeriodTestCase
     }
 
     /**
-     * New installments start at the previous month of the app timezone.
+     * New installments start at the previous month in Costa Rica time (05:00 UTC on Feb 1 is still Jan 31 there).
      */
     public function test_last_advanced_month_is_previous_month_in_app_timezone(): void
     {
-        Carbon::setTestNow(Carbon::parse('2026-01-15 12:00', 'America/Costa_Rica'));
+        $this->assertSame('America/Costa_Rica', config('app.timezone'));
+        Carbon::setTestNow(Carbon::parse('2026-02-01 05:00:00', 'UTC'));
         $this->assertSame('2025-12', $this->mkInst($this->mkCard())->assertCreated()->json('installment.lastAdvancedMonth'));
         Carbon::setTestNow();
+    }
+
+    /**
+     * Moving an installment to another card resyncs both cards' lines.
+     */
+    public function test_changing_card_syncs_both_cards(): void
+    {
+        $a = $this->mkCard('A');
+        $b = $this->mkCard('B');
+        $p = $this->makePeriod();
+        $i = $this->mkInst($a)->assertCreated()->json('installment');
+        $est = fn (string $name) => $this->cuotasLines($p['id'])->firstWhere('name', "Cuotas $name")?->estimated;
+        $this->assertSame(['5521.31', null], [$est('A'), $est('B')]);
+
+        $this->putJson("/installments/{$i['id']}/update", ['cardId' => $b])->assertOk();
+        $this->assertSame(['0.00', '5521.31'], [$est('A'), $est('B')]);
+    }
+
+    /**
+     * An empty body changes nothing; tasa0 clears the cuota amount; null clears the balance override.
+     */
+    public function test_empty_update_type_switch_and_override_clear(): void
+    {
+        $c = $this->mkCard();
+        $i = $this->mkInst($c, ['type' => 'minicuotas', 'installmentAmount' => '1.000', 'balanceOverride' => '500'])->assertCreated()->json('installment');
+        $url = "/installments/{$i['id']}/update";
+
+        $this->putJson($url, [])->assertOk()->assertJsonPath('installment.installmentAmount', 100000);
+        $this->assertSame($i, $this->getJson('/installments/get-card-list')->json('0.installments.0'));
+
+        $this->putJson($url, ['balanceOverride' => null])->assertOk()->assertJsonPath('installment.balanceOverride', null)->assertJsonPath('installment.saldo.diff', null);
+        $this->putJson($url, ['type' => 'tasa0'])->assertOk()->assertJsonPath('installment.installmentAmount', null);
+        $this->assertNull(InstallmentModel::find($i['id'])->installment_amount);
     }
 
     /**
