@@ -2,6 +2,7 @@
 
 namespace App\Models\Period;
 
+use App\Helpers\MoneyHelper;
 use App\Models\Installment\CardModel;
 use App\Models\Template\TemplateModel;
 use Illuminate\Database\Eloquent\Model;
@@ -75,5 +76,30 @@ class LineModel extends Model
     public function period(): BelongsTo
     {
         return $this->belongsTo(PeriodModel::class, 'period_id');
+    }
+
+    /**
+     * The stable JSON shape of the line: money in cents, plus the carried flag.
+     *
+     * @return array{id:int,periodId:int,category:string,name:string,estimated:int,actual:?int,paid:bool,paidAt:?string,source:string,templateId:?int,cardId:?int,carriedToLineId:?int,sort:int,carried:bool}
+     */
+    public function toView(): array
+    {
+        return [
+            'id' => $this->id,
+            'periodId' => $this->period_id,
+            'category' => $this->category,
+            'name' => $this->name,
+            'estimated' => (int) MoneyHelper::toCents($this->estimated),
+            'actual' => MoneyHelper::toCents($this->actual),
+            'paid' => (bool) $this->paid,
+            'paidAt' => $this->paid_at?->toISOString(),
+            'source' => $this->source,
+            'templateId' => $this->template_id,
+            'cardId' => $this->card_id,
+            'carriedToLineId' => $this->carried_to_line_id,
+            'sort' => $this->sort,
+            'carried' => $this->carried_to_line_id !== null,
+        ];
     }
 }

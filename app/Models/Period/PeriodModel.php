@@ -2,6 +2,7 @@
 
 namespace App\Models\Period;
 
+use App\Helpers\PeriodKeyHelper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -39,5 +40,22 @@ class PeriodModel extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(LineModel::class, 'period_id');
+    }
+
+    /**
+     * The stable JSON shape of the period, with its label.
+     *
+     * @return array{id:int,year:int,month:int,half:int,closed:bool,label:string}
+     */
+    public function toView(): array
+    {
+        return [
+            'id' => $this->id,
+            'year' => $this->year,
+            'month' => $this->month,
+            'half' => $this->half,
+            'closed' => $this->closed,
+            'label' => PeriodKeyHelper::label($this->year, $this->month, $this->half),
+        ];
     }
 }

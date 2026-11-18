@@ -1,0 +1,66 @@
+<?php
+
+namespace App\DTOs\Period;
+
+use App\Helpers\MoneyHelper;
+use Illuminate\Http\Request;
+
+class LineStoreDto
+{
+    /**
+     * Create the line fields to store; money is in cents.
+     *
+     * @param  int  $periodId  The period the line belongs to.
+     * @param  string  $category  The category.
+     * @param  string  $name  The trimmed name.
+     * @param  int  $estimated  The estimated amount in cents.
+     * @param  int|null  $actual  The actual amount in cents, or null.
+     * @param  bool  $paid  Whether the line is paid.
+     */
+    public function __construct(
+        public readonly int $periodId,
+        public readonly string $category,
+        public readonly string $name,
+        public readonly int $estimated,
+        public readonly ?int $actual,
+        public readonly bool $paid,
+    ) {}
+
+    /**
+     * Create a LineStoreDto from a validated request; the period comes from the route.
+     *
+     * @param  Request  $request  The HTTP request containing the line data.
+     * @return LineStoreDto The created DTO.
+     */
+    public static function fromRequest(Request $request): self
+    {
+        $actual = $request->input('actual');
+
+        return new self(
+            periodId: (int) $request->route('periodId'),
+            category: (string) $request->input('category'),
+            name: trim((string) $request->input('name')),
+            estimated: (int) MoneyHelper::parseAmount((string) $request->input('estimated')),
+            actual: $actual === null ? null : MoneyHelper::parseAmount((string) $actual),
+            paid: $request->boolean('paid'),
+        );
+    }
+
+    /**
+     * Convert the DTO to the line columns (money as decimal strings, paid_at set when paid).
+     *
+     * @return array<string, mixed> The line columns.
+     */
+    public function toArray(): array
+    {
+        return [
+            'period_id' => $this->periodId,
+            'category' => $this->category,
+            'name' => $this->name,
+            'estimated' => MoneyHelper::fromCents($this->estimated),
+            'actual' => $this->actual === null ? null : MoneyHelper::fromCents($this->actual),
+            'paid' => $this->paid,
+            'paid_at' => $this->paid ? now() : null,
+        ];
+    }
+}
